@@ -1,0 +1,22 @@
+name: Release
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write  # Trusted Publisher OIDC
+    steps:
+      - uses: actions/checkout@v6.0.2
+      - uses: actions/setup-python@v6.2.0
+        with:
+          python-version-file: packages/core/pyproject.toml
+      - uses: astral-sh/setup-uv@v8.1.0
+        with:
+          enable-cache: true
+      - run: uv build --package musickit-api-mock --out-dir dist/
+      - run: uv build --package musickit-api-mock-playwright --out-dir dist/
+      - uses: pypa/gh-action-pypi-publish@release/v1

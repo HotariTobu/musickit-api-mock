@@ -1,0 +1,16 @@
+[project]
+name = "musickit-api-mock"
+version = "0.1.0"
+description = "Apple Music API mock for MusicKit JS"
+authors = [
+    { name = "HotariTobu", email = "hotari24tools@gmail.com" }
+]
+requires-python = ">=3.12"
+dependencies = [
+    "av>=17.0.1",
+    "werkzeug>=3.1.8",
+]
+
+[build-system]
+requires = ["uv_build>=0.11.2,<0.12.0"]
+build-backend = "uv_build"

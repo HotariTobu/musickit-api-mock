@@ -1,0 +1,72 @@
+name: Preflight & Test
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+jobs:
+  preflight:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6.0.2
+      - uses: actions/setup-python@v6.2.0
+        with:
+          python-version-file: packages/core/pyproject.toml
+      - uses: astral-sh/setup-uv@v8.1.0
+        with:
+          enable-cache: true
+      - run: uv sync
+      - run: make preflight
+
+  test-core:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v6.0.2
+      - uses: actions/setup-python@v6.2.0
+        with:
+          python-version-file: packages/core/pyproject.toml
+      - uses: astral-sh/setup-uv@v8.1.0
+        with:
+          enable-cache: true
+      - run: uv sync
+      - run: make test:core
+
+  test-playwright:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        browser: [chromium, firefox, webkit]
+        include:
+          - os: ubuntu-latest
+            playwright-cache: ~/.cache/ms-playwright
+          - os: macos-latest
+            playwright-cache: ~/Library/Caches/ms-playwright
+          - os: windows-latest
+            playwright-cache: ~\AppData\Local\ms-playwright
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v6.0.2
+      - uses: actions/setup-python@v6.2.0
+        with:
+          python-version-file: packages/core/pyproject.toml
+      - uses: astral-sh/setup-uv@v8.1.0
+        with:
+          enable-cache: true
+      - run: uv sync
+      - id: playwright-cache
+        uses: actions/cache@v5.0.5
+        with:
+          path: ${{ matrix.playwright-cache }}
+          key: playwright-${{ runner.os }}-${{ matrix.browser }}-${{ hashFiles('uv.lock') }}
+      - if: steps.playwright-cache.outputs.cache-hit != 'true' && matrix.os == 'ubuntu-latest'
+        run: uv run playwright install --with-deps ${{ matrix.browser }}
+      - if: steps.playwright-cache.outputs.cache-hit != 'true' && matrix.os != 'ubuntu-latest'
+        run: uv run playwright install ${{ matrix.browser }}
+      - run: make test:playwright:${{ matrix.browser }}
