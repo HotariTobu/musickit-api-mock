@@ -20,5 +20,15 @@ musickit-api-mock = { workspace = true }
 
 [dependency-groups]
 dev = [
-    "pytest-playwright>=0.7.2",
+    "pytest-asyncio>=1.3.0",
+    "pytest-playwright-asyncio>=0.7.2",
+]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "session"
+asyncio_default_test_loop_scope = "session"
+markers = [
+    "sync_test: tests using the sync_playwright API",
+    "async_test: tests using the async_playwright API",
 ]

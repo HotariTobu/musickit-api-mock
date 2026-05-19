@@ -284,7 +284,8 @@ dependencies = [
 
 [package.dev-dependencies]
 dev = [
-    { name = "pytest-playwright" },
+    { name = "pytest-asyncio" },
+    { name = "pytest-playwright-asyncio" },
 ]
 
 [package.metadata]
@@ -294,7 +295,10 @@ requires-dist = [
 ]
 
 [package.metadata.requires-dev]
-dev = [{ name = "pytest-playwright", specifier = ">=0.7.2" }]
+dev = [
+    { name = "pytest-asyncio", specifier = ">=1.3.0" },
+    { name = "pytest-playwright-asyncio", specifier = ">=0.7.2" },
+]
 
 [[package]]
 name = "packaging"
@@ -371,6 +375,19 @@ wheels = [
 ]
 
 [[package]]
+name = "pytest-asyncio"
+version = "1.3.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "pytest" },
+    { name = "typing-extensions", marker = "python_full_version < '3.13'" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/90/2c/8af215c0f776415f3590cac4f9086ccefd6fd463befeae41cd4d3f193e5a/pytest_asyncio-1.3.0.tar.gz", hash = "sha256:d7f52f36d231b80ee124cd216ffb19369aa168fc10095013c6b014a34d3ee9e5", size = 50087, upload-time = "2025-11-10T16:07:47.256Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/e5/35/f8b19922b6a25bc0880171a2f1a003eaeb93657475193ab516fd87cac9da/pytest_asyncio-1.3.0-py3-none-any.whl", hash = "sha256:611e26147c7f77640e6d0a92a38ed17c3e9848063698d5c93d5aa7aa11cebff5", size = 15075, upload-time = "2025-11-10T16:07:45.537Z" },
+]
+
+[[package]]
 name = "pytest-base-url"
 version = "2.1.0"
 source = { registry = "https://pypi.org/simple" }
@@ -384,18 +401,19 @@ wheels = [
 ]
 
 [[package]]
-name = "pytest-playwright"
+name = "pytest-playwright-asyncio"
 version = "0.7.2"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "playwright" },
     { name = "pytest" },
+    { name = "pytest-asyncio" },
     { name = "pytest-base-url" },
     { name = "python-slugify" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/e8/6b/913e36aa421b35689ec95ed953ff7e8df3f2ee1c7b8ab2a3f1fd39d95faf/pytest_playwright-0.7.2.tar.gz", hash = "sha256:247b61123b28c7e8febb993a187a07e54f14a9aa04edc166f7a976d88f04c770", size = 16928, upload-time = "2025-11-24T03:43:22.53Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/bc/97/933c873b1e7fd9cd0d5cabde84d4b546c1de95cc18a6e39a432b1438c13f/pytest_playwright_asyncio-0.7.2.tar.gz", hash = "sha256:f9b6d9941b723d40c72f492863841416e9a24a6b2be84b48435c424aea2b8bd6", size = 16931, upload-time = "2025-11-24T03:43:23.655Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/76/61/4d333d8354ea2bea2c2f01bad0a4aa3c1262de20e1241f78e73360e9b620/pytest_playwright-0.7.2-py3-none-any.whl", hash = "sha256:8084e015b2b3ecff483c2160f1c8219b38b66c0d4578b23c0f700d1b0240ea38", size = 16881, upload-time = "2025-11-24T03:43:24.423Z" },
+    { url = "https://files.pythonhosted.org/packages/b9/ac/b0e2515fb3a30d24c009907eae2317c71756c57df0bb3eefe19541c3a191/pytest_playwright_asyncio-0.7.2-py3-none-any.whl", hash = "sha256:176b17007b74b9ce9487ca570ec896c0f74a880eff172412f22a0bb66a8d5002", size = 17087, upload-time = "2025-11-24T03:43:25.253Z" },
 ]
 
 [[package]]
