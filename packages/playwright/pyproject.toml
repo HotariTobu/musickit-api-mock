@@ -1,15 +1,35 @@
 [project]
 name = "musickit-api-mock-playwright"
 version = "0.1.0"
-description = "Playwright adapter for musickit-api-mock"
+description = "Playwright host adapter for musickit-api-mock."
+readme = "README.md"
 authors = [
     { name = "HotariTobu", email = "hotari24tools@gmail.com" }
 ]
+license = "CC0-1.0"
+license-files = ["LICENSE.txt"]
 requires-python = ">=3.12"
+keywords = ["apple-music", "musickit", "mock", "testing", "playwright", "browser-automation"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Software Development :: Testing",
+    "Topic :: Software Development :: Testing :: Mocking",
+    "Typing :: Typed",
+]
 dependencies = [
     "musickit-api-mock",
     "playwright>=1.58.0",
 ]
+
+[project.urls]
+Homepage = "https://github.com/HotariTobu/musickit-api-mock"
+Repository = "https://github.com/HotariTobu/musickit-api-mock"
+Issues = "https://github.com/HotariTobu/musickit-api-mock/issues"
 
 [build-system]
 requires = ["uv_build>=0.11.2,<0.12.0"]
