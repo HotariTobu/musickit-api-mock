@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 from typing import TYPE_CHECKING
 
 import pytest
@@ -19,8 +20,10 @@ from musickit_api_mock import (
     LibraryAlbum,
     LibraryArtist,
     LibrarySong,
+    LicenseResponse,
     LicenseResponseGeoBlock,
     LicenseResponseSuccess,
+    LookupContext,
     MusicKitApiMock,
     MusicVideo,
     PersonalRecommendation,
@@ -244,6 +247,97 @@ async def test_genre_singular_endpoint_intercepted(
     page = await mount_async_page(mock)
     await page.goto(page_url)
     assert_genre_singular_response(await page.evaluate(FETCH_GENRE_SINGULAR))
+
+
+async def test_data_dict_mutation_after_intercept_is_reflected(
+    mount_async_page: Callable[..., Awaitable[AsyncPage]], page_url: str
+) -> None:
+    """Reassigning a dict-form data source after intercept takes effect on the next request."""
+    mock = MusicKitApiMock()
+    _basic_storefront(mock)
+    mock.data.genres = {
+        "20": Genre(name="Pop", url="https://music.apple.com/us/genre/20")
+    }
+    page = await mount_async_page(mock)
+    await page.goto(page_url)
+    assert_genre_singular_response(await page.evaluate(FETCH_GENRE_SINGULAR))
+
+    mock.data.genres = {
+        "20": Genre(name="Rock", url="https://music.apple.com/us/genre/20")
+    }
+    result = await page.evaluate(FETCH_GENRE_SINGULAR)
+    assert result["status"] == 200
+    assert json.loads(result["body"])["data"][0]["attributes"]["name"] == "Rock"
+
+
+async def test_data_callable_mutation_after_intercept_is_reflected(
+    mount_async_page: Callable[..., Awaitable[AsyncPage]], page_url: str
+) -> None:
+    """Reassigning a callable-form data source after intercept takes effect on the next request."""
+    mock = MusicKitApiMock()
+    _basic_storefront(mock)
+
+    def first(ctx: LookupContext) -> Genre | None:
+        if ctx.id != "20":
+            return None
+        return Genre(name="Pop", url="https://music.apple.com/us/genre/20")
+
+    mock.data.genres = first
+    page = await mount_async_page(mock)
+    await page.goto(page_url)
+    assert_genre_singular_response(await page.evaluate(FETCH_GENRE_SINGULAR))
+
+    def second(ctx: LookupContext) -> Genre | None:
+        if ctx.id != "20":
+            return None
+        return Genre(name="Rock", url="https://music.apple.com/us/genre/20")
+
+    mock.data.genres = second
+    result = await page.evaluate(FETCH_GENRE_SINGULAR)
+    assert result["status"] == 200
+    assert json.loads(result["body"])["data"][0]["attributes"]["name"] == "Rock"
+
+
+async def test_endpoint_static_mutation_after_intercept_is_reflected(
+    mount_async_page: Callable[..., Awaitable[AsyncPage]], page_url: str
+) -> None:
+    """Reassigning a static endpoint override after intercept takes effect on the next request."""
+    mock = MusicKitApiMock()
+    _basic_storefront(mock)
+    page = await mount_async_page(mock)
+    await page.goto(page_url)
+    assert_storefront_response(await page.evaluate(FETCH_STOREFRONT))
+
+    mock.endpoints.storefront = StorefrontResponseSuccess(
+        storefront=Storefront(
+            id="jp",
+            name="Japan",
+            default_language_tag="ja-JP",
+            supported_language_tags=["ja-JP"],
+            explicit_content_policy="allowed",
+        )
+    )
+    result = await page.evaluate(FETCH_STOREFRONT)
+    assert result["status"] == 200
+    parsed = json.loads(result["body"])
+    assert parsed["data"][0]["id"] == "jp"
+    assert parsed["data"][0]["attributes"]["name"] == "Japan"
+
+
+async def test_endpoint_keyed_mutation_after_intercept_is_reflected(
+    mount_async_page: Callable[..., Awaitable[AsyncPage]], page_url: str
+) -> None:
+    """Reassigning a keyed endpoint override after intercept takes effect on the next request."""
+    mock = MusicKitApiMock()
+    first: dict[str, LicenseResponse] = {"1": LicenseResponseSuccess(license=b"hello")}
+    mock.endpoints.license_catalog_song = first
+    page = await mount_async_page(mock)
+    await page.goto(page_url)
+    assert_license_success_b64(await page.evaluate(FETCH_LICENSE), b"hello")
+
+    second: dict[str, LicenseResponse] = {"1": LicenseResponseSuccess(license=b"world")}
+    mock.endpoints.license_catalog_song = second
+    assert_license_success_b64(await page.evaluate(FETCH_LICENSE), b"world")
 
 
 async def test_recommendation_singular_endpoint_intercepted(
