@@ -1,12 +1,9 @@
-"""Playback-control E2E tests — skipped on webkit (FairPlay shim limitation).
+"""Playback-control E2E tests.
 
 These exercise state-machine paths that depend on the underlying audio
 element actually fetching HLS segments and progressing through playback:
 pause → resume, seek mid-playback, stop during playback, jump to a non-
-adjacent queue index. webkit's FairPlay path cannot deliver a usable key
-to its native HLS player via the mock's EME shim, so segment fetch never
-starts and the player flips through state=2 → 8 → 1 within ~1 ms without
-ever reaching stable PLAYING — see the module-level skip fixture.
+adjacent queue index.
 
 Sister module: ``test_musickit_playback_control_async.py`` (async API).
 """
@@ -42,12 +39,6 @@ pytestmark = [
     pytest.mark.sync_test,
     pytest.mark.usefixtures("assert_no_musickit_leaks"),
 ]
-
-
-@pytest.fixture(autouse=True)
-def _skip_on_webkit(browser_name: str) -> None:
-    if browser_name == "webkit":
-        pytest.skip("FairPlay shim limitation; see module docstring")
 
 
 def test_pause_and_resume(

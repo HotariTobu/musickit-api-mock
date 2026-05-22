@@ -65,8 +65,5 @@ jobs:
         with:
           path: ${{ matrix.playwright-cache }}
           key: playwright-${{ runner.os }}-${{ matrix.browser }}-${{ hashFiles('uv.lock') }}
-      - if: steps.playwright-cache.outputs.cache-hit != 'true' && matrix.os == 'ubuntu-latest'
-        run: uv run playwright install --with-deps ${{ matrix.browser }}
-      - if: steps.playwright-cache.outputs.cache-hit != 'true' && matrix.os != 'ubuntu-latest'
-        run: uv run playwright install ${{ matrix.browser }}
+      - run: uv run playwright install --with-deps ${{ matrix.browser }}
       - run: make test:playwright:${{ matrix.browser }}
