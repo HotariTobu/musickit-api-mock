@@ -33,12 +33,6 @@ pytestmark = [
 ]
 
 
-@pytest.fixture(autouse=True)
-def _skip_on_webkit(browser_name: str) -> None:
-    if browser_name == "webkit":
-        pytest.skip("FairPlay shim limitation; see module docstring of sync sister")
-
-
 async def test_pause_and_resume(
     mount_async_page: Callable[..., Awaitable[AsyncPage]],
     page_url: str,

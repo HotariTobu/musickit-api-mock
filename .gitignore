@@ -263,6 +263,3 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
-
-# Playwright pytest artifacts
-test-results/

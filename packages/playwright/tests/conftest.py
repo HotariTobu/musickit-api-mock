@@ -115,7 +115,8 @@ def silence_song(silence_audio_path: Path, page_url: str) -> Song:
 
 @pytest.fixture
 async def mount_async_page(
-    browser: AsyncBrowser, _musickit_js_cache: dict[str, bytes]
+    browser: AsyncBrowser,
+    _musickit_js_cache: dict[str, bytes],
 ) -> AsyncIterator[Callable[[MusicKitApiMock], Awaitable[AsyncPage]]]:
     context = await browser.new_context()
     context.set_default_timeout(60_000)
@@ -173,7 +174,8 @@ def _sync_browser(
 
 @pytest.fixture
 def mount_sync_page(
-    _sync_browser: SyncBrowser, _musickit_js_cache: dict[str, bytes]
+    _sync_browser: SyncBrowser,
+    _musickit_js_cache: dict[str, bytes],
 ) -> Iterator[Callable[[MusicKitApiMock], SyncPage]]:
     context = _sync_browser.new_context()
     context.set_default_timeout(60_000)

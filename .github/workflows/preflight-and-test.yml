@@ -65,17 +65,5 @@ jobs:
         with:
           path: ${{ matrix.playwright-cache }}
           key: playwright-${{ runner.os }}-${{ matrix.browser }}-${{ hashFiles('uv.lock') }}
-      - if: steps.playwright-cache.outputs.cache-hit != 'true' && matrix.os == 'ubuntu-latest'
-        run: uv run playwright install --with-deps ${{ matrix.browser }}
-      - if: steps.playwright-cache.outputs.cache-hit != 'true' && matrix.os != 'ubuntu-latest'
-        run: uv run playwright install ${{ matrix.browser }}
+      - run: uv run playwright install --with-deps ${{ matrix.browser }}
       - run: make test:playwright:${{ matrix.browser }}
-        env:
-          PYTEST_ADDOPTS: --tracing retain-on-failure --video retain-on-failure --screenshot only-on-failure
-      - if: failure()
-        uses: actions/upload-artifact@v7.0.1
-        with:
-          name: pw-${{ matrix.os }}-${{ matrix.browser }}
-          path: packages/playwright/test-results/
-          retention-days: 7
-          if-no-files-found: ignore
