@@ -4,6 +4,8 @@ site_url: https://hotaritobu.github.io/musickit-api-mock/
 repo_url: https://github.com/HotariTobu/musickit-api-mock
 repo_name: HotariTobu/musickit-api-mock
 edit_uri: edit/main/docs/
+exclude_docs: |
+  CLAUDE.md
 
 theme:
   name: material
