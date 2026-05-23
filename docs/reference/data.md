@@ -1,6 +1,6 @@
 # `mock.data` — resource data
 
-Resource dataclasses you assign to `mock.data.<field>`. Each field accepts a `dict[str, T]` keyed by id or a `Callable[[LookupContext], T]` for dynamic resolution.
+Resource dataclasses you assign to `mock.data.<field>`. Each field accepts a `dict[str, T]` keyed by id or a `Callable[[LookupContext], T | None]` for dynamic resolution.
 
 ## Catalog resources
 

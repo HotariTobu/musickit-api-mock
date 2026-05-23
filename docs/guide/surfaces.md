@@ -13,17 +13,19 @@ A `MusicKitApiMock` instance exposes three configuration surfaces. The split is 
 Each field accepts:
 
 - a **`dict[str, T]` keyed by id** — looked up on demand, or
-- a **`Callable[[LookupContext], T]`** — for dynamic resolution (e.g. generate a `Song` for any id matching a pattern).
+- a **`Callable[[LookupContext], T | None]`** — for dynamic resolution (e.g. load a `Song` for any id matching a pattern, or return `None` for not found).
 
 ```python
 # dict form
 mock.data.songs = {
-    "1000000001": Song(id="1000000001", name="Silence", ...),
+    "1000000001": Song.from_file("tests/fixtures/1000000001.m4a"),
 }
 
 # callable form
-def resolve_song(ctx: LookupContext) -> Song:
-    return Song(id=ctx.id, name=f"Track {ctx.id}", ...)
+def resolve_song(ctx: LookupContext) -> Song | None:
+    if not ctx.id.startswith("test-"):
+        return None
+    return Song.from_file(f"tests/fixtures/{ctx.id}.m4a")
 
 mock.data.songs = resolve_song
 ```

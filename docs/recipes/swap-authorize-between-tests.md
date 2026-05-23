@@ -6,6 +6,7 @@
 
 ```python
 from musickit_api_mock import (
+    AuthorizeClose,
     AuthorizeDecline,
     AuthorizeSuccess,
     MusicKitApiMock,

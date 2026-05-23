@@ -8,6 +8,7 @@ MusicKit JS surfaces a subscription error from two body-driven endpoints — `we
 from musickit_api_mock import (
     MusicKitApiMock,
     WebPlaybackResponseSubscriptionError,
+    WebPlaybackResponseSuccess,
 )
 
 mock = MusicKitApiMock()

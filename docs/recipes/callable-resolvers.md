@@ -7,6 +7,7 @@ Every `mock.data.*` field accepts either a `dict[str, T]` keyed by id or a `Call
 ```python
 from musickit_api_mock import (
     Artwork,
+    HlsChunk,
     HlsLayout,
     LookupContext,
     MusicKitApiMock,
@@ -16,19 +17,18 @@ from musickit_api_mock import (
 mock = MusicKitApiMock()
 
 
-def resolve_song(ctx: LookupContext) -> Song | None:
-    if not ctx.id.startswith("test-"):
-        return None
+def make_song(song_id: str, *, title: str) -> Song:
+    media_segment = b"mock media segment"
     return Song(
-        title=f"Track {ctx.id}",
+        title=title,
         artist="Test Artist",
         album="Test Album",
         duration_ms=180_000,
-        artwork=Artwork(...),
-        # ... fill the remaining required fields ...
-        hls_layout=HlsLayout(...),
-        hls_segment=b"...",
-        preview_audio=b"...",
+        artwork=Artwork(
+            url="https://example.test/artwork/{w}x{h}.{f}",
+            width=1200,
+            height=1200,
+        ),
         bitrate=256,
         sample_rate=44_100,
         file_size=0,
@@ -40,8 +40,28 @@ def resolve_song(ctx: LookupContext) -> Song | None:
         is_apple_digital_master=False,
         is_mastered_for_itunes=False,
         is_vocal_attenuation_allowed=False,
-        url=f"https://music.apple.com/us/song/{ctx.id}",
+        url=f"https://music.apple.com/us/song/{song_id}",
+        hls_layout=HlsLayout(
+            target_duration_sec=6,
+            init_byte_offset=0,
+            init_byte_length=0,
+            chunks=(
+                HlsChunk(
+                    duration_sec=6.0,
+                    byte_offset=0,
+                    byte_length=len(media_segment),
+                ),
+            ),
+        ),
+        hls_segment=media_segment,
+        preview_audio=media_segment,
     )
+
+
+def resolve_song(ctx: LookupContext) -> Song | None:
+    if not ctx.id.startswith("test-"):
+        return None
+    return make_song(ctx.id, title=f"Track {ctx.id}")
 
 
 mock.data.songs = resolve_song
@@ -58,7 +78,7 @@ def resolve_song(ctx: LookupContext) -> Song | None:
     title = f"Track {ctx.id}"
     if ctx.locale == "ja":
         title = f"トラック {ctx.id}"
-    return Song(title=title, ...)
+    return make_song(ctx.id, title=title)
 ```
 
 The mock does not fabricate a locale from the storefront slug; `ctx.locale` is `None` when the URL did not include `?l=`. Dict sources ignore the locale entirely.
