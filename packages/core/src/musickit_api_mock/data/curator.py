@@ -16,13 +16,21 @@ from musickit_api_mock.data.primitives.artwork import Artwork
 
 @dataclass
 class Curator:
-    """Apple Music catalog curator (``apple-curators`` or ``curators`` type).
+    """Apple Music catalog curator (apple-curators or curators type).
 
-    ``playlist_ids`` references the playlists the curator owns; emitted in
-    ``relationships.playlists`` of the curator's singular endpoint and as
-    the data of ``/v1/catalog/{sf}/{type}/{id}/playlists``. ``grouping_id``
-    (apple-curators only) references the editorial grouping the curator
-    belongs to; surfaces as ``relationships.grouping``.
+    Attributes:
+        name: Display name of the curator.
+        type: Curator type — ``apple-curators`` for Apple's editorial team,
+            ``curators`` for third-party curators.
+        url: Curator landing-page URL on Apple Music.
+        artwork: Hero artwork for the curator.
+        short_name: Optional short display name.
+        kind: Apple-specific kind tag.
+        playlist_ids: Catalog playlist ids the curator owns. Surface in the
+            curator's ``relationships.playlists`` and as the data of
+            ``/v1/catalog/{sf}/{type}/{id}/playlists``.
+        grouping_id: Editorial grouping the curator belongs to (apple-curators
+            only). Surfaces as ``relationships.grouping``.
     """
 
     name: str

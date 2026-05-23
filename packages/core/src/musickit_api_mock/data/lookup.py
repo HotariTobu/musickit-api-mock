@@ -21,7 +21,19 @@ _T = TypeVar("_T")
 
 @dataclass(frozen=True)
 class LookupContext:
-    """Per-request resource lookup input: id + optional request locale tag."""
+    """Per-request resource lookup input.
+
+    Passed to callable data sources so user code can produce locale-aware
+    responses. Dict sources ignore the locale (id-only mapping is the
+    simplest contract).
+
+    Attributes:
+        id: Catalog or library id of the resource being looked up.
+        locale: Request locale tag from the URL's ``?l=`` parameter, or
+            ``None`` when the request did not specify one. The mock does
+            not fabricate a locale from the storefront slug or any other
+            source.
+    """
 
     id: str
     locale: str | None

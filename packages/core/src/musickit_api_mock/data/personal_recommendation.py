@@ -24,9 +24,13 @@ PersonalRecommendationKind = Literal[
 class PersonalRecommendationContent:
     """A single content reference within a recommendation row.
 
-    A recommendation's contents can be heterogeneous (playlists + albums
-    + stations mixed in one row), so each entry carries its own type
-    alongside the catalog id.
+    A recommendation's contents can be heterogeneous (playlists, albums,
+    stations, music videos mixed in one row), so each entry carries its
+    own type alongside the catalog id.
+
+    Attributes:
+        type: Resource type of the linked catalog resource.
+        id: Catalog id of the linked resource.
     """
 
     type: PersonalRecommendationContentKind
@@ -37,8 +41,12 @@ class PersonalRecommendationContent:
 class PersonalRecommendationDisplay:
     """Editorial-shelf display hint for a recommendation row.
 
-    Apple emits this alongside the row attributes; the values surface on
-    the wire and user code can observe them via the response passthrough.
+    Apple emits these values alongside the row attributes; user code can
+    observe them via the response passthrough.
+
+    Attributes:
+        kind: Apple-defined display style identifier.
+        decorations: Display-treatment tags applied to the row.
     """
 
     kind: str
@@ -49,11 +57,20 @@ class PersonalRecommendationDisplay:
 class PersonalRecommendation:
     """A single user-recommendation row.
 
-    ``kind`` is the editorial category of the row (generic music
-    recommendation, playlist-specific recommendation, recently-played row,
-    etc.). ``contents`` references the linked catalog resources, each
-    paired with its resource type so a single row can mix types.
-    ``title`` is the editorial display name shown above the row in the UI.
+    Attributes:
+        title: Editorial display name shown above the row in the UI.
+        is_group_recommendation: Whether the row is a group recommendation.
+        kind: Editorial category of the row (generic music recommendation,
+            playlist-specific recommendation, recently-played row, etc.).
+        next_update_date: ISO-8601 timestamp of the next refresh.
+        reason: Optional editorial reason copy.
+        resource_types: Resource types featured in the row.
+        contents: Catalog resource references composing the row. Each entry
+            pairs a resource type with a catalog id so a single row can
+            mix types.
+        display: Editorial-shelf display hint.
+        has_see_all: Whether the row has a "see all" expansion.
+        version: Apple's row revision marker.
     """
 
     title: str

@@ -88,13 +88,42 @@ from musickit_api_mock.endpoints.responses.widevine_cert import (
 
 @dataclass
 class EndpointResponses:
-    """Per-endpoint response overrides and endpoint-only state (DTO).
+    """Per-endpoint response overrides and endpoint-only state.
 
-    Pure data holder for user assignment. Lookup / unset detection is owned
-    by the resolver layer. Each setter overrides or parametrizes the
-    response of one specific endpoint; context callables take a single
-    named-context dataclass (``Callable[[SomeContext], T]``), never
-    positional primitives.
+    Pure data holder. Each setter overrides or parametrizes one specific
+    endpoint's response. Setters accept a static response value, a callable
+    taking the matching context dataclass and returning a response, or (for
+    keyed endpoints) an id-keyed mapping of response values. Fields default
+    to ``None``; reading an unset setter raises ``ValueError`` rather than
+    synthesizing a fallback.
+
+    Attributes:
+        storefront: Override for ``/v1/me/storefront``.
+        account: Override for ``/v1/me/account``.
+        station_next_tracks: Override for the station next-tracks endpoint.
+            Keyed by station id; value is the list of follow-up track ids.
+        continuous_stations: Override for the continuous-stations endpoint.
+        license_catalog_song: Override for the catalog-song license
+            acquisition endpoint, keyed by adam id.
+        license_hls_offers: Override for the HLS-offers license acquisition
+            endpoint, keyed by adam id.
+        license_live_radio: Override for the live-radio license acquisition
+            endpoint, keyed by station id.
+        web_playback: Override for the web-playback endpoint, keyed by
+            salable adam id.
+        play_assets_catalog_song: Override for catalog-song play-assets,
+            keyed by adam id.
+        play_assets_live_audio: Override for live-audio play-assets, keyed
+            by station id.
+        play_assets_live_video: Override for live-video play-assets, keyed
+            by station id.
+        play_assets_broadcast: Override for broadcast play-assets, keyed by
+            station id.
+        widevine_cert: Override for the Widevine certificate fetch endpoint.
+        fairplay_cert: Override for the FairPlay certificate fetch endpoint.
+        webplayer_logout: Override for the web-player logout endpoint.
+        play_activity: Override for the play-activity reporting endpoint.
+        renew_music_token: Override for the music-token renewal endpoint.
     """
 
     storefront: StorefrontSetter = None

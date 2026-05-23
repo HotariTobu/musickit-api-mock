@@ -14,7 +14,15 @@ from musickit_api_mock.json_value import _JSONValue
 
 @dataclass
 class WebPlaybackAsset:
-    """One playback asset variant (URL plus optional metadata)."""
+    """One playback asset variant (URL plus optional metadata).
+
+    Attributes:
+        flavor: Apple-defined flavor tag describing the asset bitrate or
+            codec (e.g. ``28:ctrp256``).
+        url: URL of the asset media.
+        metadata: Optional metadata payload Apple emits alongside the asset.
+        artwork_url: Optional artwork URL specific to this asset variant.
+    """
 
     flavor: str
     url: str
@@ -24,7 +32,17 @@ class WebPlaybackAsset:
 
 @dataclass
 class WebPlaybackSong:
-    """Per-song web-playback payload (DRM URLs, asset list, optional HLS)."""
+    """Per-song web-playback payload (DRM URLs, asset list, optional HLS).
+
+    Attributes:
+        hls_key_cert_url: FairPlay certificate endpoint for HLS playback.
+        hls_key_server_url: License-acquisition endpoint for HLS playback.
+        widevine_cert_url: Widevine certificate endpoint.
+        assets: Per-variant playback assets for the song.
+        song_id: Catalog song id the payload is for.
+        hls_playlist_url: Optional HLS master-playlist URL when an HLS
+            rendition is available alongside the asset variants.
+    """
 
     hls_key_cert_url: str
     hls_key_server_url: str
@@ -36,7 +54,11 @@ class WebPlaybackSong:
 
 @dataclass
 class WebPlaybackResponseSuccess:
-    """200 response carrying one or more song payloads."""
+    """200 response carrying one or more song payloads.
+
+    Attributes:
+        song_list: Per-song web-playback payloads returned to the caller.
+    """
 
     song_list: list[WebPlaybackSong]
 
@@ -132,7 +154,11 @@ WebPlaybackResponse = (
 
 @dataclass
 class WebPlaybackContext:
-    """Context for the web-playback setter."""
+    """Context for the web-playback setter.
+
+    Attributes:
+        salable_adam_id: Salable adam id the web-playback request is for.
+    """
 
     salable_adam_id: str
 

@@ -6,7 +6,14 @@ from dataclasses import dataclass
 
 @dataclass
 class Account:
-    """Apple Music subscriber account state."""
+    """Apple Music subscriber account state.
+
+    Attributes:
+        subscription_active: Whether the account has an active Apple Music
+            subscription.
+        subscription_storefront: Storefront identifier the subscription is
+            scoped to.
+    """
 
     subscription_active: bool
     subscription_storefront: str
@@ -14,7 +21,11 @@ class Account:
 
 @dataclass
 class AccountResponseSuccess:
-    """200 success carrying the active account."""
+    """200 success carrying the active account.
+
+    Attributes:
+        account: The active account returned to the caller.
+    """
 
     account: Account
 

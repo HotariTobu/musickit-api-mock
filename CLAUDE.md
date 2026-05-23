@@ -10,13 +10,21 @@ All documentation, code comments, commit messages, and issues must be written in
 
 ### Layers
 
-Documentation in this repo splits into three scopes; each piece belongs to exactly one layer:
+Documentation splits along two audience axes; each piece belongs to exactly one layer.
 
-- **File comments / docstrings** — fine-grained design decisions scoped to a single module / class / function.
+**Internal** (audience: Claude and contributors working on the codebase):
+
+- **File comments** — inline `#` comments scoped to a line / block / function. Carry hidden constraints, subtle invariants, or workaround rationale.
 - **Directory CLAUDE.md** (e.g. `packages/core/CLAUDE.md`) — mid-scope decisions and conventions that span multiple files within that directory.
 - **Root CLAUDE.md** (this file) — project-wide rules, the high-level architecture map, and design axes that hold across all layers.
 
-When adding documentation, pick the layer matching the scope of the content. Don't duplicate across layers.
+**External** (audience: library users, served via the docs site at `docs/` and published to GitHub Pages):
+
+- **Docstrings** — consumed by `mkdocstrings` and rendered as the API reference pages (`docs/reference/`). Cover every user-facing surface.
+- **`docs/guide/`** — hand-written walkthroughs (getting started, surfaces overview, Playwright integration).
+- **`docs/recipes/`** — task-oriented snippets keyed by scenario.
+
+When adding documentation, pick the layer matching its audience and scope. Don't duplicate across layers.
 
 ### Code comments
 
@@ -26,9 +34,17 @@ Don't reference other symbols by name in backticks (`` `SomeClass` ``, `` `helpe
 
 ### Docstrings
 
-Docstrings serve the library user (a third-party developer consuming the public API), not Claude. Apply to user-facing surfaces — the `MusicKitApiMock` class, `mock.data.*` / `mock.endpoints.*` setters, dataclasses the user constructs (`Song`, `Album`, etc.), response variants the user assigns, callback contexts the user receives, the Playwright adapter functions. Document external behavior, usage, parameters, return values, and exceptions — explaining **what** the API does is the point (opposite of the comment axis). Include sample code when it clarifies usage. Internal helpers fall under the comment axis above; default to no docstring unless a why-is-non-obvious comment is warranted.
+Docstrings serve the library user (a third-party developer consuming the public API), not Claude. They are consumed by `mkdocstrings` and rendered as the `docs/reference/` pages of the docs site. Apply to user-facing surfaces — the `MusicKitApiMock` class, `mock.data.*` / `mock.endpoints.*` setters, dataclasses the user constructs (`Song`, `Album`, etc.), response variants the user assigns, callback contexts the user receives, the Playwright adapter functions. Document external behavior, usage, parameters, return values, and exceptions — explaining **what** the API does is the point (opposite of the comment axis). Include sample code when it clarifies usage. Internal helpers fall under the comment axis above; default to no docstring unless a why-is-non-obvious comment is warranted.
+
+**Use Google style** (`Args:` / `Returns:` / `Raises:` / `Attributes:` sections). This matches the project's pydocstyle convention (`[tool.ruff.lint.pydocstyle] convention = "google"`) and the `mkdocstrings-python` parser configuration.
 
 Same symbol-reference rule as comments: don't embed other symbols' names. The reader navigates the public API in their IDE; backticked symbol references in prose are gratuitous and brittle. Use plain language. Self-reference (the symbol the docstring is on) is the only safe boundary; attribute paths like `` `mock.data.<field>` `` / `` `mock.endpoints.<field>` `` are user-typed surface paths, not symbol embeds.
+
+### Hand-written docs site content (`docs/guide/`, `docs/recipes/`)
+
+Audience is the library user — the same as docstrings. The same symbol-reference rule applies (no backticked symbol names; use plain language).
+
+The **`replicate, don't invent`** design axis is load-bearing in snippets: every field, response variant, or behavior shown must be verified against src or a live probe before publication. A snippet with one wrong field name ships as a half-broken example that erodes user trust.
 
 ## Overview
 

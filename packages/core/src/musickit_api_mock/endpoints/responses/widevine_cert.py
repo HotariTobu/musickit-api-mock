@@ -6,14 +6,22 @@ from dataclasses import dataclass
 
 @dataclass
 class WidevineCertResponseSuccess:
-    """Success carrying the Widevine cert bytes."""
+    """Success carrying the Widevine certificate bytes.
+
+    Attributes:
+        cert: Raw Widevine certificate bytes.
+    """
 
     cert: bytes
 
 
 @dataclass
 class WidevineCertResponseFailure:
-    """Cert fetch failure (MusicKit reads body bytes only; status alone signals !ok)."""
+    """Cert fetch failure.
+
+    MusicKit reads the body bytes only; an HTTP non-OK status is enough to
+    signal failure.
+    """
 
 
 WidevineCertResponse = WidevineCertResponseSuccess | WidevineCertResponseFailure

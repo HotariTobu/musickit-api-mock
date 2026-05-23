@@ -14,7 +14,14 @@ from musickit_api_mock.data.lookup import LookupContext, _lookup_source
 
 @dataclass
 class Genre:
-    """Apple Music catalog genre."""
+    """Apple Music catalog genre.
+
+    Attributes:
+        name: Display name of the genre.
+        url: Genre landing-page URL on Apple Music.
+        parent_id: Catalog id of the parent genre when this is a subgenre.
+        parent_name: Display name of the parent genre when this is a subgenre.
+    """
 
     name: str
     url: str

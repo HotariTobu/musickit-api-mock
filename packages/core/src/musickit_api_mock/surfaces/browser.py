@@ -31,9 +31,21 @@ type EmeFlavorSetter = KeySystem | Callable[[], KeySystem] | None
 
 @dataclass
 class BrowserBehavior:
-    """State that lives inside the page (browser-side shim consumes it).
+    """State that lives inside the page; the browser-side shim consumes it.
 
     Configures the in-page shim's runtime behavior, not HTTP responses.
+    Fields default to ``None``; reading an unset value via the shim raises
+    rather than synthesizing a fallback.
+
+    Attributes:
+        authorize_response: Response the shim returns from the authorize
+            flow MusicKit JS opens on sign-in. Accepts either a static
+            response variant or a zero-argument callable returning one (the
+            callable is re-evaluated on each authorize attempt, so a fresh
+            value can be returned per popup).
+        eme_flavor: DRM key system the shim reports as supported when
+            MusicKit JS probes Encrypted Media Extensions. Use one of the
+            three key-system identifier strings.
     """
 
     authorize_response: AuthorizeResponseSetter = None

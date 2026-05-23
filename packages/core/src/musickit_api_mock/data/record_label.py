@@ -16,7 +16,14 @@ from musickit_api_mock.data.primitives.description import Description
 
 @dataclass
 class RecordLabel:
-    """Apple Music catalog record label."""
+    """Apple Music catalog record label.
+
+    Attributes:
+        name: Display name of the record label.
+        url: Record-label landing-page URL on Apple Music.
+        artwork: Hero artwork for the label.
+        description: Long/short description text.
+    """
 
     name: str
     url: str

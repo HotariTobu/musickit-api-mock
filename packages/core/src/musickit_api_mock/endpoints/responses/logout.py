@@ -6,7 +6,10 @@ from dataclasses import dataclass
 
 @dataclass
 class LogoutResponseSuccess:
-    """200 success for the logout endpoint (caller swallows the body)."""
+    """200 success for the logout endpoint.
+
+    The caller swallows the body, so the response carries no fields.
+    """
 
 
 LogoutResponse = LogoutResponseSuccess
