@@ -703,5 +703,13 @@ def _build_url_map() -> Map:
             methods=["GET"],
         )
     )
+    m.add(
+        Rule(
+            "/browser/eme_flavor",
+            host=_HOST_INTERNAL,
+            endpoint="browser.eme_flavor",
+            methods=["GET"],
+        )
+    )
 
     return m

@@ -12,15 +12,26 @@ from musickit_api_mock.transport.response_builders import (
 )
 
 if TYPE_CHECKING:
+    from musickit_api_mock.key_system import KeySystem
     from musickit_api_mock.mock import MusicKitApiMock
+    from musickit_api_mock.surfaces.browser import EmeFlavorSetter
     from musickit_api_mock.transport.http import Response
+
+
+def _resolve_eme_flavor(setter: EmeFlavorSetter) -> KeySystem | None:
+    if setter is None:
+        return None
+    if callable(setter):
+        return setter()
+    return setter
 
 
 def _handle_hls_manifest(mock: MusicKitApiMock, song_id: str) -> Response:
     song = mock._data_resolver.song.get(LookupContext(song_id, None))
     if song is None:
         return _empty_response(status=404)
-    manifest = _compose_manifest(song.hls_layout, mock.browser.eme_flavor, song_id)
+    key_system = _resolve_eme_flavor(mock.browser.eme_flavor)
+    manifest = _compose_manifest(song.hls_layout, key_system, song_id)
     return _bytes_response(manifest, content_type="application/vnd.apple.mpegurl")
 
 

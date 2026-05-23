@@ -38,11 +38,11 @@ from musickit_api_mock import (
 )
 
 from tests.scenarios_intercept import (
-    EVAL_EME_FLAVOR,
     FETCH_ALBUM_RECORD_LABELS,
     FETCH_APPLE_CURATOR_PLAYLISTS,
     FETCH_ARTIST_STATION,
     FETCH_AUTHORIZE_RESPONSE,
+    FETCH_EME_FLAVOR,
     FETCH_GENRE_SINGULAR,
     FETCH_LIBRARY_ARTIST_ALBUMS,
     FETCH_LICENSE,
@@ -62,7 +62,7 @@ from tests.scenarios_intercept import (
     assert_artist_station_response,
     assert_authorize_message,
     assert_authorize_response_success,
-    assert_eme_flavor,
+    assert_eme_flavor_success,
     assert_fetch_aborted,
     assert_genre_singular_response,
     assert_library_artist_albums_response,
@@ -147,14 +147,16 @@ async def test_license_success_returns_base64(
     assert_license_success_b64(await page.evaluate(FETCH_LICENSE), b"hello")
 
 
-async def test_shim_injects_eme_flavor(
+async def test_eme_flavor_endpoint_serves_live_value(
     mount_async_page: Callable[..., Awaitable[AsyncPage]], page_url: str
 ) -> None:
     mock = MusicKitApiMock()
     mock.browser.eme_flavor = "com.widevine.alpha"
     page = await mount_async_page(mock)
     await page.goto(page_url)
-    assert_eme_flavor(await page.evaluate(EVAL_EME_FLAVOR), "com.widevine.alpha")
+    assert_eme_flavor_success(
+        await page.evaluate(FETCH_EME_FLAVOR), "com.widevine.alpha"
+    )
 
 
 async def test_authorize_response_endpoint_serves_live_value(

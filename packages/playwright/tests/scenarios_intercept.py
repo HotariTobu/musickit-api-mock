@@ -27,6 +27,15 @@ class _FetchAuthorizeResult(TypedDict):
     body: _AuthorizeResponseBody
 
 
+class _EmeFlavorBody(TypedDict, total=False):
+    value: str
+
+
+class _FetchEmeFlavorResult(TypedDict):
+    status: int
+    body: _EmeFlavorBody
+
+
 class _LicenseFetchResult(TypedDict, total=False):
     status: int
     license: str
@@ -204,7 +213,10 @@ def assert_license_success_b64(result: _LicenseFetchResult, expected: bytes) -> 
     assert base64.b64decode(result["license"]) == expected
 
 
-EVAL_EME_FLAVOR = """() => window.__musickitApiMock.browser.eme_flavor"""
+FETCH_EME_FLAVOR = """async () => {
+    const r = await fetch('https://musickit-api-mock.invalid/browser/eme_flavor');
+    return { status: r.status, body: await r.json() };
+}"""
 
 
 FETCH_AUTHORIZE_RESPONSE = """async () => {
@@ -213,8 +225,11 @@ FETCH_AUTHORIZE_RESPONSE = """async () => {
 }"""
 
 
-def assert_eme_flavor(result: str, expected_flavor: str) -> None:
-    assert result == expected_flavor
+def assert_eme_flavor_success(
+    result: _FetchEmeFlavorResult, expected_flavor: str
+) -> None:
+    assert result["status"] == 200
+    assert result["body"]["value"] == expected_flavor
 
 
 def assert_authorize_response_success(

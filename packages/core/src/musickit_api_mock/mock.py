@@ -12,7 +12,6 @@ from musickit_api_mock.surfaces import (
     BrowserBehavior,
     DataSources,
     EndpointResponses,
-    _browser_state_init_script,
     _BrowserResolver,
     _DataResolver,
     _EndpointResolver,
@@ -90,4 +89,4 @@ class MusicKitApiMock:
 
     def get_shim_script(self) -> str:
         """Return the JS init script the host adapter must inject into the page."""
-        return _browser_state_init_script(self.browser) + "\n;\n" + _load_shim_script()
+        return _load_shim_script()

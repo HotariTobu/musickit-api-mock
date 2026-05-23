@@ -291,5 +291,7 @@ def _dispatch(
             return preview._handle_preview(mock, kwargs["song_id"])
         case "browser.authorize_response":
             return browser._handle_authorize_response(mock)
+        case "browser.eme_flavor":
+            return browser._handle_eme_flavor(mock)
         case _:
             return None

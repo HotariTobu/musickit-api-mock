@@ -255,3 +255,17 @@ def test_authorize_response_unset_raises() -> None:
                 body=None,
             ),
         )
+
+
+def test_eme_flavor_unset_raises() -> None:
+    m = _new_mock()
+    with pytest.raises(ValueError, match="eme_flavor"):
+        _send(
+            m,
+            Request(
+                method="GET",
+                url="https://musickit-api-mock.invalid/browser/eme_flavor",
+                headers={},
+                body=None,
+            ),
+        )

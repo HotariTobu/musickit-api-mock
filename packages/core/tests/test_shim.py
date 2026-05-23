@@ -18,12 +18,24 @@ from musickit_api_mock import (
 if TYPE_CHECKING:
     from collections.abc import Callable
 
+    from musickit_api_mock.key_system import KeySystem
+
 _AUTHORIZE_URL = "https://musickit-api-mock.invalid/browser/authorize_response"
+_EME_FLAVOR_URL = "https://musickit-api-mock.invalid/browser/eme_flavor"
 
 
 def _get_authorize_response(mock: MusicKitApiMock) -> dict[str, object]:
     resp = mock.handle_request(
         Request(method="GET", url=_AUTHORIZE_URL, headers={}, body=None)
+    )
+    assert resp is not None
+    assert resp.status == 200
+    return json.loads(resp.body)
+
+
+def _get_eme_flavor(mock: MusicKitApiMock) -> dict[str, object]:
+    resp = mock.handle_request(
+        Request(method="GET", url=_EME_FLAVOR_URL, headers={}, body=None)
     )
     assert resp is not None
     assert resp.status == 200
@@ -40,11 +52,28 @@ def test_shim_script_contains_overrides() -> None:
     assert "__musickitApiMock" in s
 
 
-def test_shim_script_embeds_eme_flavor() -> None:
+def test_eme_flavor_endpoint_returns_static_value() -> None:
     m = MusicKitApiMock()
     m.browser.eme_flavor = "com.widevine.alpha"
-    s = m.get_shim_script()
-    assert "com.widevine.alpha" in s
+    body = _get_eme_flavor(m)
+    assert body == {"value": "com.widevine.alpha"}
+
+
+def test_eme_flavor_endpoint_evaluates_callable_per_call() -> None:
+    m = MusicKitApiMock()
+    counter = {"n": 0}
+    flavors: list[KeySystem] = ["com.widevine.alpha", "com.apple.fps"]
+
+    def pick_flavor() -> KeySystem:
+        flavor = flavors[counter["n"] % len(flavors)]
+        counter["n"] += 1
+        return flavor
+
+    m.browser.eme_flavor = pick_flavor
+    first = _get_eme_flavor(m)
+    second = _get_eme_flavor(m)
+    assert first == {"value": "com.widevine.alpha"}
+    assert second == {"value": "com.apple.fps"}
 
 
 def test_authorize_response_endpoint_returns_static_value() -> None:
