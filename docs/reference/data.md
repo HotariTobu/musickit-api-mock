@@ -1,6 +1,10 @@
 # `mock.data` — resource data
 
-Resource dataclasses you assign to `mock.data.<field>`. Each field accepts a `dict[str, T]` keyed by id or a `Callable[[LookupContext], T]` for dynamic resolution.
+Shared resource sources and dataclasses used by the data configuration surface.
+
+## Configuration surface
+
+::: musickit_api_mock.surfaces.DataSources
 
 ## Catalog resources
 

@@ -57,8 +57,9 @@ class DataSources:
     """Shared resource sources read by multiple endpoints.
 
     Pure data holder. Each field accepts either an id-keyed mapping or a
-    lookup callable returning the resource (or ``None`` when not found).
-    Fields default to ``None``; reading an unset source via the mock raises
+    lookup callable. Callable sources receive the lookup context and return
+    the resource, or ``None`` when the requested id is not found. Fields
+    default to ``None``; reading an unset source via the mock raises
     ``ValueError`` rather than synthesizing a fallback.
 
     Attributes:
