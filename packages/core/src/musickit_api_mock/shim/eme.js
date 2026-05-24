@@ -2,7 +2,23 @@
   var ns = (window.__musickitApiMock = window.__musickitApiMock || {});
   ns.browser = ns.browser || {};
 
-  function getFlavor() {
+  var INTERNAL_URL =
+    "https://musickit-api-mock.invalid/browser/eme_flavor";
+
+  function fetchFlavor() {
+    return fetch(INTERNAL_URL).then(function (r) {
+      if (r.status === 200) {
+        return r.json().then(function (body) {
+          return body && body.value;
+        });
+      }
+      return r.text().then(function (text) {
+        throw new Error(text || "browser.eme_flavor is not set");
+      });
+    });
+  }
+
+  function getCachedFlavor() {
     return ns.browser.eme_flavor || null;
   }
 
@@ -111,16 +127,22 @@
       configurable: true,
       writable: true,
       value: function (keySystem, configurations) {
-        var flavor = getFlavor();
-        if (flavor !== keySystem) {
-          return Promise.reject(
-            new DOMException(
-              "Unsupported keySystem: " + keySystem,
-              "NotSupportedError"
-            )
-          );
-        }
-        return Promise.resolve(makeStubAccess(keySystem, configurations));
+        return fetchFlavor().then(
+          function (flavor) {
+            if (flavor !== keySystem) {
+              throw new DOMException(
+                "Unsupported keySystem: " + keySystem,
+                "NotSupportedError"
+              );
+            }
+            return makeStubAccess(keySystem, configurations);
+          },
+          function (err) {
+            var msg = err && err.message ? err.message : String(err);
+            console.error("[musickit-api-mock] " + msg);
+            throw new DOMException(msg, "InvalidStateError");
+          }
+        );
       },
     });
     // Modern-EME path selection in the player can gate on these globals;
@@ -168,7 +190,7 @@
       return session;
     };
     StubWebKitMediaKeys.isTypeSupported = function (keySystem, _contentType) {
-      var flavor = getFlavor();
+      var flavor = getCachedFlavor();
       if (flavor !== "com.apple.fps") return false;
       return (
         keySystem === "com.apple.fps" ||
@@ -206,7 +228,7 @@
       return session;
     };
     StubMSMediaKeys.isTypeSupported = function (keySystem, _contentType) {
-      var flavor = getFlavor();
+      var flavor = getCachedFlavor();
       if (flavor !== "com.microsoft.playready") return false;
       return keySystem === "com.microsoft.playready";
     };
@@ -727,27 +749,56 @@
     document.addEventListener("musickitloaded", patchMusicKit, { once: true });
   }
 
-  function setup() {
-    var flavor = getFlavor();
-    // Always install the modern EME shim so navigator.requestMediaKeySystemAccess
-    // resolves or rejects synchronously. Without it, browsers without a CDM
-    // (e.g. Firefox playwright builds without Widevine) can hang ~120s before
-    // the native call rejects.
-    installModernEme();
+  function installForFlavor(flavor) {
     if (flavor === "com.apple.fps") {
       // Force MusicKit JS to take the modern Fairplay EME path (which listens
       // for the standard "encrypted" event) instead of the legacy WebKitMediaKeys
       // path that depends on Safari's native FairPlay binary.
       try { localStorage.setItem("mk-safari-modern-eme", "1"); } catch (_) {}
       installWebKit();
-    } else if (flavor === "com.microsoft.playready") {
-      installMSMediaKeys();
+    } else {
+      // The init-script snapshot may have installed FairPlay sync paths for
+      // a stale flavor; reset the localStorage signal so MusicKit JS doesn't
+      // take the modern FairPlay path for a non-fps live value.
+      try { localStorage.removeItem("mk-safari-modern-eme"); } catch (_) {}
+      if (flavor === "com.microsoft.playready") {
+        installMSMediaKeys();
+      }
     }
-    if (flavor) {
-      installSyntheticEncryptedDispatcher();
-      installMusicKitPlaybackTimeBridge();
-    }
+    installSyntheticEncryptedDispatcher();
+    installMusicKitPlaybackTimeBridge();
     clearOthers(flavor);
+  }
+
+  function setup() {
+    // Install the modern EME shim synchronously so the override is in place
+    // before MusicKit JS probes navigator.requestMediaKeySystemAccess; the
+    // override fetches the configured flavor per-probe so the unset case
+    // surfaces loudly instead of mimicking CDM-absent behavior.
+    installModernEme();
+    // Sync detection probes (WebKitMediaKeys.isTypeSupported,
+    // MSMediaKeys.isTypeSupported, the mk-safari-modern-eme localStorage
+    // flag) cannot await an async fetch. When the host adapter pre-seeded
+    // a static snapshot of eme_flavor, install the legacy detection
+    // globals synchronously so probes immediately after the init script
+    // don't race the fetch and pick the wrong native path.
+    var initialFlavor = ns.browser.eme_flavor || null;
+    if (initialFlavor) {
+      installForFlavor(initialFlavor);
+    }
+    // The snapshot can't capture a callable setter or a value the user
+    // mutated after get_shim_script() ran; the live fetch covers both.
+    fetchFlavor().then(
+      function (flavor) {
+        if (flavor === initialFlavor) return;
+        ns.browser.eme_flavor = flavor;
+        installForFlavor(flavor);
+      },
+      function (err) {
+        var msg = err && err.message ? err.message : String(err);
+        console.error("[musickit-api-mock] " + msg);
+      }
+    );
   }
 
   setup();

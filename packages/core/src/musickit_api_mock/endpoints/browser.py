@@ -1,4 +1,4 @@
-"""Handler for the in-page ``authorize-response`` endpoint exposed by the shim."""
+"""Handlers for the internal in-page endpoints the shim fetches live state from."""
 
 from __future__ import annotations
 
@@ -15,3 +15,8 @@ if TYPE_CHECKING:
 def _handle_authorize_response(mock: MusicKitApiMock) -> Response:
     resp = mock._browser_resolver.authorize_response()
     return _json_response(_authorize_response_to_json(resp))
+
+
+def _handle_eme_flavor(mock: MusicKitApiMock) -> Response:
+    value = mock._browser_resolver.eme_flavor()
+    return _json_response({"value": value})

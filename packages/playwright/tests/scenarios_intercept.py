@@ -27,6 +27,15 @@ class _FetchAuthorizeResult(TypedDict):
     body: _AuthorizeResponseBody
 
 
+class _EmeFlavorBody(TypedDict, total=False):
+    value: str
+
+
+class _FetchEmeFlavorResult(TypedDict):
+    status: int
+    body: _EmeFlavorBody
+
+
 class _LicenseFetchResult(TypedDict, total=False):
     status: int
     license: str
@@ -204,7 +213,10 @@ def assert_license_success_b64(result: _LicenseFetchResult, expected: bytes) -> 
     assert base64.b64decode(result["license"]) == expected
 
 
-EVAL_EME_FLAVOR = """() => window.__musickitApiMock.browser.eme_flavor"""
+FETCH_EME_FLAVOR = """async () => {
+    const r = await fetch('https://musickit-api-mock.invalid/browser/eme_flavor');
+    return { status: r.status, body: await r.json() };
+}"""
 
 
 FETCH_AUTHORIZE_RESPONSE = """async () => {
@@ -213,8 +225,11 @@ FETCH_AUTHORIZE_RESPONSE = """async () => {
 }"""
 
 
-def assert_eme_flavor(result: str, expected_flavor: str) -> None:
-    assert result == expected_flavor
+def assert_eme_flavor_success(
+    result: _FetchEmeFlavorResult, expected_flavor: str
+) -> None:
+    assert result["status"] == 200
+    assert result["body"]["value"] == expected_flavor
 
 
 def assert_authorize_response_success(
@@ -254,6 +269,47 @@ REQUEST_PLAYREADY_ACCESS = """async () => {
 
 def assert_not_supported_error(result: str | None) -> None:
     assert result == "NotSupportedError"
+
+
+class _EarlyShimState(TypedDict, total=False):
+    webkit_type: str
+    ms_type: str
+    cached_flavor: str | None
+    mk_safari_modern_eme: str | None
+
+
+# Registered after the shim init script so the two run back-to-back on
+# every new document. Captures the shim's installation state into a global
+# during the same synchronous task as the shim's setup() — before any
+# microtask or macrotask boundary, so the readings are the exact state
+# MusicKit JS would observe if it probed immediately after init.
+EARLY_SHIM_PROBE_INIT_SCRIPT = """
+window.__earlyShimState = {
+    webkit_type: typeof window.WebKitMediaKeys,
+    ms_type: typeof window.MSMediaKeys,
+    cached_flavor: (window.__musickitApiMock
+        && window.__musickitApiMock.browser
+        && window.__musickitApiMock.browser.eme_flavor) || null,
+    mk_safari_modern_eme: (function () {
+        try { return localStorage.getItem('mk-safari-modern-eme'); }
+        catch (_) { return null; }
+    })(),
+};
+"""
+
+READ_EARLY_SHIM_STATE = "() => window.__earlyShimState"
+
+
+def assert_legacy_fairplay_sync_installed(state: _EarlyShimState) -> None:
+    assert state.get("cached_flavor") == "com.apple.fps"
+    assert state.get("webkit_type") == "function"
+    assert state.get("mk_safari_modern_eme") == "1"
+
+
+def assert_legacy_playready_sync_installed(state: _EarlyShimState) -> None:
+    assert state.get("cached_flavor") == "com.microsoft.playready"
+    assert state.get("ms_type") == "function"
+    assert state.get("mk_safari_modern_eme") is None
 
 
 OPEN_OAUTH_POPUP_AND_RECEIVE = """async () => {

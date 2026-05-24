@@ -1,16 +1,13 @@
-"""Browser-side state DTO + serializer for the in-page shim.
+"""Browser-side state DTO and resolver for the in-page shim.
 
-The DTO holds the user-facing browser-shim state. Serializer functions
-carry the static fields the JS shim consumes at page load. The resolver
-exposes per-request reads of dynamic fields (callable setters re-evaluated
-on each access) for the internal HTTP endpoint that serves live values to
-the shim.
-
-The resolver receives the DTO via a callback so user re-assignment of
-``mock.browser.<field>`` after construction is reflected on the next lookup.
+The DTO holds the user-facing browser-shim state. The resolver exposes
+per-request reads of every field (callable setters re-evaluated on each
+access) for the internal HTTP endpoints that serve live values to the
+shim. The resolver receives the DTO via a callback so user re-assignment
+of ``mock.browser.<field>`` after construction is reflected on the next
+lookup.
 """
 
-import json
 from collections.abc import Callable
 from dataclasses import dataclass
 from typing import cast
@@ -29,6 +26,7 @@ from musickit_api_mock.key_system import KeySystem
 type AuthorizeResponseSetter = (
     AuthorizeResponse | Callable[[], AuthorizeResponse] | None
 )
+type EmeFlavorSetter = KeySystem | Callable[[], KeySystem] | None
 
 
 @dataclass
@@ -39,7 +37,7 @@ class BrowserBehavior:
     """
 
     authorize_response: AuthorizeResponseSetter = None
-    eme_flavor: KeySystem | None = None
+    eme_flavor: EmeFlavorSetter = None
 
 
 def _authorize_response_to_json(resp: AuthorizeResponse) -> dict[str, _JSONValue]:
@@ -60,22 +58,6 @@ def _authorize_response_to_json(resp: AuthorizeResponse) -> dict[str, _JSONValue
     if isinstance(resp, AuthorizeUnavailable):
         return {"kind": "AuthorizeUnavailable"}
     raise TypeError(f"Unexpected AuthorizeResponse: {type(resp).__name__}")
-
-
-def _serialize_browser_state(behavior: BrowserBehavior) -> dict[str, _JSONValue]:
-    """Project the static fields of the browser behavior DTO into the JSON the shim reads at load."""
-    return {"eme_flavor": behavior.eme_flavor}
-
-
-def _browser_state_init_script(behavior: BrowserBehavior) -> str:
-    """Build the JS init script that exposes the serialized state to the in-page shim."""
-    state_json = json.dumps(_serialize_browser_state(behavior))
-    return (
-        "(function(){"
-        "var ns = window.__musickitApiMock = window.__musickitApiMock || {};"
-        "ns.browser = " + state_json + ";"
-        "})();"
-    )
 
 
 class _BrowserResolver:
@@ -99,4 +81,13 @@ class _BrowserResolver:
         if callable(setter):
             fn = cast("Callable[[], AuthorizeResponse]", setter)
             return fn()
+        return setter
+
+    def eme_flavor(self) -> KeySystem:
+        """Resolve the active ``eme_flavor`` setter and return its value."""
+        setter = self._get_browser().eme_flavor
+        if setter is None:
+            raise ValueError("browser.eme_flavor is not set")
+        if callable(setter):
+            return setter()
         return setter

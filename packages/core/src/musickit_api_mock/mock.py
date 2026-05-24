@@ -1,5 +1,6 @@
 """Library entry point: MusicKitApiMock and its request handling."""
 
+import json
 from typing import cast
 from urllib.parse import urlparse
 
@@ -12,7 +13,6 @@ from musickit_api_mock.surfaces import (
     BrowserBehavior,
     DataSources,
     EndpointResponses,
-    _browser_state_init_script,
     _BrowserResolver,
     _DataResolver,
     _EndpointResolver,
@@ -26,6 +26,19 @@ def _warn_possibly_musickit_related(req: Request) -> None:
     print(
         f"[musickit-api-mock] Possibly MusicKit-related: "
         f"{req.method} {req.url} — file an issue if this should be handled."
+    )
+
+
+def _build_browser_snapshot_script(browser: BrowserBehavior) -> str:
+    eme_flavor = browser.eme_flavor
+    if not isinstance(eme_flavor, str):
+        return ""
+    return (
+        "(function () {\n"
+        "  var ns = (window.__musickitApiMock = window.__musickitApiMock || {});\n"
+        "  ns.browser = ns.browser || {};\n"
+        f"  ns.browser.eme_flavor = {json.dumps(eme_flavor)};\n"
+        "})();\n;\n"
     )
 
 
@@ -89,5 +102,12 @@ class MusicKitApiMock:
         return _is_musickit_related(req)
 
     def get_shim_script(self) -> str:
-        """Return the JS init script the host adapter must inject into the page."""
-        return _browser_state_init_script(self.browser) + "\n;\n" + _load_shim_script()
+        """Return the JS init script the host adapter must inject into the page.
+
+        Prepends a synchronous snapshot of any browser-state field whose
+        current value is static (non-callable). Sync legacy paths in the
+        shim install before the async fetch resolves when a snapshot is
+        present; callable forms are evaluated per-probe via the internal
+        endpoint and are not snapshotted.
+        """
+        return _build_browser_snapshot_script(self.browser) + _load_shim_script()
