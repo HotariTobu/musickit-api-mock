@@ -52,6 +52,36 @@ def test_shim_script_contains_overrides() -> None:
     assert "__musickitApiMock" in s
 
 
+def test_shim_script_includes_static_eme_flavor_snapshot() -> None:
+    m = MusicKitApiMock()
+    m.browser.eme_flavor = "com.apple.fps"
+    s = m.get_shim_script()
+    # The snapshot must precede the shim body so the sync legacy-path
+    # install sees the value before the async fetch resolves.
+    snapshot_idx = s.find('ns.browser.eme_flavor = "com.apple.fps"')
+    setup_idx = s.find("function setup()")
+    assert snapshot_idx != -1
+    assert setup_idx != -1
+    assert snapshot_idx < setup_idx
+
+
+def test_shim_script_omits_snapshot_for_callable_eme_flavor() -> None:
+    m = MusicKitApiMock()
+    m.browser.eme_flavor = lambda: "com.apple.fps"
+    s = m.get_shim_script()
+    # Callable forms are evaluated per-probe via the internal endpoint;
+    # snapshotting the callable's identity would freeze a stale value. The
+    # shim body assigns ns.browser.eme_flavor from the fetch result, so the
+    # snapshot is identified by the literal-string assignment shape.
+    assert 'ns.browser.eme_flavor = "' not in s
+
+
+def test_shim_script_omits_snapshot_when_eme_flavor_unset() -> None:
+    m = MusicKitApiMock()
+    s = m.get_shim_script()
+    assert 'ns.browser.eme_flavor = "' not in s
+
+
 def test_eme_flavor_endpoint_returns_static_value() -> None:
     m = MusicKitApiMock()
     m.browser.eme_flavor = "com.widevine.alpha"

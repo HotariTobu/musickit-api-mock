@@ -43,6 +43,7 @@ from musickit_api_mock import (
 )
 
 from tests.scenarios_intercept import (
+    EARLY_SHIM_PROBE_INIT_SCRIPT,
     FETCH_ALBUM_RECORD_LABELS,
     FETCH_APPLE_CURATOR_PLAYLISTS,
     FETCH_ARTIST_STATION,
@@ -59,6 +60,7 @@ from tests.scenarios_intercept import (
     FETCH_STOREFRONT_AND_REPORT_OUTCOME,
     FETCH_UNRELATED_APPLE_URL,
     OPEN_OAUTH_POPUP_AND_RECEIVE,
+    READ_EARLY_SHIM_STATE,
     REQUEST_PLAYREADY_ACCESS,
     REQUEST_WIDEVINE_ACCESS,
     UNRELATED_APPLE_URL,
@@ -70,6 +72,8 @@ from tests.scenarios_intercept import (
     assert_eme_flavor_success,
     assert_fetch_aborted,
     assert_genre_singular_response,
+    assert_legacy_fairplay_sync_installed,
+    assert_legacy_playready_sync_installed,
     assert_library_artist_albums_response,
     assert_license_failure,
     assert_license_success_b64,
@@ -191,6 +195,39 @@ def test_shim_rejects_non_active_flavor(
     page = mount_sync_page(mock)
     page.goto(page_url)
     assert_not_supported_error(page.evaluate(REQUEST_PLAYREADY_ACCESS))
+
+
+def test_static_fairplay_flavor_installs_legacy_detection_synchronously(
+    mount_sync_page: Callable[..., Page], page_url: str
+) -> None:
+    """Regression: static eme_flavor seeds sync legacy install before fetch resolves.
+
+    MusicKit JS probes WebKitMediaKeys.isTypeSupported and the
+    mk-safari-modern-eme localStorage flag synchronously when picking its
+    EME path. The shim's per-probe fetch model would otherwise leave those
+    globals at their pre-fetch state on the first probe. The probe init
+    script registered here runs in the same synchronous task as the shim's
+    setup() so its capture is exactly what MusicKit JS would observe on an
+    immediate post-init probe.
+    """
+    mock = MusicKitApiMock()
+    mock.browser.eme_flavor = "com.apple.fps"
+    page = mount_sync_page(mock)
+    page.add_init_script(EARLY_SHIM_PROBE_INIT_SCRIPT)
+    page.goto(page_url)
+    assert_legacy_fairplay_sync_installed(page.evaluate(READ_EARLY_SHIM_STATE))
+
+
+def test_static_playready_flavor_installs_legacy_detection_synchronously(
+    mount_sync_page: Callable[..., Page], page_url: str
+) -> None:
+    """Regression: static Playready eme_flavor seeds MSMediaKeys before fetch resolves."""
+    mock = MusicKitApiMock()
+    mock.browser.eme_flavor = "com.microsoft.playready"
+    page = mount_sync_page(mock)
+    page.add_init_script(EARLY_SHIM_PROBE_INIT_SCRIPT)
+    page.goto(page_url)
+    assert_legacy_playready_sync_installed(page.evaluate(READ_EARLY_SHIM_STATE))
 
 
 def test_oauth_popup_shim_dispatches_authorize_message(

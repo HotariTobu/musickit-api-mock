@@ -749,32 +749,50 @@
     document.addEventListener("musickitloaded", patchMusicKit, { once: true });
   }
 
+  function installForFlavor(flavor) {
+    if (flavor === "com.apple.fps") {
+      // Force MusicKit JS to take the modern Fairplay EME path (which listens
+      // for the standard "encrypted" event) instead of the legacy WebKitMediaKeys
+      // path that depends on Safari's native FairPlay binary.
+      try { localStorage.setItem("mk-safari-modern-eme", "1"); } catch (_) {}
+      installWebKit();
+    } else {
+      // The init-script snapshot may have installed FairPlay sync paths for
+      // a stale flavor; reset the localStorage signal so MusicKit JS doesn't
+      // take the modern FairPlay path for a non-fps live value.
+      try { localStorage.removeItem("mk-safari-modern-eme"); } catch (_) {}
+      if (flavor === "com.microsoft.playready") {
+        installMSMediaKeys();
+      }
+    }
+    installSyntheticEncryptedDispatcher();
+    installMusicKitPlaybackTimeBridge();
+    clearOthers(flavor);
+  }
+
   function setup() {
     // Install the modern EME shim synchronously so the override is in place
     // before MusicKit JS probes navigator.requestMediaKeySystemAccess; the
     // override fetches the configured flavor per-probe so the unset case
     // surfaces loudly instead of mimicking CDM-absent behavior.
     installModernEme();
-    // Sync WebKitMediaKeys.isTypeSupported / MSMediaKeys.isTypeSupported
-    // cannot await an async fetch, so resolve the flavor once and cache it.
-    // Sync-path install also gates on this fetch: don't override the legacy
-    // detection globals when the configuration is missing or for a different
-    // key system, otherwise MusicKit JS picks the wrong native path.
+    // Sync detection probes (WebKitMediaKeys.isTypeSupported,
+    // MSMediaKeys.isTypeSupported, the mk-safari-modern-eme localStorage
+    // flag) cannot await an async fetch. When the host adapter pre-seeded
+    // a static snapshot of eme_flavor, install the legacy detection
+    // globals synchronously so probes immediately after the init script
+    // don't race the fetch and pick the wrong native path.
+    var initialFlavor = ns.browser.eme_flavor || null;
+    if (initialFlavor) {
+      installForFlavor(initialFlavor);
+    }
+    // The snapshot can't capture a callable setter or a value the user
+    // mutated after get_shim_script() ran; the live fetch covers both.
     fetchFlavor().then(
       function (flavor) {
+        if (flavor === initialFlavor) return;
         ns.browser.eme_flavor = flavor;
-        if (flavor === "com.apple.fps") {
-          // Force MusicKit JS to take the modern Fairplay EME path (which listens
-          // for the standard "encrypted" event) instead of the legacy WebKitMediaKeys
-          // path that depends on Safari's native FairPlay binary.
-          try { localStorage.setItem("mk-safari-modern-eme", "1"); } catch (_) {}
-          installWebKit();
-        } else if (flavor === "com.microsoft.playready") {
-          installMSMediaKeys();
-        }
-        installSyntheticEncryptedDispatcher();
-        installMusicKitPlaybackTimeBridge();
-        clearOthers(flavor);
+        installForFlavor(flavor);
       },
       function (err) {
         var msg = err && err.message ? err.message : String(err);

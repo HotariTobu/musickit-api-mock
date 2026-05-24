@@ -271,6 +271,47 @@ def assert_not_supported_error(result: str | None) -> None:
     assert result == "NotSupportedError"
 
 
+class _EarlyShimState(TypedDict, total=False):
+    webkit_type: str
+    ms_type: str
+    cached_flavor: str | None
+    mk_safari_modern_eme: str | None
+
+
+# Registered after the shim init script so the two run back-to-back on
+# every new document. Captures the shim's installation state into a global
+# during the same synchronous task as the shim's setup() — before any
+# microtask or macrotask boundary, so the readings are the exact state
+# MusicKit JS would observe if it probed immediately after init.
+EARLY_SHIM_PROBE_INIT_SCRIPT = """
+window.__earlyShimState = {
+    webkit_type: typeof window.WebKitMediaKeys,
+    ms_type: typeof window.MSMediaKeys,
+    cached_flavor: (window.__musickitApiMock
+        && window.__musickitApiMock.browser
+        && window.__musickitApiMock.browser.eme_flavor) || null,
+    mk_safari_modern_eme: (function () {
+        try { return localStorage.getItem('mk-safari-modern-eme'); }
+        catch (_) { return null; }
+    })(),
+};
+"""
+
+READ_EARLY_SHIM_STATE = "() => window.__earlyShimState"
+
+
+def assert_legacy_fairplay_sync_installed(state: _EarlyShimState) -> None:
+    assert state.get("cached_flavor") == "com.apple.fps"
+    assert state.get("webkit_type") == "function"
+    assert state.get("mk_safari_modern_eme") == "1"
+
+
+def assert_legacy_playready_sync_installed(state: _EarlyShimState) -> None:
+    assert state.get("cached_flavor") == "com.microsoft.playready"
+    assert state.get("ms_type") == "function"
+    assert state.get("mk_safari_modern_eme") is None
+
+
 OPEN_OAUTH_POPUP_AND_RECEIVE = """async () => {
     const got = new Promise((resolve) => {
         window.addEventListener('message', (ev) => {
