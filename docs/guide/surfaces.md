@@ -18,14 +18,14 @@ Each field accepts:
 ```python
 # dict form
 mock.data.songs = {
-    "1000000001": Song.from_file("tests/fixtures/1000000001.m4a"),
+    "1000000001": Song.from_file("path/to/song.m4a"),
 }
 
 # callable form
 def resolve_song(ctx: LookupContext) -> Song | None:
     if not ctx.id.startswith("test-"):
         return None
-    return Song.from_file(f"tests/fixtures/{ctx.id}.m4a")
+    return Song.from_file(f"path/to/songs/{ctx.id}.m4a")
 
 mock.data.songs = resolve_song
 ```
@@ -68,5 +68,3 @@ These are **not HTTP responses**. They configure how the shim behaves inside the
 ## Unset is not "default"
 
 All fields default to `None`. **Reading an unset field at request time raises `ValueError`** — the mock does not invent fallback values for fields you didn't configure. This is intentional: silent fallbacks make broken tests look healthy.
-
-If a test fails with `ValueError: ... is not configured`, configure the field the error names.

@@ -48,12 +48,19 @@ class MusicKitApiMock:
     Configuration is split into surfaces with distinct semantics, not just
     distinct fields. The split is load-bearing:
 
-    - ``data`` — shared resource sources read by multiple endpoints.
-    - ``endpoints`` — per-endpoint response overrides and endpoint-only state.
-    - ``browser`` — state consumed by the in-page shim.
+    - ``mock.data`` — shared resource sources read by multiple endpoints.
+    - ``mock.endpoints`` — per-endpoint response overrides and endpoint-only state.
+    - ``mock.browser`` — state consumed by the in-page shim.
 
-    Field-level design axes for each surface live in the corresponding
-    surface class docstrings.
+    Field-level design axes for each surface live on the surface objects.
+
+    Attributes:
+        data: Shared resource sources (catalog and library) read by multiple
+            endpoints. Assign per-resource sources as ``mock.data.<field>``.
+        endpoints: Per-endpoint response overrides and endpoint-only state.
+            Assign per-endpoint setters as ``mock.endpoints.<field>``.
+        browser: State consumed by the in-page shim. Assign per-field
+            behavior as ``mock.browser.<field>``.
     """
 
     data: DataSources
@@ -76,7 +83,21 @@ class MusicKitApiMock:
         self._url_map = _build_url_map()
 
     def handle_request(self, req: Request) -> Response | None:
-        """Match a request against the mock and return a response, or None to pass through."""
+        """Match a request against the mock and return a response, or pass through.
+
+        Host adapters call this with each intercepted request. The mock matches
+        on host, path, and method; for matched requests it produces a response,
+        for unmatched requests it returns nothing so the adapter can let the
+        request continue to the network.
+
+        Args:
+            req: The intercepted HTTP request.
+
+        Returns:
+            The response the host adapter should fulfill, or ``None`` if the
+            request did not match any handled path (the adapter should let it
+            pass through).
+        """
         if req.method == "OPTIONS":
             return _cors_preflight(req)
 
@@ -98,7 +119,18 @@ class MusicKitApiMock:
         return Response(status=resp.status, headers=merged, body=resp.body)
 
     def is_musickit_related(self, req: Request) -> bool:
-        """Return True if the request looks MusicKit-related (host or auth header)."""
+        """Report whether a request looks MusicKit-related.
+
+        Used by host adapters to decide which requests to log or surface as
+        "possibly should have been mocked" when no handler matched.
+
+        Args:
+            req: The request to classify.
+
+        Returns:
+            ``True`` if the request targets a MusicKit-recognized host or
+            carries the MusicKit authorization header, ``False`` otherwise.
+        """
         return _is_musickit_related(req)
 
     def get_shim_script(self) -> str:
@@ -109,5 +141,9 @@ class MusicKitApiMock:
         shim install before the async fetch resolves when a snapshot is
         present; callable forms are evaluated per-probe via the internal
         endpoint and are not snapshotted.
+
+        Returns:
+            JavaScript source ready to be added as a page init script (e.g.
+            via Playwright's ``add_init_script``).
         """
         return _build_browser_snapshot_script(self.browser) + _load_shim_script()

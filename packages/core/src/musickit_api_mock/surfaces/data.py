@@ -56,11 +56,11 @@ from musickit_api_mock.data.station import StationsSource, _StationResolver
 class DataSources:
     """Shared resource sources read by multiple endpoints.
 
-    Pure data holder. Each field accepts either an id-keyed mapping or a
-    lookup callable. Callable sources receive the lookup context and return
-    the resource, or ``None`` when the requested id is not found. Fields
-    default to ``None``; reading an unset source via the mock raises
-    ``ValueError`` rather than synthesizing a fallback.
+    Each field accepts an id-keyed mapping. Callable lookups are also
+    accepted where per-id resolution is sufficient; ``genres``,
+    ``record_labels``, and ``personal_recommendations`` require the dict
+    form because their endpoints enumerate ids. Fields default to ``None``;
+    reading an unset source raises ``ValueError``.
 
     Attributes:
         songs: Catalog song source.

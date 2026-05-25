@@ -12,10 +12,10 @@ from musickit_api_mock import (
 )
 
 
-def _storefront(id: str, name: str, language: str) -> StorefrontResponseSuccess:
+def _storefront(code: str, name: str, language: str) -> StorefrontResponseSuccess:
     return StorefrontResponseSuccess(
         storefront=Storefront(
-            id=id,
+            id=code,
             name=name,
             default_language_tag=language,
             supported_language_tags=[language],
@@ -49,7 +49,7 @@ mock.endpoints.storefront = lambda: _storefront(
 )
 ```
 
-The callable runs on every `/v1/me/storefront` request, so updating `current_country` between requests changes what the page sees on the next fetch.
+`current_country` is your test's active country — a fixture parameter, dataclass instance, or shared state holding `id` / `name` / `language` attributes. The callable runs on every `/v1/me/storefront` request, so updating `current_country` between requests changes what the page sees on the next fetch.
 
 ## Keep account and storefront aligned
 

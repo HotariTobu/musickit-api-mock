@@ -28,7 +28,7 @@ mock = MusicKitApiMock()
 
 # Shared resource data: songs keyed by catalog id.
 mock.data.songs = {
-    "1000000001": Song.from_file("tests/fixtures/silence.m4a"),
+    "1000000001": Song.from_file("path/to/song.m4a"),
 }
 
 # Endpoint-level response: storefront resolution.

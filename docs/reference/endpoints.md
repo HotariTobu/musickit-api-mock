@@ -1,6 +1,10 @@
 # `mock.endpoints` — HTTP response overrides
 
-Response variants you assign to `mock.endpoints.<field>`. Each field accepts a response value, a `dict[str, Response]` keyed by id, or a `Callable[[Context], Response]` for dynamic shaping.
+Response variants you assign to `mock.endpoints.<field>`. See each field's type for accepted shape.
+
+## Configuration surface
+
+::: musickit_api_mock.surfaces.EndpointResponses
 
 ## Account
 

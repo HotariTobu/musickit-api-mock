@@ -1,6 +1,6 @@
 # Bind one mock to many pages opened in a single browser context
 
-`intercept` / `intercept_async` accept either a `Page` or a `BrowserContext`. A page binding covers only that one page; a context binding covers every page in the context — existing ones, future ones, and popups MusicKit JS opens during the authorize flow.
+`intercept` / `intercept_async` accept either a `Page` or a `BrowserContext`. A page binding covers only that one page; a context binding covers every page in the context — existing ones and any opened later.
 
 ## Sync
 
@@ -19,8 +19,6 @@ with sync_playwright() as pw:
 
     page = context.new_page()
     page.goto("https://your-app.example/")
-    # MusicKit JS's authorize popup also runs against the mock,
-    # because the popup is a new Page inside the same context.
 ```
 
 ## Async
@@ -33,9 +31,11 @@ await intercept_async(mock, context)
 page = await context.new_page()
 ```
 
-## When to prefer a page binding
+## Page vs. BrowserContext
 
-`Page` binding is strict-scope: the popup MusicKit JS opens during the authorize flow is a **new page in the same context**, so a page binding will not intercept it. That's the right choice for tests that intentionally exclude popup traffic. Most other cases — and every test that drives the authorize flow — want the context binding.
+`Page` binding is strict-scope: it intercepts only that one page. Choose it when your test drives a single page and you want strict isolation. The in-page shim handles MusicKit JS's authorize flow inside the page that injected it, so authorize works regardless of which binding you choose.
+
+Choose `BrowserContext` binding when your test opens multiple pages, or when your app opens real popups via `window.open` for non-MusicKit URLs (e.g. external OAuth providers) — the shim only stubs MusicKit's authorize URL, other popups become real new pages and need the context binding to be intercepted.
 
 ## Sharing config vs. sharing state
 

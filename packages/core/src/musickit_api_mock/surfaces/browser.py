@@ -34,8 +34,7 @@ class BrowserBehavior:
     """State that lives inside the page; the browser-side shim consumes it.
 
     Configures the in-page shim's runtime behavior, not HTTP responses.
-    Fields default to ``None``; reading an unset value via the shim raises
-    rather than synthesizing a fallback.
+    Fields default to ``None``; reading an unset value raises ``ValueError``.
 
     Attributes:
         authorize_response: Response the shim returns from the authorize

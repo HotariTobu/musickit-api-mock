@@ -19,6 +19,8 @@ def intercept(mock: MusicKitApiMock, target: Page | BrowserContext) -> None:
     the mock. Unmatched requests fall through to the network; the mock
     handles MusicKit JS HTTP traffic and the browser-side shim covers
     in-page interactions (e.g. the authorize popup, EME flavor reporting).
+    If the mock raises (e.g. an unset setter), the adapter logs the error
+    to stderr and aborts the request at the network layer.
 
     Args:
         mock: The mock instance to bind.

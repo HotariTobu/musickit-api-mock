@@ -90,12 +90,10 @@ from musickit_api_mock.endpoints.responses.widevine_cert import (
 class EndpointResponses:
     """Per-endpoint response overrides and endpoint-only state.
 
-    Pure data holder. Each setter overrides or parametrizes one specific
-    endpoint's response. Setters accept a static response value, a callable
-    taking the matching context dataclass and returning a response, or (for
-    keyed endpoints) an id-keyed mapping of response values. Fields default
-    to ``None``; reading an unset setter raises ``ValueError`` rather than
-    synthesizing a fallback.
+    Each setter overrides or parametrizes one specific endpoint's response.
+    Fields default to ``None``; reading an unset setter raises ``ValueError``.
+    Each setter's accepted shape (static value, callable arity, dict keying)
+    is on its type alias.
 
     Attributes:
         storefront: Override for ``/v1/me/storefront``.

@@ -6,6 +6,13 @@ on:
       - main
     tags:
       - 'v*.*.*'
+  pull_request:
+    paths:
+      - 'docs/**'
+      - 'mkdocs.yml'
+      - 'pyproject.toml'
+      - '.github/workflows/docs.yml'
+      - 'packages/**/*.py'
   workflow_dispatch:
 
 permissions:
@@ -18,27 +25,34 @@ concurrency:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    env:
+      UV_NO_DEFAULT_GROUPS: "1"
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           fetch-depth: 0
 
       - name: Install uv
-        uses: astral-sh/setup-uv@v6
+        uses: astral-sh/setup-uv@v8.1.0
 
       - name: Set up Python
         run: uv python install
 
       - name: Install docs deps
-        run: uv sync --group docs --no-default-groups
+        run: uv sync --group docs
+
+      - name: Strict build (validation gate)
+        run: uv run mkdocs build --strict
 
       - name: Configure git
+        if: github.event_name != 'pull_request'
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
-      - name: Fetch gh-pages branch (if exists)
-        run: git fetch origin gh-pages --depth=1 || true
+      - name: Fetch gh-pages branch
+        if: github.event_name != 'pull_request'
+        run: git fetch origin gh-pages --depth=1
 
       - name: Deploy dev (main branch)
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'

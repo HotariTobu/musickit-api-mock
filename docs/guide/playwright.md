@@ -37,7 +37,8 @@ async with async_playwright() as pw:
 
 Use `BrowserContext` when:
 
-- Your app opens MusicKit JS in a popup or new tab (e.g. the authorize flow).
+- Your test opens multiple pages.
+- Your app opens real popups via `window.open` for non-MusicKit URLs (e.g. external OAuth providers).
 - You want one configuration to apply to many pages in one test.
 
 Use `Page` when:

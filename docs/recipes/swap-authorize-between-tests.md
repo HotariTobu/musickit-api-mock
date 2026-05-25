@@ -43,7 +43,7 @@ results = iter([
 mock.browser.authorize_response = lambda: next(results)
 ```
 
-The callable is invoked once per authorize popup. Raising from it surfaces as a failed authorize attempt in the page.
+The callable is invoked once per authorize popup. Raising aborts the request rather than producing a failed authorize; return a failure variant to make the page see failure.
 
 ## Variant menu
 

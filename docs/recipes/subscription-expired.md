@@ -8,7 +8,6 @@ MusicKit JS surfaces a subscription error from two body-driven endpoints — `we
 from musickit_api_mock import (
     MusicKitApiMock,
     WebPlaybackResponseSubscriptionError,
-    WebPlaybackResponseSuccess,
 )
 
 mock = MusicKitApiMock()
@@ -47,10 +46,12 @@ calls = {"count": 0}
 def web_playback_for(ctx):
     calls["count"] += 1
     if calls["count"] == 1:
-        return WebPlaybackResponseSuccess(song_list=[...])
+        return healthy_response(ctx)
     return WebPlaybackResponseSubscriptionError()
 
 mock.endpoints.web_playback = web_playback_for
 ```
+
+`healthy_response(ctx)` is your test's normal success path — the `WebPlaybackResponseSuccess` you would return when subscription is valid.
 
 This pattern works for every keyed endpoint, not just web-playback.
