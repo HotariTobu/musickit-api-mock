@@ -34,13 +34,9 @@ Endpoints that read the same resource compose their response from this shared so
 
 ## `mock.endpoints.*` — per-endpoint HTTP responses
 
-Each field accepts:
+Accepted shapes vary by field — some accept only a response value or callable; others also accept a `dict` keyed by id. See each field's type in the [reference](../reference/endpoints.md) for the exact union.
 
-- a **response value** (e.g. `StorefrontResponseSuccess(...)` or `AccountResponseSessionExpired()`),
-- a **`dict[str, Response]` keyed by id** — different responses for different ids, or
-- a **`Callable[[Context], Response]`** — for dynamic shaping.
-
-Use these to drive error scenarios (subscription expired, DRM failure, content unavailable, ...) or to override success-body details that aren't derivable from `mock.data`.
+Use these to drive error scenarios (subscription expired, DRM failure, content unavailable, ...) or to override success-body details that aren't derivable from `mock.data`. Common forms:
 
 ```python
 # success
