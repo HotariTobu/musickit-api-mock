@@ -27,7 +27,8 @@ dependencies = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/HotariTobu/musickit-api-mock"
+Homepage = "https://hotaritobu.github.io/musickit-api-mock/"
+Documentation = "https://hotaritobu.github.io/musickit-api-mock/"
 Repository = "https://github.com/HotariTobu/musickit-api-mock"
 Issues = "https://github.com/HotariTobu/musickit-api-mock/issues"
 
