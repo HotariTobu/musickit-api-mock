@@ -74,8 +74,8 @@ await intercept_async(mock, page)
 
 A `MusicKitApiMock` instance exposes three configuration surfaces. The split is load-bearing — each surface has a distinct semantic role:
 
-- **`mock.data.*`** — shared resource sources (songs, albums, playlists, artists, library items, ...). Read by multiple endpoints when composing responses. Each field accepts a `dict[str, T]` keyed by id, or a `Callable[[LookupContext], T]` for dynamic resolution.
-- **`mock.endpoints.*`** — per-endpoint response overrides (storefront, account, license, web playback, ...). Each field accepts a response value, a dict keyed by id, or a callable returning a response. Use these to shape the HTTP response itself (status, error variants, ...).
+- **`mock.data.*`** — shared resource sources (songs, albums, playlists, artists, library items, ...). Read by multiple endpoints when composing responses. Each field accepts a `dict[str, T]` keyed by id, or a `Callable[[LookupContext], T | None]` for dynamic resolution (`None` = not found).
+- **`mock.endpoints.*`** — per-endpoint response overrides (storefront, account, license, web playback, ...). Accepted shapes vary by field (response value, callable, or dict keyed by id — see each field's type for the exact union). Use these to shape the HTTP response itself (status, error variants, ...).
 - **`mock.browser.*`** — state consumed by the in-page JS shim, e.g. the authorize response delivered when the page calls `music.authorize()`, and the EME key system flavor the shim should expose.
 
 All fields default to `None`, which is the unset sentinel. Reading an unset field at request time raises `ValueError` — the mock does not invent fallback values for fields you didn't configure.

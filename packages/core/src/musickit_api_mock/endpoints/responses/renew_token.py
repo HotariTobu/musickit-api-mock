@@ -6,7 +6,12 @@ from dataclasses import dataclass
 
 @dataclass
 class RenewTokenResponseSuccess:
-    """200 success carrying the renewed music token (or none)."""
+    """200 success carrying the renewed music token.
+
+    Attributes:
+        music_token: Renewed music token. Leave unset to emit a 200 with no
+            token body, matching Apple's no-renewal response.
+    """
 
     music_token: str | None = None
 

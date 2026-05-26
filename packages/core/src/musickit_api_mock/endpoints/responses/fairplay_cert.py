@@ -6,14 +6,22 @@ from dataclasses import dataclass
 
 @dataclass
 class FairPlayCertResponseSuccess:
-    """Success carrying the FairPlay cert bytes."""
+    """Success carrying the FairPlay certificate bytes.
+
+    Attributes:
+        cert: Raw FairPlay certificate bytes.
+    """
 
     cert: bytes
 
 
 @dataclass
 class FairPlayCertResponseFailure:
-    """Cert fetch failure (MusicKit reads body bytes only; status alone signals !ok)."""
+    """Cert fetch failure.
+
+    MusicKit reads the body bytes only; an HTTP non-OK status is enough to
+    signal failure.
+    """
 
 
 FairPlayCertResponse = FairPlayCertResponseSuccess | FairPlayCertResponseFailure

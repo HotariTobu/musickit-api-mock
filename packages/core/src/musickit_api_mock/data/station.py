@@ -11,7 +11,26 @@ from musickit_api_mock.data.primitives.editorial_notes import EditorialNotes
 
 @dataclass
 class Station:
-    """Apple Music catalog radio station."""
+    """Apple Music catalog radio station.
+
+    Attributes:
+        name: Display name of the station.
+        artwork: Hero artwork for the station.
+        is_live: Whether the station is a live broadcast.
+        media_kind: Media kind — ``audio`` or ``video``.
+        url: Station landing-page URL on Apple Music.
+        is_tracks_station: Whether the station plays a track-driven playlist.
+        has_drm: Whether the station's playback is DRM-protected.
+        kind: Apple-specific station-kind tag.
+        radio_url: HLS URL the station streams from.
+        requires_subscription: Whether playback requires an Apple Music
+            subscription.
+        editorial_notes: Editorial copy shown alongside the station.
+        streaming_radio_sub_type: Streaming sub-type — ``Episode`` for
+            episodic broadcasts, ``Shoutcast`` for Shoutcast streams.
+        station_provider_name: Display name of the third-party provider.
+        radio_show_id: Catalog id of the linked radio show.
+    """
 
     name: str
     artwork: Artwork

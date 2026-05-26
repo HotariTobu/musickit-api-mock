@@ -15,7 +15,13 @@ from musickit_api_mock.data.primitives.artwork import Artwork
 
 @dataclass
 class Grouping:
-    """Apple Music catalog grouping (editorial category for apple-curators)."""
+    """Apple Music catalog grouping (editorial category for apple-curators).
+
+    Attributes:
+        name: Display name of the grouping.
+        url: Grouping landing-page URL on Apple Music.
+        artwork: Hero artwork for the grouping.
+    """
 
     name: str
     url: str

@@ -12,14 +12,31 @@ from musickit_api_mock.data.primitives.editorial_notes import EditorialNotes
 
 @dataclass
 class Playlist:
-    """Apple Music catalog playlist. ``track_ids`` refs catalog songs by id.
+    """Apple Music catalog playlist.
 
-    ``curator_id`` (when set) refs the editorial / user curator id; the
-    library auto-emits a ``relationships.curator`` shallow ref for any
-    playlist that supplies one (matches Apple's default emit).
     Catalog playlists curated by Apple Music's editorial team carry the
-    ``apple-curators`` curator type — that distinction lives on the Curator
-    resource, not on Playlist.
+    ``apple-curators`` curator type — that distinction lives on the curator
+    resource, not here.
+
+    Attributes:
+        name: Display name of the playlist.
+        playlist_type: Playlist category — one of ``user-shared``,
+            ``editorial``, ``external``, or ``personal-mix``.
+        curator_name: Display name of the curator.
+        has_collaboration: Whether collaborative editing is enabled.
+        is_chart: Whether the playlist is a chart playlist.
+        audio_traits: Audio capability tags (lossless, dolby-atmos, etc.).
+        supports_sing: Whether the playlist supports Apple Music Sing.
+        url: Playlist landing-page URL on Apple Music.
+        artwork: Cover artwork.
+        last_modified: ISO-8601 timestamp of the last edit.
+        track_ids: Catalog song ids in the playlist's track order.
+        description: Long/short description text.
+        editorial_notes: Editorial copy shown alongside the playlist.
+        curator_id: Editorial or user curator id. When set, the mock emits
+            a ``relationships.curator`` shallow ref matching Apple's default.
+        library_playlist_id: Library playlist id when the playlist has a
+            counterpart in the user's library.
     """
 
     name: str

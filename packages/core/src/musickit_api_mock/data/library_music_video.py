@@ -11,9 +11,23 @@ from musickit_api_mock.data.primitives.artwork import Artwork
 class LibraryMusicVideo:
     """User-library music video.
 
-    ``album_ids`` / ``artist_ids`` ref **library** albums/artists (not catalog)
-    — Apple's /v1/me/library/music-videos/<id>?include=albums,artists returns
-    library-albums and library-artists in relationships.
+    Attributes:
+        name: Display title of the music video.
+        artist_name: Display name of the primary artist.
+        artwork: Cover artwork.
+        duration_ms: Duration in milliseconds.
+        genre_names: Display names of the genres.
+        release_date: ISO-8601 release date.
+        track_number: Track number when part of an album.
+        album_ids: Library album ids the video belongs to. These reference
+            library albums (not catalog albums) — the same endpoint
+            ``?include=albums`` returns library-albums in relationships.
+        artist_ids: Library artist ids credited on the video. References
+            library artists for the same reason as the album ids.
+        content_rating: Apple content-rating tag.
+        album_name: Display name of the album the video belongs to.
+        catalog_id: Catalog music-video id linking back to the catalog
+            counterpart, used to resolve ``?include=catalog``.
     """
 
     name: str

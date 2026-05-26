@@ -1,4 +1,4 @@
-.PHONY: autofix inspection typecheck preflight test\:core test\:playwright\:chromium test\:playwright\:firefox test\:playwright\:webkit test\:playwright test
+.PHONY: autofix inspection typecheck preflight test\:core test\:playwright\:chromium test\:playwright\:firefox test\:playwright\:webkit test\:playwright test docs\:serve docs\:build
 
 autofix:
 	uv run ruff check --fix
@@ -30,3 +30,9 @@ test\:playwright:
 
 test:
 	$(MAKE) test:core test:playwright
+
+docs\:serve:
+	uv run --group docs mkdocs serve
+
+docs\:build:
+	uv run --group docs mkdocs build --strict

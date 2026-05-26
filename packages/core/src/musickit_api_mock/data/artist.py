@@ -11,8 +11,17 @@ from musickit_api_mock.data.primitives.artwork import Artwork
 class Artist:
     """Apple Music catalog artist.
 
-    ``album_ids`` carries the artist's discography by id; the library resolves
-    them into full album resources at response time.
+    Attributes:
+        name: Display name of the artist.
+        genre_names: Display names of the artist's genres.
+        url: Artist landing-page URL on Apple Music.
+        artwork: Hero artwork for the artist.
+        album_ids: Catalog album ids forming the artist's discography. The
+            mock resolves these into full album resources at response time.
+        genre_ids: Catalog genre ids the artist is associated with.
+        music_video_ids: Catalog music-video ids credited to the artist.
+        playlist_ids: Catalog playlist ids credited to the artist.
+        station_id: Catalog station id of the artist's radio station.
     """
 
     name: str

@@ -18,7 +18,13 @@ from musickit_api_mock.key_system import KeySystem
 
 @dataclass
 class LicenseResponseSuccess:
-    """200 with body ``status=0`` plus license blob and optional renewal/session token."""
+    """200 success carrying the license blob and optional renewal/session token.
+
+    Attributes:
+        license: License blob bytes returned to the CDM.
+        renew_after: Seconds until the client should renew the license.
+        stkn: Optional session token associated with the license.
+    """
 
     license: bytes
     renew_after: int | None = None
@@ -27,70 +33,70 @@ class LicenseResponseSuccess:
 
 @dataclass
 class LicenseResponseMediaLicense:
-    """Body ``status=-1003`` → MEDIA_LICENSE."""
+    """Body ``status=-1003`` that triggers MEDIA_LICENSE."""
 
 
 @dataclass
 class LicenseResponseDeviceLimit:
-    """Body status → DEVICE_LIMIT (mock emits the canonical code)."""
+    """Body status that triggers DEVICE_LIMIT (mock emits the canonical code)."""
 
 
 @dataclass
 class LicenseResponseGeoBlock:
-    """Body ``status=-1017`` → GEO_BLOCK."""
+    """Body ``status=-1017`` that triggers GEO_BLOCK."""
 
 
 @dataclass
 class LicenseResponseNotFound:
-    """Body ``status=1010`` → NOT_FOUND."""
+    """Body ``status=1010`` that triggers NOT_FOUND."""
 
 
 @dataclass
 class LicenseResponseAuthorizationError:
-    """Body ``status=2002`` → AUTHORIZATION_ERROR (triggers user-token revoke)."""
+    """Body ``status=2002`` that triggers AUTHORIZATION_ERROR (user-token revoke)."""
 
 
 @dataclass
 class LicenseResponseTokenExpired:
-    """Body ``status=2034`` → TOKEN_EXPIRED (triggers token renew + retry)."""
+    """Body ``status=2034`` that triggers TOKEN_EXPIRED (token renew + retry)."""
 
 
 @dataclass
 class LicenseResponseSubscriptionError:
-    """Body ``status=3063`` → SUBSCRIPTION_ERROR."""
+    """Body ``status=3063`` that triggers SUBSCRIPTION_ERROR."""
 
 
 @dataclass
 class LicenseResponseContentUnavailable:
-    """Body ``status=3076`` → CONTENT_UNAVAILABLE."""
+    """Body ``status=3076`` that triggers CONTENT_UNAVAILABLE."""
 
 
 @dataclass
 class LicenseResponseContentRestricted:
-    """Body ``status=3082`` → CONTENT_RESTRICTED."""
+    """Body ``status=3082`` that triggers CONTENT_RESTRICTED."""
 
 
 @dataclass
 class LicenseResponseStreamUpsell:
-    """Body ``status=3084`` → STREAM_UPSELL."""
+    """Body ``status=3084`` that triggers STREAM_UPSELL."""
 
 
 @dataclass
 class LicenseResponseServerError:
-    """Body ``status=5002`` → SERVER_ERROR."""
+    """Body ``status=5002`` that triggers SERVER_ERROR."""
 
 
 @dataclass
 class LicenseResponsePlayReadyCbcEncryptionError:
-    """Body ``status=180202`` → PLAYREADY_CBC_ENCRYPTION_ERROR."""
+    """Body ``status=180202`` that triggers PLAYREADY_CBC_ENCRYPTION_ERROR."""
 
 
 @dataclass
 class LicenseResponseWidevineCdmExpired:
-    """Body ``status=190121`` → WIDEVINE_CDM_EXPIRED.
+    """Body ``status=190121`` that triggers WIDEVINE_CDM_EXPIRED.
 
-    MusicKit also rewrites body ``status=-1021`` to ``190121`` before dispatch;
-    the mock emits ``190121`` directly.
+    MusicKit also rewrites body ``status=-1021`` to ``190121`` before
+    dispatch; the mock emits ``190121`` directly.
     """
 
 
@@ -114,7 +120,14 @@ LicenseResponse = (
 
 @dataclass
 class LicenseCatalogSongContext:
-    """Context for the catalog-song license setter."""
+    """Context for the catalog-song license setter.
+
+    Attributes:
+        adam_id: Catalog song id the license is being acquired for.
+        key_system: DRM key-system identifier of the requesting CDM.
+        is_library: Whether the licensed playback is for the library
+            counterpart (vs. the catalog song).
+    """
 
     adam_id: str
     key_system: KeySystem
@@ -123,7 +136,12 @@ class LicenseCatalogSongContext:
 
 @dataclass
 class LicenseHlsOffersContext:
-    """Context for the HLS-offers license setter."""
+    """Context for the HLS-offers license setter.
+
+    Attributes:
+        adam_id: Catalog song id the HLS-offers license is for.
+        key_system: DRM key-system identifier of the requesting CDM.
+    """
 
     adam_id: str
     key_system: KeySystem
@@ -131,7 +149,12 @@ class LicenseHlsOffersContext:
 
 @dataclass
 class LicenseLiveRadioContext:
-    """Context for the live-radio license setter."""
+    """Context for the live-radio license setter.
+
+    Attributes:
+        station_id: Catalog station id the live-radio license is for.
+        key_system: DRM key-system identifier of the requesting CDM.
+    """
 
     station_id: str
     key_system: KeySystem

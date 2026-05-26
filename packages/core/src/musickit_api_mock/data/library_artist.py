@@ -8,7 +8,14 @@ from musickit_api_mock.data.lookup import LookupContext, _lookup_source
 
 @dataclass
 class LibraryArtist:
-    """User-library artist."""
+    """User-library artist.
+
+    Attributes:
+        name: Display name of the artist.
+        album_ids: Library album ids credited to the artist.
+        catalog_id: Catalog artist id linking back to the catalog counterpart,
+            used to resolve ``?include=catalog``.
+    """
 
     name: str
     album_ids: list[str] | None = None

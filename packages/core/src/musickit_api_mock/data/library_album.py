@@ -11,10 +11,21 @@ from musickit_api_mock.data.primitives.artwork import Artwork
 class LibraryAlbum:
     """User-library album.
 
-    ``track_ids`` refs library songs by id; ``artist_ids`` refs library
-    artists by id and is emitted in ``relationships.artists`` only when
-    ``?include=artists`` is requested. ``catalog_id`` links the library
-    album back to its catalog counterpart for ``?include=catalog`` resolution.
+    Attributes:
+        name: Display title of the album.
+        artist_name: Display name of the primary artist.
+        artwork: Cover artwork.
+        genre_names: Display names of the album's genres.
+        track_count: Number of tracks on the album.
+        date_added: ISO-8601 timestamp the user added the album to their
+            library.
+        track_ids: Library song ids on the album.
+        artist_ids: Library artist ids credited on the album. Surface in
+            ``relationships.artists`` only when ``?include=artists`` is
+            requested.
+        release_date: ISO-8601 release date.
+        catalog_id: Catalog album id linking back to the catalog counterpart,
+            used to resolve ``?include=catalog``.
     """
 
     name: str

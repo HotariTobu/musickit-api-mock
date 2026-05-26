@@ -54,10 +54,31 @@ from musickit_api_mock.data.station import StationsSource, _StationResolver
 
 @dataclass
 class DataSources:
-    """Shared resource sources read by multiple endpoints (DTO).
+    """Shared resource sources read by multiple endpoints.
 
-    Pure data holder for user assignment. Lookup / unset detection is owned
-    by the resolver layer. Fields are designed by **resource composition**.
+    Each field accepts an id-keyed mapping. Callable lookups are also
+    accepted where per-id resolution is sufficient; ``genres``,
+    ``record_labels``, and ``personal_recommendations`` require the dict
+    form because their endpoints enumerate ids. Fields default to ``None``;
+    reading an unset source raises ``ValueError``.
+
+    Attributes:
+        songs: Catalog song source.
+        albums: Catalog album source.
+        playlists: Catalog playlist source.
+        artists: Catalog artist source.
+        music_videos: Catalog music-video source.
+        stations: Catalog radio-station source.
+        curators: Catalog curator source (apple-curators and curators).
+        genres: Catalog genre source.
+        record_labels: Catalog record-label source.
+        groupings: Catalog grouping source (editorial categories).
+        personal_recommendations: User recommendation row source.
+        library_songs: User-library song source.
+        library_albums: User-library album source.
+        library_playlists: User-library playlist source.
+        library_artists: User-library artist source.
+        library_music_videos: User-library music-video source.
     """
 
     songs: SongsSource = None

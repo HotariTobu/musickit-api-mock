@@ -9,7 +9,22 @@ from musickit_api_mock.data.primitives.artwork import Artwork
 
 @dataclass
 class LibraryPlaylist:
-    """User-library playlist. ``track_ids`` refs library songs by id."""
+    """User-library playlist.
+
+    Attributes:
+        name: Display name of the playlist.
+        can_delete: Whether the user can delete the playlist.
+        can_edit: Whether the user can edit the playlist's tracks.
+        is_public: Whether the playlist is shared publicly.
+        has_catalog: Whether a corresponding catalog playlist exists.
+        has_collaboration: Whether collaborative editing is enabled.
+        date_added: ISO-8601 timestamp the playlist was added to the library.
+        last_modified_date: ISO-8601 timestamp of the last edit.
+        track_ids: Library song ids in the playlist's track order.
+        artwork: Cover artwork.
+        catalog_id: Catalog playlist id linking back to the catalog
+            counterpart, used to resolve ``?include=catalog``.
+    """
 
     name: str
     can_delete: bool

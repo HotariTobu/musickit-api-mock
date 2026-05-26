@@ -9,7 +9,24 @@ from musickit_api_mock.data.primitives.artwork import Artwork
 
 @dataclass
 class LibrarySong:
-    """User-library song. ``catalog_id`` links back to the catalog song if known."""
+    """User-library song.
+
+    Attributes:
+        name: Display title of the song.
+        artist_name: Display name of the primary artist.
+        artwork: Cover artwork.
+        duration_ms: Duration in milliseconds.
+        genre_names: Display names of the song's genres.
+        has_lyrics: Whether lyrics are available.
+        album_name: Display name of the album the song belongs to.
+        disc_number: Disc number when part of a multi-disc album.
+        track_number: Track number within the album.
+        release_date: ISO-8601 release date.
+        catalog_id: Catalog song id linking back to the catalog counterpart,
+            used to resolve ``?include=catalog``.
+        album_ids: Library album ids the song belongs to.
+        artist_ids: Library artist ids credited on the song.
+    """
 
     name: str
     artist_name: str

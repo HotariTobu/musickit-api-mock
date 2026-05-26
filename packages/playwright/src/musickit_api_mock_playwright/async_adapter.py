@@ -20,8 +20,18 @@ async def intercept_async(
 ) -> None:
     """Wire the mock into an async Playwright page or browser context.
 
-    Pass a page to bind to that single page. Pass a browser context to cover
-    every page in the context, including popups and pages opened later.
+    Installs the in-page shim init script and routes every request through
+    the mock. Unmatched requests fall through to the network; the mock
+    handles MusicKit JS HTTP traffic and the browser-side shim covers
+    in-page interactions (e.g. the authorize popup, EME flavor reporting).
+    If the mock raises (e.g. an unset setter), the adapter logs the error
+    to stderr and aborts the request at the network layer.
+
+    Args:
+        mock: The mock instance to bind.
+        target: Either an async page (binds to that single page) or an async
+            browser context (covers every page in the context, including
+            popups and pages opened later).
     """
     await target.add_init_script(mock.get_shim_script())
     await target.route("**/*", lambda route: _handle_async(mock, route))
