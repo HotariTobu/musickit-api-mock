@@ -86,13 +86,22 @@ def silence_audio_path(tmp_path_factory: pytest.TempPathFactory) -> Path:
 
 
 @pytest.fixture(scope="session")
+def short_silence_audio_path(tmp_path_factory: pytest.TempPathFactory) -> Path:
+    p = tmp_path_factory.mktemp("silence_short") / "silence_short.m4a"
+    # Sized to cross the end boundary quickly so a loop iteration completes
+    # within the test window — the inverse of silence_audio_path, which is
+    # sized to avoid completion.
+    build_silence_m4a(p, duration_sec=4.0)
+    return p
+
+
+@pytest.fixture(scope="session")
 def dev_token() -> str:
     return make_test_jwt()
 
 
-@pytest.fixture
-def silence_song(silence_audio_path: Path, page_url: str) -> Song:
-    fb = SongMetadataFallback(
+def _silence_fallback(page_url: str) -> SongMetadataFallback:
+    return SongMetadataFallback(
         artwork=Artwork(url=f"{page_url}a.jpg", width=64, height=64),
         has_lyrics=False,
         audio_locale="en-US",
@@ -110,7 +119,16 @@ def silence_song(silence_audio_path: Path, page_url: str) -> Song:
         track_number=1,
         disc_number=1,
     )
-    return Song.from_file(str(silence_audio_path), fb)
+
+
+@pytest.fixture
+def silence_song(silence_audio_path: Path, page_url: str) -> Song:
+    return Song.from_file(str(silence_audio_path), _silence_fallback(page_url))
+
+
+@pytest.fixture
+def short_silence_song(short_silence_audio_path: Path, page_url: str) -> Song:
+    return Song.from_file(str(short_silence_audio_path), _silence_fallback(page_url))
 
 
 @pytest.fixture

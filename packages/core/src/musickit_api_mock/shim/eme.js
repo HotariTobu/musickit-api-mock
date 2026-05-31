@@ -273,7 +273,11 @@
     var M3U8_REGEX = /\.m3u8(\?|#|$)/;
     var BLOB_REGEX = /^blob:/;
     var CACHE_TTL_MS = 30000;
+    // Fallback for manifests that carry no per-segment durations (e.g. a master
+    // playlist, or a live stream): the synthetic element reports an open-ended
+    // timeline so playback never hits a fabricated end boundary.
     var SYNTHETIC_DURATION_SEC = 3600;
+    var EXTINF_REGEX = /#EXTINF:\s*([0-9.]+)/g;
     var LOAD_PROGRESSION_EVENTS = ["loadstart", "durationchange", "loadedmetadata", "loadeddata", "canplay", "canplaythrough"];
     function monotonicNowMs() {
       return window.performance && typeof window.performance.now === "function" ? window.performance.now() : Date.now();
@@ -284,6 +288,25 @@
       }
     }
     var keyByUrl = Object.create(null);
+    // Duration resolution differs by media engine, so both stores below are
+    // load-bearing — neither alone covers every engine, and dropping either
+    // breaks the engines that depend on it.
+    //
+    // Some engines attach the manifest URL directly as the element src; there
+    // the duration keyed by that URL is read back for the element's whole
+    // lifetime. Other engines feed playback through MediaSource: the element
+    // src becomes an opaque blob URL with no readable body and no way to key a
+    // duration to it. Playback is sequential (fetch manifest, then attach its
+    // MediaSource), so those engines fall back to the most recently parsed
+    // manifest duration.
+    //
+    // TODO: this map is never pruned, so it grows once per distinct manifest
+    // URL over a page's lifetime. A blind time-based eviction is unsafe — the
+    // direct-src engines read an entry for the element's whole playback, which
+    // can outlive any fixed TTL; pruning must instead be tied to the track /
+    // element lifecycle (drop an entry once its URL is no longer an active src).
+    var durationByUrl = Object.create(null);
+    var lastManifestDuration = null;
     var pendingMediaByUrl = Object.create(null);
     function dispatchLoadProgression(mediaEl) {
       Promise.resolve().then(function () {
@@ -331,6 +354,20 @@
       }
       return null;
     }
+    function extractDuration(body) {
+      EXTINF_REGEX.lastIndex = 0;
+      var total = 0;
+      var found = false;
+      var m;
+      while ((m = EXTINF_REGEX.exec(body)) !== null) {
+        var v = parseFloat(m[1]);
+        if (isFinite(v)) {
+          total += v;
+          found = true;
+        }
+      }
+      return found ? total : null;
+    }
     var origFetch = window.fetch;
     if (typeof origFetch === "function") {
       window.fetch = function (input, init) {
@@ -343,6 +380,11 @@
         return p.then(function (response) {
           return response.clone().text().then(
             function (body) {
+              var dur = extractDuration(body);
+              if (dur != null) {
+                durationByUrl[url] = dur;
+                lastManifestDuration = dur;
+              }
               var key = extractKey(body);
               if (key) cacheKey(url, key);
               return response;
@@ -360,6 +402,11 @@
         if (typeof url === "string" && object && typeof object.text === "function") {
           object.text().then(
             function (body) {
+              var dur = extractDuration(body);
+              if (dur != null) {
+                durationByUrl[url] = dur;
+                lastManifestDuration = dur;
+              }
               var key = extractKey(body);
               if (key) {
                 cacheKey(url, key);
@@ -394,7 +441,7 @@
     function ensureState(mediaEl) {
       var s = STATE.get(mediaEl);
       if (!s) {
-        s = { playing: false, seeking: false, simCurrentTime: 0, lastTickMs: null, tickHandle: null };
+        s = { playing: false, seeking: false, ended: false, simCurrentTime: 0, lastTickMs: null, tickHandle: null };
         STATE.set(mediaEl, s);
       }
       return s;
@@ -461,9 +508,20 @@
     function startTick(mediaEl, s) {
       if (s.tickHandle !== null) return;
       s.tickHandle = setInterval(function () {
-        if (s.playing) {
+        if (!s.playing) return;
+        var d = durationFor(mediaEl);
+        var t = s.simCurrentTime + (monotonicNowMs() - (s.lastTickMs === null ? monotonicNowMs() : s.lastTickMs)) / 1000;
+        if (t >= d) {
+          s.simCurrentTime = d;
+          s.lastTickMs = null;
+          s.playing = false;
+          s.ended = true;
+          stopTick(s);
           try { mediaEl.dispatchEvent(new Event("timeupdate")); } catch (_) {}
+          try { mediaEl.dispatchEvent(new Event("ended")); } catch (_) {}
+          return;
         }
+        try { mediaEl.dispatchEvent(new Event("timeupdate")); } catch (_) {}
       }, 250);
     }
     function stopTick(s) {
@@ -471,11 +529,20 @@
       clearInterval(s.tickHandle);
       s.tickHandle = null;
     }
-    var fullRange = {
-      length: 1,
-      start: function (i) { return i === 0 ? 0 : NaN; },
-      end: function (i) { return i === 0 ? SYNTHETIC_DURATION_SEC : NaN; },
-    };
+    function durationFor(mediaEl) {
+      var url = srcByEl.get(mediaEl);
+      var d = url != null ? durationByUrl[url] : undefined;
+      if (typeof d === "number" && isFinite(d) && d > 0) return d;
+      if (typeof lastManifestDuration === "number" && lastManifestDuration > 0) return lastManifestDuration;
+      return SYNTHETIC_DURATION_SEC;
+    }
+    function makeRange(end) {
+      return {
+        length: 1,
+        start: function (i) { return i === 0 ? 0 : NaN; },
+        end: function (i) { return i === 0 ? end : NaN; },
+      };
+    }
     function overrideAccessor(name, syntheticGet, syntheticSet) {
       var orig = Object.getOwnPropertyDescriptor(proto, name);
       var origGet = orig && orig.get;
@@ -564,10 +631,11 @@
     overrideAccessor("readyState", function () { return 4; });
     overrideAccessor("networkState", function () { return 1; });
     overrideAccessor("seeking", function (el, s) { return !!s.seeking; });
-    overrideAccessor("duration", function () { return SYNTHETIC_DURATION_SEC; });
-    overrideAccessor("buffered", function () { return fullRange; });
-    overrideAccessor("seekable", function () { return fullRange; });
-    overrideAccessor("played", function () { return fullRange; });
+    overrideAccessor("ended", function (el, s) { return !!s.ended; });
+    overrideAccessor("duration", function (el) { return durationFor(el); });
+    overrideAccessor("buffered", function (el) { return makeRange(durationFor(el)); });
+    overrideAccessor("seekable", function (el) { return makeRange(durationFor(el)); });
+    overrideAccessor("played", function (el) { return makeRange(durationFor(el)); });
     overrideAccessor("currentSrc", function (el) {
       var stored = srcByEl.get(el);
       return typeof stored === "string" ? stored : "";
@@ -575,15 +643,18 @@
     overrideAccessor(
       "currentTime",
       function (el, s) {
+        var t = s.simCurrentTime;
         if (s.playing && s.lastTickMs !== null) {
-          return s.simCurrentTime + (monotonicNowMs() - s.lastTickMs) / 1000;
+          t += (monotonicNowMs() - s.lastTickMs) / 1000;
         }
-        return s.simCurrentTime;
+        var d = durationFor(el);
+        return t > d ? d : t;
       },
       function (el, s, v) {
         var t = Number(v);
         if (!isFinite(t)) return;
         s.simCurrentTime = t;
+        if (t < durationFor(el)) s.ended = false;
         if (s.playing) s.lastTickMs = monotonicNowMs();
         s.seeking = true;
         try { el.dispatchEvent(new Event("seeking")); } catch (_) {}
@@ -598,6 +669,7 @@
       var t = Number(args[0]);
       if (!isFinite(t)) return;
       s.simCurrentTime = t;
+      if (t < durationFor(el)) s.ended = false;
       if (s.playing) s.lastTickMs = monotonicNowMs();
       s.seeking = true;
       try { el.dispatchEvent(new Event("seeking")); } catch (_) {}
@@ -608,6 +680,11 @@
       });
     });
     overrideMethod("play", function (el, s) {
+      // Native HTMLMediaElement semantics: play() at the end rewinds to 0.
+      if (s.ended) {
+        s.simCurrentTime = 0;
+        s.ended = false;
+      }
       if (!s.playing) {
         s.playing = true;
         s.lastTickMs = monotonicNowMs();
@@ -676,9 +753,6 @@
   function installMusicKitPlaybackTimeBridge() {
     if (ns.__musicKitPlaybackTimeBridgeInstalled) return;
     ns.__musicKitPlaybackTimeBridgeInstalled = true;
-    function monotonicNowMs() {
-      return window.performance && typeof window.performance.now === "function" ? window.performance.now() : Date.now();
-    }
     function currentSyntheticMediaElement() {
       var media = ns.__currentSyntheticMediaElement;
       return media && media.isConnected !== false ? media : null;
@@ -686,24 +760,26 @@
     function patchInstance(mk) {
       if (!mk || mk.__musickitApiMockPlaybackTimePatched) return mk;
       mk.__musickitApiMockPlaybackTimePatched = true;
-      var seekBase = null;
-      var seekBaseMs = null;
       var origSeekToTime = mk.seekToTime;
-      var origChangeToMediaAtIndex = mk.changeToMediaAtIndex;
       var desc = Object.getOwnPropertyDescriptor(mk, "currentPlaybackTime");
       if (!desc && Object.getPrototypeOf(mk)) {
         desc = Object.getOwnPropertyDescriptor(Object.getPrototypeOf(mk), "currentPlaybackTime");
       }
       var origCurrentPlaybackTimeGet = desc && desc.get;
       try {
+        // MusicKit's native currentPlaybackTime does not track the synthetic
+        // media element, so read the element clock directly: it advances during
+        // playback, reflects seeks, and wraps to 0 when single-song repeat loops
+        // past the end boundary. Fall back to the native value only when no
+        // synthetic element is attached.
         Object.defineProperty(mk, "currentPlaybackTime", {
           configurable: true,
           enumerable: desc ? desc.enumerable : true,
           get: function () {
-            if (seekBase !== null && seekBaseMs !== null) {
-              var media = currentSyntheticMediaElement();
-              if (media && !media.paused) return seekBase + (monotonicNowMs() - seekBaseMs) / 1000;
-              return seekBase;
+            var media = currentSyntheticMediaElement();
+            if (media) {
+              var t = media.currentTime;
+              if (typeof t === "number" && isFinite(t)) return t;
             }
             return origCurrentPlaybackTimeGet ? origCurrentPlaybackTimeGet.call(this) : 0;
           },
@@ -713,21 +789,12 @@
         mk.seekToTime = function (time) {
           var t = Number(time);
           if (isFinite(t)) {
-            seekBase = t;
-            seekBaseMs = monotonicNowMs();
             try {
               var media = currentSyntheticMediaElement();
               if (media) media.currentTime = t;
             } catch (_) {}
           }
           return origSeekToTime.apply(this, arguments);
-        };
-      }
-      if (typeof origChangeToMediaAtIndex === "function") {
-        mk.changeToMediaAtIndex = function () {
-          seekBase = null;
-          seekBaseMs = null;
-          return origChangeToMediaAtIndex.apply(this, arguments);
         };
       }
       return mk;

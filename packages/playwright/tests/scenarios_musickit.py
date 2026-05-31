@@ -82,6 +82,15 @@ class _JumpResult(TypedDict, total=False):
     secondId: str
 
 
+class _LoopResult(TypedDict, total=False):
+    states: list[int]
+    wrapped: bool
+    endedSeen: bool
+    playingAfterEnded: bool
+    isPlaying: bool
+    repeatMode: int
+
+
 LOAD_AND_CONFIGURE = f"""async (devToken) => {{
     if (!window._fetchInstrumented) {{
         window._fetches = [];
@@ -563,3 +572,88 @@ def assert_jumped_to(result: _JumpResult, expected_id: str) -> None:
     assert result.get("secondId") is not None, result
     assert result["firstId"] != result["secondId"], result
     assert result["secondId"] == expected_id, result
+
+
+# Single-song repeat (repeatMode = 1): play a short song head-to-tail and
+# observe one loop iteration. The resolve condition captures the externally
+# observable loop signals: currentPlaybackTime rises then wraps back near 0
+# while playback continues, the player surfaces ended (state 5) at the end
+# boundary, and then re-enters playing (state 2). Resolves as soon as one full
+# loop is observed so the test stays fast.
+LOOP_SINGLE_SONG = """async (songId) => {
+    await window.__mk.setQueue({ songs: [songId] });
+    window.__mk.repeatMode = 1;
+    const states = [];
+    let maxTime = 0;
+    let wrapped = false;
+    let endedSeen = false;
+    let playingAfterEnded = false;
+    const promise = new Promise((resolve, reject) => {
+        let done = false;
+        let sampler = null;
+        const finish = () => {
+            if (done) return;
+            done = true;
+            if (sampler) clearInterval(sampler);
+            resolve({
+                states: states.slice(),
+                wrapped: wrapped,
+                endedSeen: endedSeen,
+                playingAfterEnded: playingAfterEnded,
+                isPlaying: window.__mk.isPlaying,
+                repeatMode: window.__mk.repeatMode,
+            });
+        };
+        const tryResolve = () => {
+            if (wrapped && endedSeen && playingAfterEnded) finish();
+        };
+        sampler = setInterval(() => {
+            const t = Number(window.__mk.currentPlaybackTime);
+            if (isFinite(t)) {
+                if (t > maxTime) maxTime = t;
+                if (maxTime > 1 && t < maxTime - 1) wrapped = true;
+            }
+            tryResolve();
+        }, 100);
+        window.__mk.addEventListener('playbackStateDidChange', (e) => {
+            states.push(e.state);
+            if (e.state === 5) endedSeen = true;
+            if (e.state === 2 && endedSeen) playingAfterEnded = true;
+            tryResolve();
+        });
+        window.__mk.addEventListener('mediaPlaybackError', (e) => {
+            if (sampler) clearInterval(sampler);
+            reject(new Error('mediaPlaybackError: ' + e.errorCode + ' states=' + JSON.stringify(states)));
+        });
+        setTimeout(() => {
+            if (sampler) clearInterval(sampler);
+            reject(new Error('loop not observed; states=' + JSON.stringify(states)
+                + ' wrapped=' + wrapped + ' endedSeen=' + endedSeen
+                + ' playingAfterEnded=' + playingAfterEnded
+                + ' fetches=' + JSON.stringify(window._fetches)));
+        }, 30000);
+    });
+    window.__mk.changeToMediaAtIndex(0).catch(() => {});
+    return await promise;
+}"""
+
+
+def assert_looped(result: _LoopResult) -> None:
+    """Assert single-song repeat looped at the end boundary.
+
+    Verifies the externally observable loop signals: repeat is enabled,
+    currentPlaybackTime wrapped back toward 0 while playing, the player
+    surfaced ended (state 5), playing (state 2) resumed after that ended, and
+    playback stayed active.
+    """
+    assert isinstance(result, dict), result
+    assert result.get("repeatMode") == 1, result
+    states = result.get("states")
+    assert isinstance(states, list), result
+    assert 5 in states, result
+    ended_at = states.index(5)
+    assert 2 in states[ended_at:], result
+    assert result.get("endedSeen") is True, result
+    assert result.get("playingAfterEnded") is True, result
+    assert result.get("wrapped") is True, result
+    assert result.get("isPlaying") is True, result
