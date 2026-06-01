@@ -1,6 +1,6 @@
 [project]
 name = "musickit-api-mock"
-version = "0.1.0"
+version = "0.1.1"
 description = "Apple Music API mock for MusicKit JS, as an in-process request interceptor."
 readme = "README.md"
 authors = [
