@@ -487,7 +487,7 @@ wheels = [
 
 [[package]]
 name = "musickit-api-mock"
-version = "0.1.0"
+version = "0.1.1"
 source = { editable = "packages/core" }
 dependencies = [
     { name = "av" },
@@ -502,7 +502,7 @@ requires-dist = [
 
 [[package]]
 name = "musickit-api-mock-playwright"
-version = "0.1.0"
+version = "0.1.1"
 source = { editable = "packages/playwright" }
 dependencies = [
     { name = "musickit-api-mock" },
