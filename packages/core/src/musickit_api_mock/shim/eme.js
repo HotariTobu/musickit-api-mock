@@ -300,6 +300,15 @@
     // MediaSource), so those engines fall back to the most recently parsed
     // manifest duration.
     //
+    // The global fallback assumes the most recently parsed manifest belongs to
+    // the element being resolved. That holds while one track plays at a time;
+    // with a multi-song queue, prefetching the next track's manifest can
+    // overwrite the global while the current MediaSource element is still
+    // playing, so it would resolve to the wrong duration. Single-track playback
+    // (including single-song repeat) is unaffected. A correct multi-song fix
+    // needs a per-element duration snapshot taken when its src is attached, or
+    // a manifest-to-element link the blob src does not currently carry.
+    //
     // TODO: this map is never pruned, so it grows once per distinct manifest
     // URL over a page's lifetime. A blind time-based eviction is unsafe — the
     // direct-src engines read an entry for the element's whole playback, which
