@@ -18,6 +18,7 @@ from __future__ import annotations
 import json
 from typing import TYPE_CHECKING, cast
 
+import pytest
 from musickit_api_mock import (
     Account,
     AccountResponse,
@@ -37,7 +38,9 @@ from musickit_api_mock import (
     StorefrontResponse,
     StorefrontResponseSuccess,
     WebPlaybackAsset,
+    WebPlaybackCatalogItemContext,
     WebPlaybackContext,
+    WebPlaybackLibraryItemContext,
     WebPlaybackResponse,
     WebPlaybackResponseSuccess,
     WebPlaybackSong,
@@ -227,7 +230,7 @@ def test_web_playback_callable_form_receives_context(mock: MusicKitApiMock) -> N
         "https://play.itunes.apple.com/WebObjects/MZPlay.woa/wa/webPlayback",
         body,
     )
-    assert captured == [WebPlaybackContext(salable_adam_id="abc")]
+    assert captured == [WebPlaybackCatalogItemContext(salable_adam_id="abc")]
 
 
 def test_web_playback_callable_form_receives_library_item_context(
@@ -253,13 +256,28 @@ def test_web_playback_callable_form_receives_library_item_context(
         body,
     )
     assert captured == [
-        WebPlaybackContext(
-            salable_adam_id=None,
+        WebPlaybackLibraryItemContext(
             subscription_adam_id="c1",
             universal_library_id="i.abc",
             purchase_adam_id="p1",
         )
     ]
+
+
+def test_web_playback_dict_form_rejects_library_item_without_subscription_adam_id(
+    mock: MusicKitApiMock,
+) -> None:
+    web_playback_dict: dict[str, WebPlaybackResponse] = {}
+    mock.endpoints.web_playback = web_playback_dict
+    body = json.dumps({"universalLibraryId": "i.abc"}).encode()
+    with pytest.raises(
+        ValueError, match=r"endpoints\.web_playback dict form has no key"
+    ):
+        _post(
+            mock,
+            "https://play.itunes.apple.com/WebObjects/MZPlay.woa/wa/webPlayback",
+            body,
+        )
 
 
 # --- _resolve_with_context: static form for continuous_stations ------------------

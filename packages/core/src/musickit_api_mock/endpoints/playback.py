@@ -48,7 +48,9 @@ from musickit_api_mock.endpoints.responses.play_assets_live_video import (
     PlayAssetsLiveVideoResponseSuccess,
 )
 from musickit_api_mock.endpoints.responses.web_playback import (
+    WebPlaybackCatalogItemContext,
     WebPlaybackContext,
+    WebPlaybackLibraryItemContext,
     WebPlaybackResponse,
     WebPlaybackResponseSuccess,
     WebPlaybackResponseUnsupportedError,
@@ -105,6 +107,17 @@ def _optional_str(body: dict[str, _JSONValue], key: str) -> str | None:
     return None if value is None else str(value)
 
 
+def _web_playback_context(body: dict[str, _JSONValue]) -> WebPlaybackContext:
+    salable_adam_id = _optional_str(body, "salableAdamId")
+    if salable_adam_id is not None:
+        return WebPlaybackCatalogItemContext(salable_adam_id=salable_adam_id)
+    return WebPlaybackLibraryItemContext(
+        subscription_adam_id=_optional_str(body, "subscriptionAdamId"),
+        universal_library_id=_optional_str(body, "universalLibraryId"),
+        purchase_adam_id=_optional_str(body, "purchaseAdamId"),
+    )
+
+
 def _web_playback_failure_body_code(resp: WebPlaybackResponse) -> int:
     code = _WEB_PLAYBACK_FAILURE_CODES.get(type(resp))
     if code is None:
@@ -114,14 +127,7 @@ def _web_playback_failure_body_code(resp: WebPlaybackResponse) -> int:
 
 def _handle_web_playback(mock: MusicKitApiMock, req: Request) -> Response:
     body = _decode_form_or_json(req.body)
-    resp = mock._endpoint_resolver.web_playback(
-        WebPlaybackContext(
-            salable_adam_id=_optional_str(body, "salableAdamId"),
-            subscription_adam_id=_optional_str(body, "subscriptionAdamId"),
-            universal_library_id=_optional_str(body, "universalLibraryId"),
-            purchase_adam_id=_optional_str(body, "purchaseAdamId"),
-        )
-    )
+    resp = mock._endpoint_resolver.web_playback(_web_playback_context(body))
     if isinstance(resp, WebPlaybackResponseSuccess):
         return _json_response(_web_playback_success_body(resp))
     if isinstance(resp, WebPlaybackResponseUnsupportedError):

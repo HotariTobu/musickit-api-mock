@@ -107,7 +107,9 @@ from musickit_api_mock.endpoints.responses.storefront import (
 )
 from musickit_api_mock.endpoints.responses.web_playback import (
     WebPlaybackAsset,
+    WebPlaybackCatalogItemContext,
     WebPlaybackContext,
+    WebPlaybackLibraryItemContext,
     WebPlaybackResponse,
     WebPlaybackResponseAuthorizationError,
     WebPlaybackResponseContentRestricted,
@@ -213,7 +215,9 @@ __all__ = [
     "StorefrontResponseSessionExpired",
     "StorefrontResponseSuccess",
     "WebPlaybackAsset",
+    "WebPlaybackCatalogItemContext",
     "WebPlaybackContext",
+    "WebPlaybackLibraryItemContext",
     "WebPlaybackResponse",
     "WebPlaybackResponseAuthorizationError",
     "WebPlaybackResponseContentRestricted",
