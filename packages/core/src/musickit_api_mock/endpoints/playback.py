@@ -100,6 +100,11 @@ def _decode_form_or_json(body: bytes | None) -> dict[str, _JSONValue]:
     return out
 
 
+def _optional_str(body: dict[str, _JSONValue], key: str) -> str | None:
+    value = body.get(key)
+    return None if value is None else str(value)
+
+
 def _web_playback_failure_body_code(resp: WebPlaybackResponse) -> int:
     code = _WEB_PLAYBACK_FAILURE_CODES.get(type(resp))
     if code is None:
@@ -109,9 +114,13 @@ def _web_playback_failure_body_code(resp: WebPlaybackResponse) -> int:
 
 def _handle_web_playback(mock: MusicKitApiMock, req: Request) -> Response:
     body = _decode_form_or_json(req.body)
-    salable_adam_id = str(body.get("salableAdamId", ""))
     resp = mock._endpoint_resolver.web_playback(
-        WebPlaybackContext(salable_adam_id=salable_adam_id)
+        WebPlaybackContext(
+            salable_adam_id=_optional_str(body, "salableAdamId"),
+            subscription_adam_id=_optional_str(body, "subscriptionAdamId"),
+            universal_library_id=_optional_str(body, "universalLibraryId"),
+            purchase_adam_id=_optional_str(body, "purchaseAdamId"),
+        )
     )
     if isinstance(resp, WebPlaybackResponseSuccess):
         return _json_response(_web_playback_success_body(resp))

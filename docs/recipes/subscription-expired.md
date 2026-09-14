@@ -17,7 +17,7 @@ mock.endpoints.web_playback = {
 }
 ```
 
-The web-playback setter is keyed by salable adam id, so only the listed song triggers the error. Other ids resolve through whatever else is configured (or raise if unset).
+The web-playback setter is keyed by catalog song adam id (`salableAdamId` for catalog items, `subscriptionAdamId` for library items), so only the listed song triggers the error. Other ids resolve through whatever else is configured (or raise if unset).
 
 ## At the license endpoint
 

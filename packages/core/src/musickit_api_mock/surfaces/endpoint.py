@@ -108,7 +108,8 @@ class EndpointResponses:
         license_live_radio: Override for the live-radio license acquisition
             endpoint, keyed by station id.
         web_playback: Override for the web-playback endpoint, keyed by
-            salable adam id.
+            catalog song adam id (the salable adam id of a catalog item, or
+            the subscription adam id a library item plays through).
         play_assets_catalog_song: Override for catalog-song play-assets,
             keyed by adam id.
         play_assets_live_audio: Override for live-audio play-assets, keyed
@@ -293,10 +294,13 @@ class _EndpointResolver:
 
     def web_playback(self, ctx: WebPlaybackContext) -> WebPlaybackResponse:
         """Resolve the ``web_playback`` setter for the given context."""
+        key = ctx.salable_adam_id
+        if key is None:
+            key = ctx.subscription_adam_id
         return _resolve_keyed(
             self._get_endpoints().web_playback,
             ctx,
-            ctx.salable_adam_id,
+            "" if key is None else key,
             "endpoints.web_playback",
         )
 

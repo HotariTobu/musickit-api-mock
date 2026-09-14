@@ -156,11 +156,25 @@ WebPlaybackResponse = (
 class WebPlaybackContext:
     """Context for the web-playback setter.
 
+    MusicKit sends ``salableAdamId`` for catalog items. For library items it
+    sends ``subscriptionAdamId`` (the catalog song id the library item plays
+    through) plus ``universalLibraryId`` / ``purchaseAdamId`` when known.
+
     Attributes:
-        salable_adam_id: Salable adam id the web-playback request is for.
+        salable_adam_id: Salable adam id of a catalog item, or ``None`` for a
+            library item request.
+        subscription_adam_id: Catalog adam id a library item plays through,
+            or ``None`` for a catalog item request.
+        universal_library_id: Library id of the library item when MusicKit
+            includes it.
+        purchase_adam_id: Purchased adam id of the library item when MusicKit
+            includes it.
     """
 
-    salable_adam_id: str
+    salable_adam_id: str | None
+    subscription_adam_id: str | None = None
+    universal_library_id: str | None = None
+    purchase_adam_id: str | None = None
 
 
 type WebPlaybackSetter = (
