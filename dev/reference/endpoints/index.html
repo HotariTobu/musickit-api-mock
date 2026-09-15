@@ -1031,7 +1031,51 @@
   <a href="#musickit_api_mock.WebPlaybackContext" class="md-nav__link">
     <span class="md-ellipsis">
       
-        <code class="doc-symbol doc-symbol-toc doc-symbol-class"></code>&nbsp;WebPlaybackContext
+        <code class="doc-symbol doc-symbol-toc doc-symbol-attribute"></code>&nbsp;WebPlaybackContext
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#musickit_api_mock.WebPlaybackCatalogItemContext" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-class"></code>&nbsp;WebPlaybackCatalogItemContext
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#musickit_api_mock.WebPlaybackLibraryItemContext" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-class"></code>&nbsp;WebPlaybackLibraryItemContext
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#musickit_api_mock.WebPlaybackSong" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-attribute"></code>&nbsp;WebPlaybackSong
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#musickit_api_mock.WebPlaybackCatalogLibrarySong" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-class"></code>&nbsp;WebPlaybackCatalogLibrarySong
       
     </span>
   </a>
@@ -2711,7 +2755,51 @@
   <a href="#musickit_api_mock.WebPlaybackContext" class="md-nav__link">
     <span class="md-ellipsis">
       
-        <code class="doc-symbol doc-symbol-toc doc-symbol-class"></code>&nbsp;WebPlaybackContext
+        <code class="doc-symbol doc-symbol-toc doc-symbol-attribute"></code>&nbsp;WebPlaybackContext
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#musickit_api_mock.WebPlaybackCatalogItemContext" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-class"></code>&nbsp;WebPlaybackCatalogItemContext
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#musickit_api_mock.WebPlaybackLibraryItemContext" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-class"></code>&nbsp;WebPlaybackLibraryItemContext
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#musickit_api_mock.WebPlaybackSong" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-attribute"></code>&nbsp;WebPlaybackSong
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#musickit_api_mock.WebPlaybackCatalogLibrarySong" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-class"></code>&nbsp;WebPlaybackCatalogLibrarySong
       
     </span>
   </a>
@@ -3880,8 +3968,11 @@ endpoint, keyed by station id.</p>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>Override for the web-playback endpoint, keyed by
-salable adam id.</p>
+                <p>Override for the web-playback endpoint, keyed by the
+id MusicKit plays: the salable adam id of a catalog item, or the
+universal library id of a library item. The mapping form raises
+for a library item whose request carries no universal library
+id.</p>
               </div>
             </td>
           </tr>
@@ -4944,27 +5035,49 @@ token body, matching Apple's no-renewal response.</p>
 </div><h2 id="web-playback">Web playback<a class="headerlink" href="#web-playback" title="Permanent link">&para;</a></h2>
 
 
-<div class="doc doc-object doc-class">
+<div class="doc doc-object doc-attribute">
 
 
 
 <h2 id="musickit_api_mock.WebPlaybackContext" class="doc doc-heading">
-<code class="doc-symbol doc-symbol-heading doc-symbol-class"></code>            <span class="doc doc-object-name doc-class-name">WebPlaybackContext</span>
+<code class="doc-symbol doc-symbol-heading doc-symbol-attribute"></code>            <span class="doc doc-object-name doc-attribute-name">WebPlaybackContext</span>
+
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-module-attribute"><code>module-attribute</code></small>
+  </span>
+
+<a href="#musickit_api_mock.WebPlaybackContext" class="headerlink" title="Permanent link">&para;</a></h2>
+<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="n">WebPlaybackContext</span> <span class="o">=</span> <span class="n">WebPlaybackCatalogItemContext</span> <span class="o">|</span> <span class="n">WebPlaybackLibraryItemContext</span>
+</span></code></pre></div>
+
+    <div class="doc doc-contents first">
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-class">
+
+
+
+<h2 id="musickit_api_mock.WebPlaybackCatalogItemContext" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-class"></code>            <span class="doc doc-object-name doc-class-name">WebPlaybackCatalogItemContext</span>
 
 
   <span class="doc doc-labels">
       <small class="doc doc-label doc-label-dataclass"><code>dataclass</code></small>
   </span>
 
-<a href="#musickit_api_mock.WebPlaybackContext" class="headerlink" title="Permanent link">&para;</a></h2>
-<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">WebPlaybackContext</span><span class="p">(</span><span class="n">salable_adam_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span>
+<a href="#musickit_api_mock.WebPlaybackCatalogItemContext" class="headerlink" title="Permanent link">&para;</a></h2>
+<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">WebPlaybackCatalogItemContext</span><span class="p">(</span><span class="n">salable_adam_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span>
 </span></code></pre></div>
 
     <div class="doc doc-contents first">
 
 
 
-        <p>Context for the web-playback setter.</p>
+        <p>Context for a web-playback request MusicKit makes for a catalog item.</p>
 
 
 <p><span class="doc-section-title">Attributes:</span></p>
@@ -4978,13 +5091,275 @@ token body, matching Apple's no-renewal response.</p>
       </thead>
       <tbody>
           <tr class="doc-section-item">
-            <td><code><span title="musickit_api_mock.WebPlaybackContext.salable_adam_id">salable_adam_id</span></code></td>
+            <td><code><span title="musickit_api_mock.WebPlaybackCatalogItemContext.salable_adam_id">salable_adam_id</span></code></td>
             <td>
                   <code><span title="str">str</span></code>
             </td>
             <td>
               <div class="doc-md-description">
                 <p>Salable adam id the web-playback request is for.</p>
+              </div>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+
+
+
+
+
+
+
+
+
+<div class="doc doc-children">
+
+
+
+
+
+
+
+
+
+
+
+
+  </div>
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-class">
+
+
+
+<h2 id="musickit_api_mock.WebPlaybackLibraryItemContext" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-class"></code>            <span class="doc doc-object-name doc-class-name">WebPlaybackLibraryItemContext</span>
+
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-dataclass"><code>dataclass</code></small>
+  </span>
+
+<a href="#musickit_api_mock.WebPlaybackLibraryItemContext" class="headerlink" title="Permanent link">&para;</a></h2>
+<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">WebPlaybackLibraryItemContext</span><span class="p">(</span><span class="n">subscription_adam_id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span> <span class="n">universal_library_id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span> <span class="n">purchase_adam_id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">)</span>
+</span></code></pre></div>
+
+    <div class="doc doc-contents first">
+
+
+
+        <p>Context for a web-playback request MusicKit makes for a library item.</p>
+<p>MusicKit omits each field from the request body when the library item
+has no value for it.</p>
+
+
+<p><span class="doc-section-title">Attributes:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td><code><span title="musickit_api_mock.WebPlaybackLibraryItemContext.subscription_adam_id">subscription_adam_id</span></code></td>
+            <td>
+                  <code><span title="str">str</span> | None</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Catalog song adam id the library item plays
+through.</p>
+              </div>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code><span title="musickit_api_mock.WebPlaybackLibraryItemContext.universal_library_id">universal_library_id</span></code></td>
+            <td>
+                  <code><span title="str">str</span> | None</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Library id of the item.</p>
+              </div>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code><span title="musickit_api_mock.WebPlaybackLibraryItemContext.purchase_adam_id">purchase_adam_id</span></code></td>
+            <td>
+                  <code><span title="str">str</span> | None</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Purchased adam id of the item.</p>
+              </div>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+
+
+
+
+
+
+
+
+
+<div class="doc doc-children">
+
+
+
+
+
+
+
+
+
+
+
+
+  </div>
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-attribute">
+
+
+
+<h2 id="musickit_api_mock.WebPlaybackSong" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-attribute"></code>            <span class="doc doc-object-name doc-attribute-name">WebPlaybackSong</span>
+
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-module-attribute"><code>module-attribute</code></small>
+  </span>
+
+<a href="#musickit_api_mock.WebPlaybackSong" class="headerlink" title="Permanent link">&para;</a></h2>
+<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="n">WebPlaybackSong</span> <span class="o">=</span> <span class="n">WebPlaybackCatalogSong</span> <span class="o">|</span> <span class="n">WebPlaybackCatalogLibrarySong</span>
+</span></code></pre></div>
+
+    <div class="doc doc-contents first">
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-class">
+
+
+
+<h2 id="musickit_api_mock.WebPlaybackCatalogLibrarySong" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-class"></code>            <span class="doc doc-object-name doc-class-name">WebPlaybackCatalogLibrarySong</span>
+
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-dataclass"><code>dataclass</code></small>
+  </span>
+
+<a href="#musickit_api_mock.WebPlaybackCatalogLibrarySong" class="headerlink" title="Permanent link">&para;</a></h2>
+<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">WebPlaybackCatalogLibrarySong</span><span class="p">(</span><span class="n">hls_key_cert_url</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">hls_key_server_url</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">widevine_cert_url</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">assets</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">WebPlaybackAsset</span><span class="p">],</span> <span class="n">song_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">hls_playlist_url</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span>
+</span></code></pre></div>
+
+    <div class="doc doc-contents first">
+
+
+
+        <p>Web-playback payload for a library song that plays through its catalog song.</p>
+<p>Carries the catalog song's DRM URLs and assets; the mock marks the
+payload as needing playback reporting, as Apple does for library items.</p>
+
+
+<p><span class="doc-section-title">Attributes:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td><code><span title="musickit_api_mock.WebPlaybackCatalogLibrarySong.hls_key_cert_url">hls_key_cert_url</span></code></td>
+            <td>
+                  <code><span title="str">str</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>FairPlay certificate endpoint for HLS playback.</p>
+              </div>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code><span title="musickit_api_mock.WebPlaybackCatalogLibrarySong.hls_key_server_url">hls_key_server_url</span></code></td>
+            <td>
+                  <code><span title="str">str</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>License-acquisition endpoint for HLS playback.</p>
+              </div>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code><span title="musickit_api_mock.WebPlaybackCatalogLibrarySong.widevine_cert_url">widevine_cert_url</span></code></td>
+            <td>
+                  <code><span title="str">str</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Widevine certificate endpoint.</p>
+              </div>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code><span title="musickit_api_mock.WebPlaybackCatalogLibrarySong.assets">assets</span></code></td>
+            <td>
+                  <code><span title="list">list</span>[<a class="autorefs autorefs-internal" title="            WebPlaybackAsset
+
+
+  
+      dataclass
+   (musickit_api_mock.endpoints.responses.web_playback.WebPlaybackAsset)" href="#musickit_api_mock.WebPlaybackAsset">WebPlaybackAsset</a>]</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Per-variant playback assets for the song.</p>
+              </div>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code><span title="musickit_api_mock.WebPlaybackCatalogLibrarySong.song_id">song_id</span></code></td>
+            <td>
+                  <code><span title="str">str</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Catalog song id the library song plays through.</p>
+              </div>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code><span title="musickit_api_mock.WebPlaybackCatalogLibrarySong.hls_playlist_url">hls_playlist_url</span></code></td>
+            <td>
+                  <code><span title="str">str</span> | None</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Optional HLS master-playlist URL when an HLS
+rendition is available alongside the asset variants.</p>
               </div>
             </td>
           </tr>
@@ -5040,7 +5415,7 @@ token body, matching Apple's no-renewal response.</p>
 
 
 
-        <p>Per-song web-playback payload (DRM URLs, asset list, optional HLS).</p>
+        <p>Web-playback payload for a catalog song (DRM URLs, asset list, optional HLS).</p>
 
 
 <p><span class="doc-section-title">Attributes:</span></p>
@@ -5302,7 +5677,7 @@ codec (e.g. <code>28:ctrp256</code>).</p>
   </span>
 
 <a href="#musickit_api_mock.WebPlaybackResponseSuccess" class="headerlink" title="Permanent link">&para;</a></h2>
-<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">WebPlaybackResponseSuccess</span><span class="p">(</span><span class="n">song_list</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">WebPlaybackCatalogSong</span><span class="p">])</span>
+<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">WebPlaybackResponseSuccess</span><span class="p">(</span><span class="n">song_list</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">WebPlaybackSong</span><span class="p">])</span>
 </span></code></pre></div>
 
     <div class="doc doc-contents first">
@@ -5325,12 +5700,12 @@ codec (e.g. <code>28:ctrp256</code>).</p>
           <tr class="doc-section-item">
             <td><code><span title="musickit_api_mock.WebPlaybackResponseSuccess.song_list">song_list</span></code></td>
             <td>
-                  <code><span title="list">list</span>[<a class="autorefs autorefs-internal" title="            WebPlaybackCatalogSong
+                  <code><span title="list">list</span>[<a class="autorefs autorefs-internal" title="            WebPlaybackSong
 
 
   
-      dataclass
-   (musickit_api_mock.endpoints.responses.web_playback.WebPlaybackCatalogSong)" href="#musickit_api_mock.WebPlaybackCatalogSong">WebPlaybackCatalogSong</a>]</code>
+      module-attribute
+   (musickit_api_mock.endpoints.responses.web_playback.WebPlaybackSong)" href="#musickit_api_mock.WebPlaybackSong">WebPlaybackSong</a>]</code>
             </td>
             <td>
               <div class="doc-md-description">

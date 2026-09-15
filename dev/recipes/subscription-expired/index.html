@@ -1234,7 +1234,7 @@
 </span><span id="__span-0-9"><a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>    <span class="s2">&quot;1000000001&quot;</span><span class="p">:</span> <span class="n">WebPlaybackResponseSubscriptionError</span><span class="p">(),</span>
 </span><span id="__span-0-10"><a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a><span class="p">}</span>
 </span></code></pre></div>
-<p>The web-playback setter is keyed by salable adam id, so only the listed song triggers the error. Other ids resolve through whatever else is configured (or raise if unset).</p>
+<p>The web-playback setter is keyed by the id MusicKit plays: the catalog song id (<code>salableAdamId</code>) for a catalog item, or the library id such as <code>i.abc123</code> (<code>universalLibraryId</code>) for a library item. Only the listed id triggers the error. Other ids resolve through whatever else is configured (or raise if unset).</p>
 <h2 id="at-the-license-endpoint">At the license endpoint<a class="headerlink" href="#at-the-license-endpoint" title="Permanent link">&para;</a></h2>
 <div class="language-python highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">musickit_api_mock</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
 </span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>    <span class="n">LicenseResponseSubscriptionError</span><span class="p">,</span>
