@@ -182,10 +182,10 @@ def test_web_playback_dict_form_dispatches_on_salable_adam_id(
     assert parsed["songList"][0]["songId"] == "s1"
 
 
-def test_web_playback_dict_form_dispatches_on_subscription_adam_id(
+def test_web_playback_dict_form_dispatches_on_universal_library_id(
     mock: MusicKitApiMock,
 ) -> None:
-    """Library-item bodies (``subscriptionAdamId``) key the dict form by that id."""
+    """Library-item bodies key the dict form by ``universalLibraryId``."""
     success_song = WebPlaybackCatalogSong(
         song_id="s1",
         hls_key_cert_url="https://s.mzstatic.com/skdtool_2021_certbundle.bin",
@@ -199,7 +199,7 @@ def test_web_playback_dict_form_dispatches_on_subscription_adam_id(
         ],
     )
     web_playback_dict: dict[str, WebPlaybackResponse] = {
-        "s1": WebPlaybackResponseSuccess(song_list=[success_song]),
+        "i.abc": WebPlaybackResponseSuccess(song_list=[success_song]),
     }
     mock.endpoints.web_playback = web_playback_dict
     body = json.dumps(
@@ -264,12 +264,12 @@ def test_web_playback_callable_form_receives_library_item_context(
     ]
 
 
-def test_web_playback_dict_form_rejects_library_item_without_subscription_adam_id(
+def test_web_playback_dict_form_rejects_library_item_without_universal_library_id(
     mock: MusicKitApiMock,
 ) -> None:
     web_playback_dict: dict[str, WebPlaybackResponse] = {}
     mock.endpoints.web_playback = web_playback_dict
-    body = json.dumps({"universalLibraryId": "i.abc"}).encode()
+    body = json.dumps({"subscriptionAdamId": "s1"}).encode()
     with pytest.raises(
         ValueError, match=r"endpoints\.web_playback dict form has no key"
     ):

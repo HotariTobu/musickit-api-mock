@@ -84,9 +84,11 @@ _LicenseResponseBody = TypedDict(
 
 
 class _WebPlaybackSongEntry(TypedDict, total=False):
-    songId: str
+    songId: str | int
     assets: list[dict[str, _JSONValue]]
     keyCert: str
+    needsPlaybackReporting: bool
+    artworkURL: str
 
 
 class _WebPlaybackResponseBody(TypedDict, total=False):

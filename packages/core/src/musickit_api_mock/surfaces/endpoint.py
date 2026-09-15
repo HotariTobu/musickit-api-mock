@@ -108,11 +108,10 @@ class EndpointResponses:
             endpoint, keyed by adam id.
         license_live_radio: Override for the live-radio license acquisition
             endpoint, keyed by station id.
-        web_playback: Override for the web-playback endpoint, keyed by
-            catalog song adam id (the salable adam id of a catalog item, or
-            the subscription adam id a library item plays through). The dict
-            form raises for a library item whose request carries no
-            subscription adam id.
+        web_playback: Override for the web-playback endpoint, keyed by the
+            id MusicKit plays: the salable adam id of a catalog item, or the
+            universal library id of a library item. The dict form raises for
+            a library item whose request carries no universal library id.
         play_assets_catalog_song: Override for catalog-song play-assets,
             keyed by adam id.
         play_assets_live_audio: Override for live-audio play-assets, keyed
@@ -302,7 +301,7 @@ class _EndpointResolver:
         key = (
             ctx.salable_adam_id
             if isinstance(ctx, WebPlaybackCatalogItemContext)
-            else ctx.subscription_adam_id
+            else ctx.universal_library_id
         )
         return _resolve_keyed(
             self._get_endpoints().web_playback,

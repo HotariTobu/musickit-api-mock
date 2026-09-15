@@ -43,7 +43,12 @@ Response variants you assign to `mock.endpoints.<field>`. See each field's type 
 ::: musickit_api_mock.WebPlaybackContext
 ::: musickit_api_mock.WebPlaybackCatalogItemContext
 ::: musickit_api_mock.WebPlaybackLibraryItemContext
+::: musickit_api_mock.WebPlaybackSong
 ::: musickit_api_mock.WebPlaybackCatalogSong
+::: musickit_api_mock.WebPlaybackCatalogLibrarySong
+::: musickit_api_mock.WebPlaybackUploadedLibrarySong
+::: musickit_api_mock.WebPlaybackUploadedLibraryAsset
+::: musickit_api_mock.WebPlaybackUploadedLibraryAssetMetadata
 ::: musickit_api_mock.WebPlaybackAsset
 ::: musickit_api_mock.WebPlaybackResponse
 ::: musickit_api_mock.WebPlaybackResponseSuccess

@@ -11,6 +11,7 @@ Task-oriented snippets — pick the goal, read the snippet. For background on th
 | Force a DRM (FairPlay / Widevine / PlayReady) failure | [DRM license failure](drm-license-failure.md) |
 | Serve different storefronts across tests reusing one mock | [Multiple storefronts](multi-storefront.md) |
 | Generate catalog resources on the fly instead of enumerating ids | [Callable resolvers](callable-resolvers.md) |
+| Play a song the user uploaded to their library (no catalog counterpart) | [Uploaded library song](uploaded-library-song.md) |
 | Cover popups and pages opened later in one binding | [Bind to a browser context](bind-to-context.md) |
 | Vary the authorize result between tests without re-creating the page | [Swap authorize between tests](swap-authorize-between-tests.md) |
 

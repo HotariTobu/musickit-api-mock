@@ -108,6 +108,7 @@ from musickit_api_mock.endpoints.responses.storefront import (
 from musickit_api_mock.endpoints.responses.web_playback import (
     WebPlaybackAsset,
     WebPlaybackCatalogItemContext,
+    WebPlaybackCatalogLibrarySong,
     WebPlaybackCatalogSong,
     WebPlaybackContext,
     WebPlaybackLibraryItemContext,
@@ -127,6 +128,10 @@ from musickit_api_mock.endpoints.responses.web_playback import (
     WebPlaybackResponseTokenExpired,
     WebPlaybackResponseUnsupportedError,
     WebPlaybackResponseWidevineCdmExpired,
+    WebPlaybackSong,
+    WebPlaybackUploadedLibraryAsset,
+    WebPlaybackUploadedLibraryAssetMetadata,
+    WebPlaybackUploadedLibrarySong,
 )
 from musickit_api_mock.endpoints.responses.widevine_cert import (
     WidevineCertResponse,
@@ -216,6 +221,7 @@ __all__ = [
     "StorefrontResponseSuccess",
     "WebPlaybackAsset",
     "WebPlaybackCatalogItemContext",
+    "WebPlaybackCatalogLibrarySong",
     "WebPlaybackCatalogSong",
     "WebPlaybackContext",
     "WebPlaybackLibraryItemContext",
@@ -235,6 +241,10 @@ __all__ = [
     "WebPlaybackResponseTokenExpired",
     "WebPlaybackResponseUnsupportedError",
     "WebPlaybackResponseWidevineCdmExpired",
+    "WebPlaybackSong",
+    "WebPlaybackUploadedLibraryAsset",
+    "WebPlaybackUploadedLibraryAssetMetadata",
+    "WebPlaybackUploadedLibrarySong",
     "WidevineCertResponse",
     "WidevineCertResponseFailure",
     "WidevineCertResponseSuccess",

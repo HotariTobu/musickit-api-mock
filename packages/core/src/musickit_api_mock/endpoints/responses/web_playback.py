@@ -32,7 +32,7 @@ class WebPlaybackAsset:
 
 @dataclass
 class WebPlaybackCatalogSong:
-    """Per-song web-playback payload (DRM URLs, asset list, optional HLS).
+    """Web-playback payload for a catalog song (DRM URLs, asset list, optional HLS).
 
     Attributes:
         hls_key_cert_url: FairPlay certificate endpoint for HLS playback.
@@ -53,6 +53,104 @@ class WebPlaybackCatalogSong:
 
 
 @dataclass
+class WebPlaybackCatalogLibrarySong:
+    """Web-playback payload for a library song that plays through its catalog song.
+
+    Carries the catalog song's DRM URLs and assets; the mock marks the
+    payload as needing playback reporting, as Apple does for library items.
+
+    Attributes:
+        hls_key_cert_url: FairPlay certificate endpoint for HLS playback.
+        hls_key_server_url: License-acquisition endpoint for HLS playback.
+        widevine_cert_url: Widevine certificate endpoint.
+        assets: Per-variant playback assets for the song.
+        song_id: Catalog song id the library song plays through.
+        hls_playlist_url: Optional HLS master-playlist URL when an HLS
+            rendition is available alongside the asset variants.
+    """
+
+    hls_key_cert_url: str
+    hls_key_server_url: str
+    widevine_cert_url: str
+    assets: list[WebPlaybackAsset]
+    song_id: str
+    hls_playlist_url: str | None = None
+
+
+@dataclass
+class WebPlaybackUploadedLibraryAssetMetadata:
+    """Tag metadata Apple attaches to an uploaded library song's asset.
+
+    MusicKit copies these onto the playing media item.
+
+    Attributes:
+        item_name: Song title.
+        artist_name: Primary artist name.
+        playlist_name: Album name.
+        duration: Duration in milliseconds.
+        kind: Media kind (``song``).
+        track_number: Track number within the album.
+        disc_number: Disc number within the album.
+        genre: Genre name.
+        composer_name: Composer name.
+        explicit: ``1`` for explicit content, ``0`` otherwise.
+        release_date: ISO-8601 release date.
+        cloud_id: Cloud library id of the upload.
+        xid: Vendor-qualified ISRC (``<vendor>:isrc:<code>``).
+    """
+
+    item_name: str
+    artist_name: str
+    playlist_name: str
+    duration: int
+    kind: str
+    track_number: int | None = None
+    disc_number: int | None = None
+    genre: str | None = None
+    composer_name: str | None = None
+    explicit: int | None = None
+    release_date: str | None = None
+    cloud_id: int | None = None
+    xid: str | None = None
+
+
+@dataclass
+class WebPlaybackUploadedLibraryAsset:
+    """The single raw-file asset of an uploaded library song.
+
+    Attributes:
+        url: URL of the audio file.
+        metadata: Tag metadata for the file.
+    """
+
+    url: str
+    metadata: WebPlaybackUploadedLibraryAssetMetadata
+
+
+@dataclass
+class WebPlaybackUploadedLibrarySong:
+    """Web-playback payload for an uploaded library song (raw file, no DRM).
+
+    The mock emits ``songId: -1`` and marks the payload as not needing
+    playback reporting, as Apple does for uploads.
+
+    Attributes:
+        asset: The song's raw-file asset.
+        artwork_url: Artwork URL for the song, when it has artwork.
+    """
+
+    asset: WebPlaybackUploadedLibraryAsset
+    artwork_url: str | None = None
+
+
+WebPlaybackSong = (
+    WebPlaybackCatalogSong
+    | WebPlaybackCatalogLibrarySong
+    | WebPlaybackUploadedLibrarySong
+)
+
+
+@dataclass
 class WebPlaybackResponseSuccess:
     """200 response carrying one or more song payloads.
 
@@ -60,7 +158,7 @@ class WebPlaybackResponseSuccess:
         song_list: Per-song web-playback payloads returned to the caller.
     """
 
-    song_list: list[WebPlaybackCatalogSong]
+    song_list: list[WebPlaybackSong]
 
 
 @dataclass
