@@ -75,7 +75,7 @@ class CatalogSong:
         is_mastered_for_itunes: Apple's "Mastered for iTunes" badge.
         is_vocal_attenuation_allowed: Whether vocal attenuation (Sing) is
             allowed.
-        url: CatalogSong landing-page URL on Apple Music.
+        url: Song landing-page URL on Apple Music.
         hls_layout: fMP4 segment layout for the HLS manifest.
         hls_segment: Raw bytes of the fMP4 segment served for HLS playback.
         preview_audio: Raw bytes the mock serves as the preview asset.

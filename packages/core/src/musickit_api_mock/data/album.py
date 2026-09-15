@@ -24,7 +24,7 @@ class CatalogAlbum:
         is_single: Whether the release is a single.
         is_prerelease: Whether the release is a pre-release.
         audio_traits: Audio capability tags (lossless, dolby-atmos, etc.).
-        url: CatalogAlbum landing-page URL on Apple Music.
+        url: Album landing-page URL on Apple Music.
         release_date: ISO-8601 release date.
         copyright: Copyright line.
         record_label: Display name of the record label.

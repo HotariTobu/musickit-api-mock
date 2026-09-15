@@ -542,7 +542,7 @@ def test_locale_callable_resolver_receives_request_locale() -> None:
         )
         return CatalogAlbum(
             name=name,
-            artist_name="CatalogArtist",
+            artist_name="Artist",
             artwork=Artwork(url="x", width=1, height=1),
             genre_names=[],
             track_count=0,

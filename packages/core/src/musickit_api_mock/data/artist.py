@@ -14,7 +14,7 @@ class CatalogArtist:
     Attributes:
         name: Display name of the artist.
         genre_names: Display names of the artist's genres.
-        url: CatalogArtist landing-page URL on Apple Music.
+        url: Artist landing-page URL on Apple Music.
         artwork: Hero artwork for the artist.
         album_ids: Catalog album ids forming the artist's discography. The
             mock resolves these into full album resources at response time.
