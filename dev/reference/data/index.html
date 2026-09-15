@@ -758,19 +758,19 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#musickit_api_mock.Song" class="md-nav__link">
+  <a href="#musickit_api_mock.CatalogSong" class="md-nav__link">
     <span class="md-ellipsis">
       
-        <code class="doc-symbol doc-symbol-toc doc-symbol-class"></code>&nbsp;Song
+        <code class="doc-symbol doc-symbol-toc doc-symbol-class"></code>&nbsp;CatalogSong
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label=" Song">
+    <nav class="md-nav" aria-label=" CatalogSong">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#musickit_api_mock.Song.from_file" class="md-nav__link">
+  <a href="#musickit_api_mock.CatalogSong.from_file" class="md-nav__link">
     <span class="md-ellipsis">
       
         <code class="doc-symbol doc-symbol-toc doc-symbol-method"></code>&nbsp;from_file
@@ -786,10 +786,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#musickit_api_mock.Album" class="md-nav__link">
+  <a href="#musickit_api_mock.CatalogAlbum" class="md-nav__link">
     <span class="md-ellipsis">
       
-        <code class="doc-symbol doc-symbol-toc doc-symbol-class"></code>&nbsp;Album
+        <code class="doc-symbol doc-symbol-toc doc-symbol-class"></code>&nbsp;CatalogAlbum
       
     </span>
   </a>
@@ -797,10 +797,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#musickit_api_mock.Artist" class="md-nav__link">
+  <a href="#musickit_api_mock.CatalogArtist" class="md-nav__link">
     <span class="md-ellipsis">
       
-        <code class="doc-symbol doc-symbol-toc doc-symbol-class"></code>&nbsp;Artist
+        <code class="doc-symbol doc-symbol-toc doc-symbol-class"></code>&nbsp;CatalogArtist
       
     </span>
   </a>
@@ -1559,19 +1559,19 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#musickit_api_mock.Song" class="md-nav__link">
+  <a href="#musickit_api_mock.CatalogSong" class="md-nav__link">
     <span class="md-ellipsis">
       
-        <code class="doc-symbol doc-symbol-toc doc-symbol-class"></code>&nbsp;Song
+        <code class="doc-symbol doc-symbol-toc doc-symbol-class"></code>&nbsp;CatalogSong
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label=" Song">
+    <nav class="md-nav" aria-label=" CatalogSong">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#musickit_api_mock.Song.from_file" class="md-nav__link">
+  <a href="#musickit_api_mock.CatalogSong.from_file" class="md-nav__link">
     <span class="md-ellipsis">
       
         <code class="doc-symbol doc-symbol-toc doc-symbol-method"></code>&nbsp;from_file
@@ -1587,10 +1587,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#musickit_api_mock.Album" class="md-nav__link">
+  <a href="#musickit_api_mock.CatalogAlbum" class="md-nav__link">
     <span class="md-ellipsis">
       
-        <code class="doc-symbol doc-symbol-toc doc-symbol-class"></code>&nbsp;Album
+        <code class="doc-symbol doc-symbol-toc doc-symbol-class"></code>&nbsp;CatalogAlbum
       
     </span>
   </a>
@@ -1598,10 +1598,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#musickit_api_mock.Artist" class="md-nav__link">
+  <a href="#musickit_api_mock.CatalogArtist" class="md-nav__link">
     <span class="md-ellipsis">
       
-        <code class="doc-symbol doc-symbol-toc doc-symbol-class"></code>&nbsp;Artist
+        <code class="doc-symbol doc-symbol-toc doc-symbol-class"></code>&nbsp;CatalogArtist
       
     </span>
   </a>
@@ -2192,16 +2192,16 @@ reading an unset source raises <code>ValueError</code>.</p>
 
 
 
-<h2 id="musickit_api_mock.Song" class="doc doc-heading">
-<code class="doc-symbol doc-symbol-heading doc-symbol-class"></code>            <span class="doc doc-object-name doc-class-name">Song</span>
+<h2 id="musickit_api_mock.CatalogSong" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-class"></code>            <span class="doc doc-object-name doc-class-name">CatalogSong</span>
 
 
   <span class="doc doc-labels">
       <small class="doc doc-label doc-label-dataclass"><code>dataclass</code></small>
   </span>
 
-<a href="#musickit_api_mock.Song" class="headerlink" title="Permanent link">&para;</a></h2>
-<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">Song</span><span class="p">(</span><span class="n">title</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">artist</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">album</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">duration_ms</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">artwork</span><span class="p">:</span> <span class="n">Artwork</span><span class="p">,</span> <span class="n">genres</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">has_lyrics</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span> <span class="n">audio_locale</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">audio_traits</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">has_time_synced_lyrics</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span> <span class="n">is_apple_digital_master</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span> <span class="n">is_mastered_for_itunes</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span> <span class="n">is_vocal_attenuation_allowed</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span> <span class="n">url</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">hls_layout</span><span class="p">:</span> <span class="n">HlsLayout</span><span class="p">,</span> <span class="n">hls_segment</span><span class="p">:</span> <span class="nb">bytes</span><span class="p">,</span> <span class="n">preview_audio</span><span class="p">:</span> <span class="nb">bytes</span><span class="p">,</span> <span class="n">bitrate</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">sample_rate</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">file_size</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">release_date</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">track_number</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">disc_number</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">composer</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">isrc</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">content_rating</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">play_assets</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">StationContextPlayAsset</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">album_ids</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">artist_ids</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">composer_ids</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">genre_ids</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">music_video_ids</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">station_id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">library_song_id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span>
+<a href="#musickit_api_mock.CatalogSong" class="headerlink" title="Permanent link">&para;</a></h2>
+<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">CatalogSong</span><span class="p">(</span><span class="n">title</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">artist</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">album</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">duration_ms</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">artwork</span><span class="p">:</span> <span class="n">Artwork</span><span class="p">,</span> <span class="n">genres</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">has_lyrics</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span> <span class="n">audio_locale</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">audio_traits</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">has_time_synced_lyrics</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span> <span class="n">is_apple_digital_master</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span> <span class="n">is_mastered_for_itunes</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span> <span class="n">is_vocal_attenuation_allowed</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span> <span class="n">url</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">hls_layout</span><span class="p">:</span> <span class="n">HlsLayout</span><span class="p">,</span> <span class="n">hls_segment</span><span class="p">:</span> <span class="nb">bytes</span><span class="p">,</span> <span class="n">preview_audio</span><span class="p">:</span> <span class="nb">bytes</span><span class="p">,</span> <span class="n">bitrate</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">sample_rate</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">file_size</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">release_date</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">track_number</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">disc_number</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">composer</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">isrc</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">content_rating</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">play_assets</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">StationContextPlayAsset</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">album_ids</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">artist_ids</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">composer_ids</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">genre_ids</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">music_video_ids</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">station_id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">library_song_id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span>
 </span></code></pre></div>
 
     <div class="doc doc-contents first">
@@ -2226,7 +2226,7 @@ disk.</p>
       </thead>
       <tbody>
           <tr class="doc-section-item">
-            <td><code><span title="musickit_api_mock.Song.title">title</span></code></td>
+            <td><code><span title="musickit_api_mock.CatalogSong.title">title</span></code></td>
             <td>
                   <code><span title="str">str</span></code>
             </td>
@@ -2237,7 +2237,7 @@ disk.</p>
             </td>
           </tr>
           <tr class="doc-section-item">
-            <td><code><span title="musickit_api_mock.Song.artist">artist</span></code></td>
+            <td><code><span title="musickit_api_mock.CatalogSong.artist">artist</span></code></td>
             <td>
                   <code><span title="str">str</span></code>
             </td>
@@ -2248,7 +2248,7 @@ disk.</p>
             </td>
           </tr>
           <tr class="doc-section-item">
-            <td><code><span title="musickit_api_mock.Song.album">album</span></code></td>
+            <td><code><span title="musickit_api_mock.CatalogSong.album">album</span></code></td>
             <td>
                   <code><span title="str">str</span></code>
             </td>
@@ -2259,7 +2259,7 @@ disk.</p>
             </td>
           </tr>
           <tr class="doc-section-item">
-            <td><code><span title="musickit_api_mock.Song.duration_ms">duration_ms</span></code></td>
+            <td><code><span title="musickit_api_mock.CatalogSong.duration_ms">duration_ms</span></code></td>
             <td>
                   <code><span title="int">int</span></code>
             </td>
@@ -2270,7 +2270,7 @@ disk.</p>
             </td>
           </tr>
           <tr class="doc-section-item">
-            <td><code><span title="musickit_api_mock.Song.artwork">artwork</span></code></td>
+            <td><code><span title="musickit_api_mock.CatalogSong.artwork">artwork</span></code></td>
             <td>
                   <code><a class="autorefs autorefs-internal" title="            Artwork
 
@@ -2286,7 +2286,7 @@ disk.</p>
             </td>
           </tr>
           <tr class="doc-section-item">
-            <td><code><span title="musickit_api_mock.Song.genres">genres</span></code></td>
+            <td><code><span title="musickit_api_mock.CatalogSong.genres">genres</span></code></td>
             <td>
                   <code><span title="list">list</span>[<span title="str">str</span>]</code>
             </td>
@@ -2297,7 +2297,7 @@ disk.</p>
             </td>
           </tr>
           <tr class="doc-section-item">
-            <td><code><span title="musickit_api_mock.Song.has_lyrics">has_lyrics</span></code></td>
+            <td><code><span title="musickit_api_mock.CatalogSong.has_lyrics">has_lyrics</span></code></td>
             <td>
                   <code><span title="bool">bool</span></code>
             </td>
@@ -2308,7 +2308,7 @@ disk.</p>
             </td>
           </tr>
           <tr class="doc-section-item">
-            <td><code><span title="musickit_api_mock.Song.audio_locale">audio_locale</span></code></td>
+            <td><code><span title="musickit_api_mock.CatalogSong.audio_locale">audio_locale</span></code></td>
             <td>
                   <code><span title="str">str</span></code>
             </td>
@@ -2319,7 +2319,7 @@ disk.</p>
             </td>
           </tr>
           <tr class="doc-section-item">
-            <td><code><span title="musickit_api_mock.Song.audio_traits">audio_traits</span></code></td>
+            <td><code><span title="musickit_api_mock.CatalogSong.audio_traits">audio_traits</span></code></td>
             <td>
                   <code><span title="list">list</span>[<span title="str">str</span>]</code>
             </td>
@@ -2330,7 +2330,7 @@ disk.</p>
             </td>
           </tr>
           <tr class="doc-section-item">
-            <td><code><span title="musickit_api_mock.Song.has_time_synced_lyrics">has_time_synced_lyrics</span></code></td>
+            <td><code><span title="musickit_api_mock.CatalogSong.has_time_synced_lyrics">has_time_synced_lyrics</span></code></td>
             <td>
                   <code><span title="bool">bool</span></code>
             </td>
@@ -2341,7 +2341,7 @@ disk.</p>
             </td>
           </tr>
           <tr class="doc-section-item">
-            <td><code><span title="musickit_api_mock.Song.is_apple_digital_master">is_apple_digital_master</span></code></td>
+            <td><code><span title="musickit_api_mock.CatalogSong.is_apple_digital_master">is_apple_digital_master</span></code></td>
             <td>
                   <code><span title="bool">bool</span></code>
             </td>
@@ -2352,7 +2352,7 @@ disk.</p>
             </td>
           </tr>
           <tr class="doc-section-item">
-            <td><code><span title="musickit_api_mock.Song.is_mastered_for_itunes">is_mastered_for_itunes</span></code></td>
+            <td><code><span title="musickit_api_mock.CatalogSong.is_mastered_for_itunes">is_mastered_for_itunes</span></code></td>
             <td>
                   <code><span title="bool">bool</span></code>
             </td>
@@ -2363,7 +2363,7 @@ disk.</p>
             </td>
           </tr>
           <tr class="doc-section-item">
-            <td><code><span title="musickit_api_mock.Song.is_vocal_attenuation_allowed">is_vocal_attenuation_allowed</span></code></td>
+            <td><code><span title="musickit_api_mock.CatalogSong.is_vocal_attenuation_allowed">is_vocal_attenuation_allowed</span></code></td>
             <td>
                   <code><span title="bool">bool</span></code>
             </td>
@@ -2375,7 +2375,7 @@ allowed.</p>
             </td>
           </tr>
           <tr class="doc-section-item">
-            <td><code><span title="musickit_api_mock.Song.url">url</span></code></td>
+            <td><code><span title="musickit_api_mock.CatalogSong.url">url</span></code></td>
             <td>
                   <code><span title="str">str</span></code>
             </td>
@@ -2386,7 +2386,7 @@ allowed.</p>
             </td>
           </tr>
           <tr class="doc-section-item">
-            <td><code><span title="musickit_api_mock.Song.hls_layout">hls_layout</span></code></td>
+            <td><code><span title="musickit_api_mock.CatalogSong.hls_layout">hls_layout</span></code></td>
             <td>
                   <code><a class="autorefs autorefs-internal" title="            HlsLayout
 
@@ -2402,7 +2402,7 @@ allowed.</p>
             </td>
           </tr>
           <tr class="doc-section-item">
-            <td><code><span title="musickit_api_mock.Song.hls_segment">hls_segment</span></code></td>
+            <td><code><span title="musickit_api_mock.CatalogSong.hls_segment">hls_segment</span></code></td>
             <td>
                   <code><span title="bytes">bytes</span></code>
             </td>
@@ -2413,7 +2413,7 @@ allowed.</p>
             </td>
           </tr>
           <tr class="doc-section-item">
-            <td><code><span title="musickit_api_mock.Song.preview_audio">preview_audio</span></code></td>
+            <td><code><span title="musickit_api_mock.CatalogSong.preview_audio">preview_audio</span></code></td>
             <td>
                   <code><span title="bytes">bytes</span></code>
             </td>
@@ -2424,7 +2424,7 @@ allowed.</p>
             </td>
           </tr>
           <tr class="doc-section-item">
-            <td><code><span title="musickit_api_mock.Song.bitrate">bitrate</span></code></td>
+            <td><code><span title="musickit_api_mock.CatalogSong.bitrate">bitrate</span></code></td>
             <td>
                   <code><span title="int">int</span></code>
             </td>
@@ -2435,7 +2435,7 @@ allowed.</p>
             </td>
           </tr>
           <tr class="doc-section-item">
-            <td><code><span title="musickit_api_mock.Song.sample_rate">sample_rate</span></code></td>
+            <td><code><span title="musickit_api_mock.CatalogSong.sample_rate">sample_rate</span></code></td>
             <td>
                   <code><span title="int">int</span></code>
             </td>
@@ -2446,7 +2446,7 @@ allowed.</p>
             </td>
           </tr>
           <tr class="doc-section-item">
-            <td><code><span title="musickit_api_mock.Song.file_size">file_size</span></code></td>
+            <td><code><span title="musickit_api_mock.CatalogSong.file_size">file_size</span></code></td>
             <td>
                   <code><span title="int">int</span></code>
             </td>
@@ -2457,7 +2457,7 @@ allowed.</p>
             </td>
           </tr>
           <tr class="doc-section-item">
-            <td><code><span title="musickit_api_mock.Song.release_date">release_date</span></code></td>
+            <td><code><span title="musickit_api_mock.CatalogSong.release_date">release_date</span></code></td>
             <td>
                   <code><span title="str">str</span> | None</code>
             </td>
@@ -2468,7 +2468,7 @@ allowed.</p>
             </td>
           </tr>
           <tr class="doc-section-item">
-            <td><code><span title="musickit_api_mock.Song.track_number">track_number</span></code></td>
+            <td><code><span title="musickit_api_mock.CatalogSong.track_number">track_number</span></code></td>
             <td>
                   <code><span title="int">int</span> | None</code>
             </td>
@@ -2479,7 +2479,7 @@ allowed.</p>
             </td>
           </tr>
           <tr class="doc-section-item">
-            <td><code><span title="musickit_api_mock.Song.disc_number">disc_number</span></code></td>
+            <td><code><span title="musickit_api_mock.CatalogSong.disc_number">disc_number</span></code></td>
             <td>
                   <code><span title="int">int</span> | None</code>
             </td>
@@ -2490,7 +2490,7 @@ allowed.</p>
             </td>
           </tr>
           <tr class="doc-section-item">
-            <td><code><span title="musickit_api_mock.Song.composer">composer</span></code></td>
+            <td><code><span title="musickit_api_mock.CatalogSong.composer">composer</span></code></td>
             <td>
                   <code><span title="str">str</span> | None</code>
             </td>
@@ -2501,7 +2501,7 @@ allowed.</p>
             </td>
           </tr>
           <tr class="doc-section-item">
-            <td><code><span title="musickit_api_mock.Song.isrc">isrc</span></code></td>
+            <td><code><span title="musickit_api_mock.CatalogSong.isrc">isrc</span></code></td>
             <td>
                   <code><span title="str">str</span> | None</code>
             </td>
@@ -2512,7 +2512,7 @@ allowed.</p>
             </td>
           </tr>
           <tr class="doc-section-item">
-            <td><code><span title="musickit_api_mock.Song.content_rating">content_rating</span></code></td>
+            <td><code><span title="musickit_api_mock.CatalogSong.content_rating">content_rating</span></code></td>
             <td>
                   <code><span title="str">str</span> | None</code>
             </td>
@@ -2523,7 +2523,7 @@ allowed.</p>
             </td>
           </tr>
           <tr class="doc-section-item">
-            <td><code><span title="musickit_api_mock.Song.play_assets">play_assets</span></code></td>
+            <td><code><span title="musickit_api_mock.CatalogSong.play_assets">play_assets</span></code></td>
             <td>
                   <code><span title="list">list</span>[<a class="autorefs autorefs-internal" title="            StationContextPlayAsset
 
@@ -2540,7 +2540,7 @@ track-info responses.</p>
             </td>
           </tr>
           <tr class="doc-section-item">
-            <td><code><span title="musickit_api_mock.Song.album_ids">album_ids</span></code></td>
+            <td><code><span title="musickit_api_mock.CatalogSong.album_ids">album_ids</span></code></td>
             <td>
                   <code><span title="list">list</span>[<span title="str">str</span>] | None</code>
             </td>
@@ -2553,7 +2553,7 @@ resources when <code>?include=albums</code> is requested.</p>
             </td>
           </tr>
           <tr class="doc-section-item">
-            <td><code><span title="musickit_api_mock.Song.artist_ids">artist_ids</span></code></td>
+            <td><code><span title="musickit_api_mock.CatalogSong.artist_ids">artist_ids</span></code></td>
             <td>
                   <code><span title="list">list</span>[<span title="str">str</span>] | None</code>
             </td>
@@ -2565,7 +2565,7 @@ resources when <code>?include=albums</code> is requested.</p>
             </td>
           </tr>
           <tr class="doc-section-item">
-            <td><code><span title="musickit_api_mock.Song.composer_ids">composer_ids</span></code></td>
+            <td><code><span title="musickit_api_mock.CatalogSong.composer_ids">composer_ids</span></code></td>
             <td>
                   <code><span title="list">list</span>[<span title="str">str</span>] | None</code>
             </td>
@@ -2577,7 +2577,7 @@ resources when <code>?include=albums</code> is requested.</p>
             </td>
           </tr>
           <tr class="doc-section-item">
-            <td><code><span title="musickit_api_mock.Song.genre_ids">genre_ids</span></code></td>
+            <td><code><span title="musickit_api_mock.CatalogSong.genre_ids">genre_ids</span></code></td>
             <td>
                   <code><span title="list">list</span>[<span title="str">str</span>] | None</code>
             </td>
@@ -2588,7 +2588,7 @@ resources when <code>?include=albums</code> is requested.</p>
             </td>
           </tr>
           <tr class="doc-section-item">
-            <td><code><span title="musickit_api_mock.Song.music_video_ids">music_video_ids</span></code></td>
+            <td><code><span title="musickit_api_mock.CatalogSong.music_video_ids">music_video_ids</span></code></td>
             <td>
                   <code><span title="list">list</span>[<span title="str">str</span>] | None</code>
             </td>
@@ -2599,7 +2599,7 @@ resources when <code>?include=albums</code> is requested.</p>
             </td>
           </tr>
           <tr class="doc-section-item">
-            <td><code><span title="musickit_api_mock.Song.station_id">station_id</span></code></td>
+            <td><code><span title="musickit_api_mock.CatalogSong.station_id">station_id</span></code></td>
             <td>
                   <code><span title="str">str</span> | None</code>
             </td>
@@ -2610,7 +2610,7 @@ resources when <code>?include=albums</code> is requested.</p>
             </td>
           </tr>
           <tr class="doc-section-item">
-            <td><code><span title="musickit_api_mock.Song.library_song_id">library_song_id</span></code></td>
+            <td><code><span title="musickit_api_mock.CatalogSong.library_song_id">library_song_id</span></code></td>
             <td>
                   <code><span title="str">str</span> | None</code>
             </td>
@@ -2648,7 +2648,7 @@ the user's library.</p>
 <div class="doc doc-object doc-function">
 
 
-<h3 id="musickit_api_mock.Song.from_file" class="doc doc-heading">
+<h3 id="musickit_api_mock.CatalogSong.from_file" class="doc doc-heading">
 <code class="doc-symbol doc-symbol-heading doc-symbol-method"></code>            <span class="doc doc-object-name doc-function-name">from_file</span>
 
 
@@ -2656,8 +2656,8 @@ the user's library.</p>
       <small class="doc doc-label doc-label-classmethod"><code>classmethod</code></small>
   </span>
 
-<a href="#musickit_api_mock.Song.from_file" class="headerlink" title="Permanent link">&para;</a></h3>
-<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">from_file</span><span class="p">(</span><span class="n">audio_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">fallback</span><span class="p">:</span> <span class="n">SongMetadataFallback</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">preview</span><span class="p">:</span> <span class="n">PreviewRange</span> <span class="o">|</span> <span class="nb">bytes</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Song</span>
+<a href="#musickit_api_mock.CatalogSong.from_file" class="headerlink" title="Permanent link">&para;</a></h3>
+<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">from_file</span><span class="p">(</span><span class="n">audio_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">fallback</span><span class="p">:</span> <span class="n">SongMetadataFallback</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">preview</span><span class="p">:</span> <span class="n">PreviewRange</span> <span class="o">|</span> <span class="nb">bytes</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">CatalogSong</span>
 </span></code></pre></div>
 
     <div class="doc doc-contents ">
@@ -2757,12 +2757,12 @@ unset to use the full source audio as the preview.</p>
       <tbody>
           <tr class="doc-section-item">
             <td>
-                  <code><a class="autorefs autorefs-internal" title="            Song
+                  <code><a class="autorefs autorefs-internal" title="            CatalogSong
 
 
   
       dataclass
-   (musickit_api_mock.data.song.Song)" href="#musickit_api_mock.Song">Song</a></code>
+   (musickit_api_mock.data.song.CatalogSong)" href="#musickit_api_mock.CatalogSong">CatalogSong</a></code>
             </td>
             <td>
               <div class="doc-md-description">
@@ -2790,16 +2790,16 @@ unset to use the full source audio as the preview.</p>
 
 
 
-<h2 id="musickit_api_mock.Album" class="doc doc-heading">
-<code class="doc-symbol doc-symbol-heading doc-symbol-class"></code>            <span class="doc doc-object-name doc-class-name">Album</span>
+<h2 id="musickit_api_mock.CatalogAlbum" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-class"></code>            <span class="doc doc-object-name doc-class-name">CatalogAlbum</span>
 
 
   <span class="doc doc-labels">
       <small class="doc doc-label doc-label-dataclass"><code>dataclass</code></small>
   </span>
 
-<a href="#musickit_api_mock.Album" class="headerlink" title="Permanent link">&para;</a></h2>
-<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">Album</span><span class="p">(</span><span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">artist_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">artwork</span><span class="p">:</span> <span class="n">Artwork</span><span class="p">,</span> <span class="n">genre_names</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">track_count</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">is_compilation</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span> <span class="n">is_complete</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span> <span class="n">is_mastered_for_itunes</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span> <span class="n">is_single</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span> <span class="n">is_prerelease</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span> <span class="n">audio_traits</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">url</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">release_date</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">copyright</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">record_label</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">upc</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">track_ids</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">artist_ids</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">content_rating</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">editorial_notes</span><span class="p">:</span> <span class="n">EditorialNotes</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">editorial_artwork</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Artwork</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">genre_ids</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">record_label_ids</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">library_album_id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span>
+<a href="#musickit_api_mock.CatalogAlbum" class="headerlink" title="Permanent link">&para;</a></h2>
+<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">CatalogAlbum</span><span class="p">(</span><span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">artist_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">artwork</span><span class="p">:</span> <span class="n">Artwork</span><span class="p">,</span> <span class="n">genre_names</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">track_count</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">is_compilation</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span> <span class="n">is_complete</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span> <span class="n">is_mastered_for_itunes</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span> <span class="n">is_single</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span> <span class="n">is_prerelease</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span> <span class="n">audio_traits</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">url</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">release_date</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">copyright</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">record_label</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">upc</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">track_ids</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">artist_ids</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">content_rating</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">editorial_notes</span><span class="p">:</span> <span class="n">EditorialNotes</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">editorial_artwork</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Artwork</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">genre_ids</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">record_label_ids</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">library_album_id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span>
 </span></code></pre></div>
 
     <div class="doc doc-contents first">
@@ -2820,7 +2820,7 @@ unset to use the full source audio as the preview.</p>
       </thead>
       <tbody>
           <tr class="doc-section-item">
-            <td><code><span title="musickit_api_mock.Album.name">name</span></code></td>
+            <td><code><span title="musickit_api_mock.CatalogAlbum.name">name</span></code></td>
             <td>
                   <code><span title="str">str</span></code>
             </td>
@@ -2831,7 +2831,7 @@ unset to use the full source audio as the preview.</p>
             </td>
           </tr>
           <tr class="doc-section-item">
-            <td><code><span title="musickit_api_mock.Album.artist_name">artist_name</span></code></td>
+            <td><code><span title="musickit_api_mock.CatalogAlbum.artist_name">artist_name</span></code></td>
             <td>
                   <code><span title="str">str</span></code>
             </td>
@@ -2842,7 +2842,7 @@ unset to use the full source audio as the preview.</p>
             </td>
           </tr>
           <tr class="doc-section-item">
-            <td><code><span title="musickit_api_mock.Album.artwork">artwork</span></code></td>
+            <td><code><span title="musickit_api_mock.CatalogAlbum.artwork">artwork</span></code></td>
             <td>
                   <code><a class="autorefs autorefs-internal" title="            Artwork
 
@@ -2858,7 +2858,7 @@ unset to use the full source audio as the preview.</p>
             </td>
           </tr>
           <tr class="doc-section-item">
-            <td><code><span title="musickit_api_mock.Album.genre_names">genre_names</span></code></td>
+            <td><code><span title="musickit_api_mock.CatalogAlbum.genre_names">genre_names</span></code></td>
             <td>
                   <code><span title="list">list</span>[<span title="str">str</span>]</code>
             </td>
@@ -2869,7 +2869,7 @@ unset to use the full source audio as the preview.</p>
             </td>
           </tr>
           <tr class="doc-section-item">
-            <td><code><span title="musickit_api_mock.Album.track_count">track_count</span></code></td>
+            <td><code><span title="musickit_api_mock.CatalogAlbum.track_count">track_count</span></code></td>
             <td>
                   <code><span title="int">int</span></code>
             </td>
@@ -2880,7 +2880,7 @@ unset to use the full source audio as the preview.</p>
             </td>
           </tr>
           <tr class="doc-section-item">
-            <td><code><span title="musickit_api_mock.Album.is_compilation">is_compilation</span></code></td>
+            <td><code><span title="musickit_api_mock.CatalogAlbum.is_compilation">is_compilation</span></code></td>
             <td>
                   <code><span title="bool">bool</span></code>
             </td>
@@ -2891,7 +2891,7 @@ unset to use the full source audio as the preview.</p>
             </td>
           </tr>
           <tr class="doc-section-item">
-            <td><code><span title="musickit_api_mock.Album.is_complete">is_complete</span></code></td>
+            <td><code><span title="musickit_api_mock.CatalogAlbum.is_complete">is_complete</span></code></td>
             <td>
                   <code><span title="bool">bool</span></code>
             </td>
@@ -2902,7 +2902,7 @@ unset to use the full source audio as the preview.</p>
             </td>
           </tr>
           <tr class="doc-section-item">
-            <td><code><span title="musickit_api_mock.Album.is_mastered_for_itunes">is_mastered_for_itunes</span></code></td>
+            <td><code><span title="musickit_api_mock.CatalogAlbum.is_mastered_for_itunes">is_mastered_for_itunes</span></code></td>
             <td>
                   <code><span title="bool">bool</span></code>
             </td>
@@ -2913,7 +2913,7 @@ unset to use the full source audio as the preview.</p>
             </td>
           </tr>
           <tr class="doc-section-item">
-            <td><code><span title="musickit_api_mock.Album.is_single">is_single</span></code></td>
+            <td><code><span title="musickit_api_mock.CatalogAlbum.is_single">is_single</span></code></td>
             <td>
                   <code><span title="bool">bool</span></code>
             </td>
@@ -2924,7 +2924,7 @@ unset to use the full source audio as the preview.</p>
             </td>
           </tr>
           <tr class="doc-section-item">
-            <td><code><span title="musickit_api_mock.Album.is_prerelease">is_prerelease</span></code></td>
+            <td><code><span title="musickit_api_mock.CatalogAlbum.is_prerelease">is_prerelease</span></code></td>
             <td>
                   <code><span title="bool">bool</span></code>
             </td>
@@ -2935,7 +2935,7 @@ unset to use the full source audio as the preview.</p>
             </td>
           </tr>
           <tr class="doc-section-item">
-            <td><code><span title="musickit_api_mock.Album.audio_traits">audio_traits</span></code></td>
+            <td><code><span title="musickit_api_mock.CatalogAlbum.audio_traits">audio_traits</span></code></td>
             <td>
                   <code><span title="list">list</span>[<span title="str">str</span>]</code>
             </td>
@@ -2946,7 +2946,7 @@ unset to use the full source audio as the preview.</p>
             </td>
           </tr>
           <tr class="doc-section-item">
-            <td><code><span title="musickit_api_mock.Album.url">url</span></code></td>
+            <td><code><span title="musickit_api_mock.CatalogAlbum.url">url</span></code></td>
             <td>
                   <code><span title="str">str</span></code>
             </td>
@@ -2957,7 +2957,7 @@ unset to use the full source audio as the preview.</p>
             </td>
           </tr>
           <tr class="doc-section-item">
-            <td><code><span title="musickit_api_mock.Album.release_date">release_date</span></code></td>
+            <td><code><span title="musickit_api_mock.CatalogAlbum.release_date">release_date</span></code></td>
             <td>
                   <code><span title="str">str</span> | None</code>
             </td>
@@ -2968,7 +2968,7 @@ unset to use the full source audio as the preview.</p>
             </td>
           </tr>
           <tr class="doc-section-item">
-            <td><code><span title="musickit_api_mock.Album.copyright">copyright</span></code></td>
+            <td><code><span title="musickit_api_mock.CatalogAlbum.copyright">copyright</span></code></td>
             <td>
                   <code><span title="str">str</span> | None</code>
             </td>
@@ -2979,7 +2979,7 @@ unset to use the full source audio as the preview.</p>
             </td>
           </tr>
           <tr class="doc-section-item">
-            <td><code><span title="musickit_api_mock.Album.record_label">record_label</span></code></td>
+            <td><code><span title="musickit_api_mock.CatalogAlbum.record_label">record_label</span></code></td>
             <td>
                   <code><span title="str">str</span> | None</code>
             </td>
@@ -2990,7 +2990,7 @@ unset to use the full source audio as the preview.</p>
             </td>
           </tr>
           <tr class="doc-section-item">
-            <td><code><span title="musickit_api_mock.Album.upc">upc</span></code></td>
+            <td><code><span title="musickit_api_mock.CatalogAlbum.upc">upc</span></code></td>
             <td>
                   <code><span title="str">str</span> | None</code>
             </td>
@@ -3001,7 +3001,7 @@ unset to use the full source audio as the preview.</p>
             </td>
           </tr>
           <tr class="doc-section-item">
-            <td><code><span title="musickit_api_mock.Album.track_ids">track_ids</span></code></td>
+            <td><code><span title="musickit_api_mock.CatalogAlbum.track_ids">track_ids</span></code></td>
             <td>
                   <code><span title="list">list</span>[<span title="str">str</span>] | None</code>
             </td>
@@ -3013,7 +3013,7 @@ these into full track resources at response time.</p>
             </td>
           </tr>
           <tr class="doc-section-item">
-            <td><code><span title="musickit_api_mock.Album.artist_ids">artist_ids</span></code></td>
+            <td><code><span title="musickit_api_mock.CatalogAlbum.artist_ids">artist_ids</span></code></td>
             <td>
                   <code><span title="list">list</span>[<span title="str">str</span>] | None</code>
             </td>
@@ -3025,7 +3025,7 @@ full artist resources at response time.</p>
             </td>
           </tr>
           <tr class="doc-section-item">
-            <td><code><span title="musickit_api_mock.Album.content_rating">content_rating</span></code></td>
+            <td><code><span title="musickit_api_mock.CatalogAlbum.content_rating">content_rating</span></code></td>
             <td>
                   <code><span title="str">str</span> | None</code>
             </td>
@@ -3036,7 +3036,7 @@ full artist resources at response time.</p>
             </td>
           </tr>
           <tr class="doc-section-item">
-            <td><code><span title="musickit_api_mock.Album.editorial_notes">editorial_notes</span></code></td>
+            <td><code><span title="musickit_api_mock.CatalogAlbum.editorial_notes">editorial_notes</span></code></td>
             <td>
                   <code><a class="autorefs autorefs-internal" title="            EditorialNotes
 
@@ -3052,7 +3052,7 @@ full artist resources at response time.</p>
             </td>
           </tr>
           <tr class="doc-section-item">
-            <td><code><span title="musickit_api_mock.Album.editorial_artwork">editorial_artwork</span></code></td>
+            <td><code><span title="musickit_api_mock.CatalogAlbum.editorial_artwork">editorial_artwork</span></code></td>
             <td>
                   <code><span title="dict">dict</span>[<span title="str">str</span>, <a class="autorefs autorefs-internal" title="            Artwork
 
@@ -3069,7 +3069,7 @@ request asks for them via <code>?extend=editorialArtwork</code>.</p>
             </td>
           </tr>
           <tr class="doc-section-item">
-            <td><code><span title="musickit_api_mock.Album.genre_ids">genre_ids</span></code></td>
+            <td><code><span title="musickit_api_mock.CatalogAlbum.genre_ids">genre_ids</span></code></td>
             <td>
                   <code><span title="list">list</span>[<span title="str">str</span>] | None</code>
             </td>
@@ -3080,7 +3080,7 @@ request asks for them via <code>?extend=editorialArtwork</code>.</p>
             </td>
           </tr>
           <tr class="doc-section-item">
-            <td><code><span title="musickit_api_mock.Album.record_label_ids">record_label_ids</span></code></td>
+            <td><code><span title="musickit_api_mock.CatalogAlbum.record_label_ids">record_label_ids</span></code></td>
             <td>
                   <code><span title="list">list</span>[<span title="str">str</span>] | None</code>
             </td>
@@ -3091,7 +3091,7 @@ request asks for them via <code>?extend=editorialArtwork</code>.</p>
             </td>
           </tr>
           <tr class="doc-section-item">
-            <td><code><span title="musickit_api_mock.Album.library_album_id">library_album_id</span></code></td>
+            <td><code><span title="musickit_api_mock.CatalogAlbum.library_album_id">library_album_id</span></code></td>
             <td>
                   <code><span title="str">str</span> | None</code>
             </td>
@@ -3138,16 +3138,16 @@ in the user's library, used to resolve <code>?include=library</code>.</p>
 
 
 
-<h2 id="musickit_api_mock.Artist" class="doc doc-heading">
-<code class="doc-symbol doc-symbol-heading doc-symbol-class"></code>            <span class="doc doc-object-name doc-class-name">Artist</span>
+<h2 id="musickit_api_mock.CatalogArtist" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-class"></code>            <span class="doc doc-object-name doc-class-name">CatalogArtist</span>
 
 
   <span class="doc doc-labels">
       <small class="doc doc-label doc-label-dataclass"><code>dataclass</code></small>
   </span>
 
-<a href="#musickit_api_mock.Artist" class="headerlink" title="Permanent link">&para;</a></h2>
-<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">Artist</span><span class="p">(</span><span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">genre_names</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">url</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">artwork</span><span class="p">:</span> <span class="n">Artwork</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">album_ids</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">genre_ids</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">music_video_ids</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">playlist_ids</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">station_id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span>
+<a href="#musickit_api_mock.CatalogArtist" class="headerlink" title="Permanent link">&para;</a></h2>
+<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">CatalogArtist</span><span class="p">(</span><span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">genre_names</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">url</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">artwork</span><span class="p">:</span> <span class="n">Artwork</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">album_ids</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">genre_ids</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">music_video_ids</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">playlist_ids</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">station_id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span>
 </span></code></pre></div>
 
     <div class="doc doc-contents first">
@@ -3168,7 +3168,7 @@ in the user's library, used to resolve <code>?include=library</code>.</p>
       </thead>
       <tbody>
           <tr class="doc-section-item">
-            <td><code><span title="musickit_api_mock.Artist.name">name</span></code></td>
+            <td><code><span title="musickit_api_mock.CatalogArtist.name">name</span></code></td>
             <td>
                   <code><span title="str">str</span></code>
             </td>
@@ -3179,7 +3179,7 @@ in the user's library, used to resolve <code>?include=library</code>.</p>
             </td>
           </tr>
           <tr class="doc-section-item">
-            <td><code><span title="musickit_api_mock.Artist.genre_names">genre_names</span></code></td>
+            <td><code><span title="musickit_api_mock.CatalogArtist.genre_names">genre_names</span></code></td>
             <td>
                   <code><span title="list">list</span>[<span title="str">str</span>]</code>
             </td>
@@ -3190,7 +3190,7 @@ in the user's library, used to resolve <code>?include=library</code>.</p>
             </td>
           </tr>
           <tr class="doc-section-item">
-            <td><code><span title="musickit_api_mock.Artist.url">url</span></code></td>
+            <td><code><span title="musickit_api_mock.CatalogArtist.url">url</span></code></td>
             <td>
                   <code><span title="str">str</span></code>
             </td>
@@ -3201,7 +3201,7 @@ in the user's library, used to resolve <code>?include=library</code>.</p>
             </td>
           </tr>
           <tr class="doc-section-item">
-            <td><code><span title="musickit_api_mock.Artist.artwork">artwork</span></code></td>
+            <td><code><span title="musickit_api_mock.CatalogArtist.artwork">artwork</span></code></td>
             <td>
                   <code><a class="autorefs autorefs-internal" title="            Artwork
 
@@ -3217,7 +3217,7 @@ in the user's library, used to resolve <code>?include=library</code>.</p>
             </td>
           </tr>
           <tr class="doc-section-item">
-            <td><code><span title="musickit_api_mock.Artist.album_ids">album_ids</span></code></td>
+            <td><code><span title="musickit_api_mock.CatalogArtist.album_ids">album_ids</span></code></td>
             <td>
                   <code><span title="list">list</span>[<span title="str">str</span>] | None</code>
             </td>
@@ -3229,7 +3229,7 @@ mock resolves these into full album resources at response time.</p>
             </td>
           </tr>
           <tr class="doc-section-item">
-            <td><code><span title="musickit_api_mock.Artist.genre_ids">genre_ids</span></code></td>
+            <td><code><span title="musickit_api_mock.CatalogArtist.genre_ids">genre_ids</span></code></td>
             <td>
                   <code><span title="list">list</span>[<span title="str">str</span>] | None</code>
             </td>
@@ -3240,7 +3240,7 @@ mock resolves these into full album resources at response time.</p>
             </td>
           </tr>
           <tr class="doc-section-item">
-            <td><code><span title="musickit_api_mock.Artist.music_video_ids">music_video_ids</span></code></td>
+            <td><code><span title="musickit_api_mock.CatalogArtist.music_video_ids">music_video_ids</span></code></td>
             <td>
                   <code><span title="list">list</span>[<span title="str">str</span>] | None</code>
             </td>
@@ -3251,7 +3251,7 @@ mock resolves these into full album resources at response time.</p>
             </td>
           </tr>
           <tr class="doc-section-item">
-            <td><code><span title="musickit_api_mock.Artist.playlist_ids">playlist_ids</span></code></td>
+            <td><code><span title="musickit_api_mock.CatalogArtist.playlist_ids">playlist_ids</span></code></td>
             <td>
                   <code><span title="list">list</span>[<span title="str">str</span>] | None</code>
             </td>
@@ -3262,7 +3262,7 @@ mock resolves these into full album resources at response time.</p>
             </td>
           </tr>
           <tr class="doc-section-item">
-            <td><code><span title="musickit_api_mock.Artist.station_id">station_id</span></code></td>
+            <td><code><span title="musickit_api_mock.CatalogArtist.station_id">station_id</span></code></td>
             <td>
                   <code><span title="str">str</span> | None</code>
             </td>
