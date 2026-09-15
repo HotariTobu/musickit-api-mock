@@ -233,6 +233,46 @@ def test_web_playback_mapping_form_rejects_library_item_without_universal_librar
         )
 
 
+def test_web_playback_static_form_ignores_missing_universal_library_id(
+    mock: MusicKitApiMock,
+) -> None:
+    mock.endpoints.web_playback = WebPlaybackResponseSuccess(song_list=[])
+    body = json.dumps({"subscriptionAdamId": "s1"}).encode()
+    status, raw = _post(
+        mock,
+        "https://play.itunes.apple.com/WebObjects/MZPlay.woa/wa/webPlayback",
+        body,
+    )
+    parsed = cast("_WebPlaybackResponseBody", raw)
+    assert status == 200
+    assert parsed["status"] == 0
+
+
+def test_web_playback_callable_form_receives_omitted_library_fields_as_none(
+    mock: MusicKitApiMock,
+) -> None:
+    captured: list[WebPlaybackContext] = []
+
+    def fn(ctx: WebPlaybackContext) -> WebPlaybackResponse:
+        captured.append(ctx)
+        return WebPlaybackResponseSuccess(song_list=[])
+
+    mock.endpoints.web_playback = fn
+    body = json.dumps({"subscriptionAdamId": "s1"}).encode()
+    _post(
+        mock,
+        "https://play.itunes.apple.com/WebObjects/MZPlay.woa/wa/webPlayback",
+        body,
+    )
+    assert captured == [
+        WebPlaybackLibraryItemContext(
+            subscription_adam_id="s1",
+            universal_library_id=None,
+            purchase_adam_id=None,
+        )
+    ]
+
+
 def test_web_playback_callable_form_receives_catalog_item_context(
     mock: MusicKitApiMock,
 ) -> None:
