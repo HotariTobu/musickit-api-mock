@@ -1273,10 +1273,10 @@
 <h2 id="mockdata-shared-resource-data"><code>mock.data.*</code> — shared resource data<a class="headerlink" href="#mockdata-shared-resource-data" title="Permanent link">&para;</a></h2>
 <p>Each field accepts:</p>
 <ul>
-<li>a <strong><code>dict[str, T]</code> keyed by id</strong> — looked up on demand, or</li>
+<li>a <strong><code>Mapping[str, T]</code> keyed by id</strong> (a plain <code>dict</code>) — looked up on demand, or</li>
 <li>a <strong><code>Callable[[LookupContext], T | None]</code></strong> — for dynamic resolution (e.g. load a <code>CatalogSong</code> for any id matching a pattern, or return <code>None</code> for not found).</li>
 </ul>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="c1"># dict form</span>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="c1"># mapping form</span>
 </span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="n">mock</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">songs</span> <span class="o">=</span> <span class="p">{</span>
 </span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>    <span class="s2">&quot;1000000001&quot;</span><span class="p">:</span> <span class="n">CatalogSong</span><span class="o">.</span><span class="n">from_file</span><span class="p">(</span><span class="s2">&quot;path/to/song.m4a&quot;</span><span class="p">),</span>
 </span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="p">}</span>
@@ -1291,7 +1291,7 @@
 </span></code></pre></div>
 <p>Endpoints that read the same resource compose their response from this shared source. Configure once, reach from multiple endpoints.</p>
 <h2 id="mockendpoints-per-endpoint-http-responses"><code>mock.endpoints.*</code> — per-endpoint HTTP responses<a class="headerlink" href="#mockendpoints-per-endpoint-http-responses" title="Permanent link">&para;</a></h2>
-<p>Accepted shapes vary by field — some accept only a response value or callable; others also accept a <code>dict</code> keyed by id. See each field's type in the <a href="../../reference/endpoints/">reference</a> for the exact union.</p>
+<p>Accepted shapes vary by field — some accept only a response value or callable; others also accept a <code>Mapping</code> keyed by id (a plain <code>dict</code>). See each field's type in the <a href="../../reference/endpoints/">reference</a> for the exact union.</p>
 <p>Use these to drive error scenarios (subscription expired, DRM failure, content unavailable, ...) or to override success-body details that aren't derivable from <code>mock.data</code>. Common forms:</p>
 <div class="language-python highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="c1"># success</span>
 </span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="n">mock</span><span class="o">.</span><span class="n">endpoints</span><span class="o">.</span><span class="n">account</span> <span class="o">=</span> <span class="n">AccountResponseSuccess</span><span class="p">(</span><span class="n">account</span><span class="o">=</span><span class="n">Account</span><span class="p">(</span><span class="o">...</span><span class="p">))</span>

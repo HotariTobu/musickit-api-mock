@@ -1964,7 +1964,7 @@
         <p>Shared resource sources read by multiple endpoints.</p>
 <p>Each field accepts an id-keyed mapping. Callable lookups are also
 accepted where per-id resolution is sufficient; <code>genres</code>,
-<code>record_labels</code>, and <code>personal_recommendations</code> require the dict
+<code>record_labels</code>, and <code>personal_recommendations</code> require the mapping
 form because their endpoints enumerate ids. Fields default to <code>None</code>;
 reading an unset source raises <code>ValueError</code>.</p>
 
@@ -6925,7 +6925,7 @@ loader raises if the tag is also missing.</p>
 
         <p>Per-request resource lookup input.</p>
 <p>Passed to callable data sources so user code can produce locale-aware
-responses. Dict sources ignore the locale (id-only mapping is the
+responses. Mapping sources ignore the locale (id-only mapping is the
 simplest contract).</p>
 
 
