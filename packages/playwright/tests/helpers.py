@@ -21,16 +21,16 @@ from musickit_api_mock import (
     Storefront,
     StorefrontResponseSuccess,
     WebPlaybackAsset,
+    WebPlaybackCatalogSong,
     WebPlaybackResponse,
     WebPlaybackResponseSuccess,
-    WebPlaybackSong,
     WidevineCertResponseSuccess,
 )
 
 if TYPE_CHECKING:
     from pathlib import Path
 
-    from musickit_api_mock import LicenseResponse, Song
+    from musickit_api_mock import CatalogSong, LicenseResponse
 
 
 def make_test_jwt(
@@ -85,7 +85,7 @@ def build_silence_m4a(
 
 
 def make_playback_ready_mock(
-    songs: dict[str, Song],
+    songs: dict[str, CatalogSong],
     browser_name: str,
     *,
     license_response: LicenseResponse | None = None,
@@ -117,7 +117,7 @@ def make_playback_ready_mock(
     web_playback_map: dict[str, WebPlaybackResponse] = {
         song_id: WebPlaybackResponseSuccess(
             song_list=[
-                WebPlaybackSong(
+                WebPlaybackCatalogSong(
                     song_id=song_id,
                     hls_key_cert_url="https://s.mzstatic.com/skdtool_2021_certbundle.bin",
                     hls_key_server_url="https://play.itunes.apple.com/WebObjects/MZPlay.woa/wa/acquireWebPlaybackLicense",

@@ -16,17 +16,17 @@ from musickit_api_mock import (
     Request,
     Station,
     WebPlaybackAsset,
+    WebPlaybackCatalogSong,
     WebPlaybackResponseGeoBlock,
     WebPlaybackResponseSuccess,
     WebPlaybackResponseUnsupportedError,
-    WebPlaybackSong,
 )
 
 
 def test_p02_web_playback(mock: MusicKitApiMock) -> None:
     mock.endpoints.web_playback = WebPlaybackResponseSuccess(
         song_list=[
-            WebPlaybackSong(
+            WebPlaybackCatalogSong(
                 song_id="1",
                 hls_key_cert_url="https://s.mzstatic.com/skdtool_2021_certbundle.bin",
                 hls_key_server_url="https://play.itunes.apple.com/WebObjects/MZPlay.woa/wa/acquireWebPlaybackLicense",

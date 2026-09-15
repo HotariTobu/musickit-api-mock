@@ -11,18 +11,18 @@ from musickit_api_mock import (
     HlsLayout,
     LookupContext,
     MusicKitApiMock,
-    Song,
+    CatalogSong,
 )
 
 mock = MusicKitApiMock()
 
 
-def make_song(song_id: str, *, title: str) -> Song:
+def make_song(song_id: str, *, title: str) -> CatalogSong:
     media_segment = b"mock media segment"
-    return Song(
+    return CatalogSong(
         title=title,
-        artist="Test Artist",
-        album="Test Album",
+        artist="Test CatalogArtist",
+        album="Test CatalogAlbum",
         duration_ms=180_000,
         artwork=Artwork(
             url="https://example.test/artwork/{w}x{h}.{f}",
@@ -58,7 +58,7 @@ def make_song(song_id: str, *, title: str) -> Song:
     )
 
 
-def resolve_song(ctx: LookupContext) -> Song | None:
+def resolve_song(ctx: LookupContext) -> CatalogSong | None:
     if not ctx.id.startswith("test-"):
         return None
     return make_song(ctx.id, title=f"Track {ctx.id}")
@@ -74,7 +74,7 @@ Returning `None` from the resolver signals "no such id" — the endpoint reading
 The lookup context carries the request's `?l=` value when one was present in the URL. Use it when your test asserts locale-specific behavior:
 
 ```python
-def resolve_song(ctx: LookupContext) -> Song | None:
+def resolve_song(ctx: LookupContext) -> CatalogSong | None:
     title = f"Track {ctx.id}"
     if ctx.locale == "ja":
         title = f"トラック {ctx.id}"

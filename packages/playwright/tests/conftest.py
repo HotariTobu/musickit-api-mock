@@ -9,7 +9,7 @@ from urllib.parse import urlparse
 import pytest
 from musickit_api_mock import (
     Artwork,
-    Song,
+    CatalogSong,
     SongMetadataFallback,
 )
 from musickit_api_mock_playwright import intercept, intercept_async
@@ -112,8 +112,8 @@ def _silence_fallback(page_url: str) -> SongMetadataFallback:
         is_vocal_attenuation_allowed=False,
         url="https://music.apple.com/us/song/s1",
         title="Silence",
-        artist="Test Artist",
-        album="Test Album",
+        artist="Test CatalogArtist",
+        album="Test CatalogAlbum",
         genres=["Test"],
         release_date="2020-01-01",
         track_number=1,
@@ -122,13 +122,15 @@ def _silence_fallback(page_url: str) -> SongMetadataFallback:
 
 
 @pytest.fixture
-def silence_song(silence_audio_path: Path, page_url: str) -> Song:
-    return Song.from_file(str(silence_audio_path), _silence_fallback(page_url))
+def silence_song(silence_audio_path: Path, page_url: str) -> CatalogSong:
+    return CatalogSong.from_file(str(silence_audio_path), _silence_fallback(page_url))
 
 
 @pytest.fixture
-def short_silence_song(short_silence_audio_path: Path, page_url: str) -> Song:
-    return Song.from_file(str(short_silence_audio_path), _silence_fallback(page_url))
+def short_silence_song(short_silence_audio_path: Path, page_url: str) -> CatalogSong:
+    return CatalogSong.from_file(
+        str(short_silence_audio_path), _silence_fallback(page_url)
+    )
 
 
 @pytest.fixture

@@ -1,4 +1,4 @@
-"""Artist resource JSON shape builder."""
+"""CatalogArtist resource JSON shape builder."""
 
 from __future__ import annotations
 
@@ -10,14 +10,14 @@ from musickit_api_mock.endpoints.schema.builders import (
 )
 
 if TYPE_CHECKING:
-    from musickit_api_mock.data.artist import Artist
+    from musickit_api_mock.data.artist import CatalogArtist
     from musickit_api_mock.json_value import _JSONValue
 
 
 def _artist_resource(
     sf: str,
     artist_id: str,
-    artist: Artist,
+    artist: CatalogArtist,
     *,
     relationships: dict[str, _JSONValue] | None = None,
 ) -> dict[str, _JSONValue]:

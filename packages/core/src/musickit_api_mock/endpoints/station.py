@@ -32,7 +32,7 @@ from musickit_api_mock.endpoints.schema import (
 from musickit_api_mock.transport.response_builders import _json_response
 
 if TYPE_CHECKING:
-    from musickit_api_mock.data.song import Song
+    from musickit_api_mock.data.song import CatalogSong
     from musickit_api_mock.json_value import _JSONValue
     from musickit_api_mock.mock import MusicKitApiMock
     from musickit_api_mock.transport.http import Request, Response
@@ -187,7 +187,7 @@ def _handle_continuous(mock: MusicKitApiMock, req: Request) -> Response:
         with_raw = q.get("with", [""])[-1]
         with_tracks = "tracks" in {p.strip() for p in with_raw.split(",") if p.strip()}
         sf = _account_storefront(mock)
-        resolved_tracks: list[tuple[str, Song]] | None = None
+        resolved_tracks: list[tuple[str, CatalogSong]] | None = None
         if with_tracks:
             track_ids = resp.continuous_station.tracks
             if track_ids is not None:

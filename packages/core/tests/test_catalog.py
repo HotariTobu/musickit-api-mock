@@ -3,7 +3,7 @@ from __future__ import annotations
 import json
 from typing import TYPE_CHECKING, cast
 
-from musickit_api_mock import MusicKitApiMock, Request, Song
+from musickit_api_mock import CatalogSong, MusicKitApiMock, Request
 
 if TYPE_CHECKING:
     from tests._apple_response import _AppleArtwork, _AppleResponse
@@ -20,7 +20,7 @@ def test_q01_song_batch_valid(mock: MusicKitApiMock) -> None:
     assert status == 200
     assert body["data"][0]["id"] == "1"
     assert body["data"][0]["type"] == "songs"
-    assert body["data"][0]["attributes"]["name"] == "Test Song"
+    assert body["data"][0]["attributes"]["name"] == "Test CatalogSong"
 
 
 def test_q01_missing_id_resolves_to_empty(mock: MusicKitApiMock) -> None:
@@ -49,7 +49,7 @@ def test_q01_repeat_and_comma_ids_equivalent(mock: MusicKitApiMock) -> None:
     assert [x["id"] for x in a_body["data"]] == [x["id"] for x in b_body["data"]]
 
 
-def test_q01_dedupe(mock: MusicKitApiMock, song: Song) -> None:
+def test_q01_dedupe(mock: MusicKitApiMock, song: CatalogSong) -> None:
     mock.data.songs = {"1": song, "2": song}
     status, body = _get(
         mock, "https://api.music.apple.com/v1/catalog/us/songs?ids=2,1,2"
@@ -265,7 +265,7 @@ def test_song_singular_include_composers(mock: MusicKitApiMock) -> None:
 
 
 def test_song_batch_include_albums_deep_emit(mock: MusicKitApiMock) -> None:
-    """``?include=albums`` on song output emits full Album attrs inline."""
+    """``?include=albums`` on song output emits full CatalogAlbum attrs inline."""
     status, body = _get(
         mock, "https://api.music.apple.com/v1/catalog/us/songs?ids=1&include=albums"
     )
@@ -273,7 +273,7 @@ def test_song_batch_include_albums_deep_emit(mock: MusicKitApiMock) -> None:
     rel_album = body["data"][0]["relationships"]["albums"]["data"][0]
     assert rel_album["id"] == "a1"
     assert "attributes" in rel_album
-    assert rel_album["attributes"]["name"] == "Test Album"
+    assert rel_album["attributes"]["name"] == "Test CatalogAlbum"
 
 
 def test_song_relationship_albums_endpoint(mock: MusicKitApiMock) -> None:
@@ -313,7 +313,7 @@ def test_song_relationship_overflow_400(mock: MusicKitApiMock) -> None:
 
 
 def test_album_extend_editorial_artwork(mock: MusicKitApiMock) -> None:
-    """``?extend=editorialArtwork`` adds Album.editorial_artwork dict to attrs."""
+    """``?extend=editorialArtwork`` adds CatalogAlbum.editorial_artwork dict to attrs."""
     status, body = _get(
         mock,
         "https://api.music.apple.com/v1/catalog/us/albums?ids=a1&extend=editorialArtwork",
@@ -435,22 +435,22 @@ def _bare_mock_with_storefront() -> MusicKitApiMock:
 
 
 def test_data_songs_callable_resolves_per_id() -> None:
-    """``data.songs`` accepts ``Callable[[LookupContext], Song | None]``."""
+    """``data.songs`` accepts ``Callable[[LookupContext], CatalogSong | None]``."""
     from musickit_api_mock import (
         Artwork,
+        CatalogSong,
         HlsChunk,
         HlsLayout,
         LookupContext,
-        Song,
     )
 
     seen_ids: list[str] = []
 
-    def song_resolver(ctx: LookupContext) -> Song | None:
+    def song_resolver(ctx: LookupContext) -> CatalogSong | None:
         seen_ids.append(ctx.id)
         if ctx.id != "song-x":
             return None
-        return Song(
+        return CatalogSong(
             title=f"Title for {ctx.id}",
             artist="A",
             album="Al",
@@ -496,14 +496,14 @@ def test_data_songs_callable_resolves_per_id() -> None:
 
 
 def test_data_artists_callable_resolves_per_id() -> None:
-    """``data.artists`` accepts ``Callable[[LookupContext], Artist | None]``."""
-    from musickit_api_mock import Artist, Artwork, LookupContext
+    """``data.artists`` accepts ``Callable[[LookupContext], CatalogArtist | None]``."""
+    from musickit_api_mock import Artwork, CatalogArtist, LookupContext
 
-    def artist_resolver(ctx: LookupContext) -> Artist | None:
+    def artist_resolver(ctx: LookupContext) -> CatalogArtist | None:
         if ctx.id != "ar-x":
             return None
-        return Artist(
-            name=f"Artist {ctx.id}",
+        return CatalogArtist(
+            name=f"CatalogArtist {ctx.id}",
             artwork=Artwork(url="x", width=1, height=1),
             genre_names=[],
             url="x",
@@ -515,15 +515,15 @@ def test_data_artists_callable_resolves_per_id() -> None:
     status, body = _get(m, "https://api.music.apple.com/v1/catalog/us/artists?ids=ar-x")
     assert status == 200
     assert body["data"][0]["id"] == "ar-x"
-    assert body["data"][0]["attributes"]["name"] == "Artist ar-x"
+    assert body["data"][0]["attributes"]["name"] == "CatalogArtist ar-x"
 
 
 def test_locale_callable_resolver_receives_request_locale() -> None:
     """``?l=`` is threaded into ``Callable[[LookupContext], T | None]`` data sources; absent ``?l=`` becomes ``None``."""
     from musickit_api_mock import (
         AccountResponseSuccess,
-        Album,
         Artwork,
+        CatalogAlbum,
         LookupContext,
         MusicKitApiMock,
         StorefrontResponseSuccess,
@@ -531,7 +531,7 @@ def test_locale_callable_resolver_receives_request_locale() -> None:
 
     seen_locales: list[str | None] = []
 
-    def album_resolver(ctx: LookupContext) -> Album | None:
+    def album_resolver(ctx: LookupContext) -> CatalogAlbum | None:
         seen_locales.append(ctx.locale)
         if ctx.id != "a1":
             return None
@@ -540,9 +540,9 @@ def test_locale_callable_resolver_receives_request_locale() -> None:
             if ctx.locale is not None and ctx.locale.startswith("en")
             else "Test (default)"
         )
-        return Album(
+        return CatalogAlbum(
             name=name,
-            artist_name="Artist",
+            artist_name="CatalogArtist",
             artwork=Artwork(url="x", width=1, height=1),
             genre_names=[],
             track_count=0,

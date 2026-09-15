@@ -7,7 +7,7 @@ import pytest
 from av.audio.frame import AudioFrame
 from av.packet import Packet
 from av.stream import Disposition
-from musickit_api_mock import Artwork, Song, SongMetadataFallback
+from musickit_api_mock import Artwork, CatalogSong, SongMetadataFallback
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -115,8 +115,8 @@ def test_extracts_metadata_from_file(
     path = make_audio(
         metadata={
             "title": "File Title",
-            "artist": "File Artist",
-            "album": "File Album",
+            "artist": "File CatalogArtist",
+            "album": "File CatalogAlbum",
             "date": "2023",
             "track": "5",
             "disc": "2",
@@ -125,10 +125,10 @@ def test_extracts_metadata_from_file(
         },
         with_artwork=True,
     )
-    song = Song.from_file(path, fallback=_full_fallback(artwork_library))
+    song = CatalogSong.from_file(path, fallback=_full_fallback(artwork_library))
     assert song.title == "File Title"
-    assert song.artist == "File Artist"
-    assert song.album == "File Album"
+    assert song.artist == "File CatalogArtist"
+    assert song.album == "File CatalogAlbum"
     assert song.release_date == "2023"
     assert song.track_number == 5
     assert song.disc_number == 2
@@ -151,7 +151,7 @@ def test_extracts_artwork_from_file(
         },
         with_artwork=True,
     )
-    song = Song.from_file(path, fallback=_full_fallback(artwork_library))
+    song = CatalogSong.from_file(path, fallback=_full_fallback(artwork_library))
     assert song.artwork.url.startswith("data:image/png;base64,")
     assert song.artwork.width == 1
     assert song.artwork.height == 1
@@ -172,7 +172,7 @@ def test_falls_back_when_file_has_no_artwork(
         },
         with_artwork=False,
     )
-    song = Song.from_file(path, fallback=_full_fallback(artwork_library))
+    song = CatalogSong.from_file(path, fallback=_full_fallback(artwork_library))
     assert song.artwork == artwork_library
 
 
@@ -182,8 +182,8 @@ def test_falls_back_when_file_has_no_metadata(
     path = make_audio(metadata=None, with_artwork=True)
     fb = SongMetadataFallback(
         title="FB Title",
-        artist="FB Artist",
-        album="FB Album",
+        artist="FB CatalogArtist",
+        album="FB CatalogAlbum",
         artwork=artwork_library,
         genres=["Pop"],
         release_date="2020-01-01",
@@ -198,10 +198,10 @@ def test_falls_back_when_file_has_no_metadata(
         is_vocal_attenuation_allowed=False,
         url="https://example.com/x",
     )
-    song = Song.from_file(path, fallback=fb)
+    song = CatalogSong.from_file(path, fallback=fb)
     assert song.title == "FB Title"
-    assert song.artist == "FB Artist"
-    assert song.album == "FB Album"
+    assert song.artist == "FB CatalogArtist"
+    assert song.album == "FB CatalogAlbum"
     assert song.genres == ["Pop"]
     assert song.release_date == "2020-01-01"
     assert song.track_number == 3
@@ -224,7 +224,7 @@ def test_track_number_with_total(
         },
         with_artwork=True,
     )
-    song = Song.from_file(path, fallback=_full_fallback(artwork_library))
+    song = CatalogSong.from_file(path, fallback=_full_fallback(artwork_library))
     assert song.track_number == 3
     assert song.disc_number == 1
 
@@ -242,7 +242,7 @@ def test_genre_comma_split(make_audio: AudioFactory, artwork_library: Artwork) -
         },
         with_artwork=True,
     )
-    song = Song.from_file(path, fallback=_full_fallback(artwork_library))
+    song = CatalogSong.from_file(path, fallback=_full_fallback(artwork_library))
     assert song.genres == ["Rock", "Pop", "Jazz"]
 
 
@@ -267,7 +267,7 @@ def test_missing_required_field_raises(
         url="x",
     )
     with pytest.raises(ValueError, match="missing 'title'"):
-        Song.from_file(path, fallback=fb)
+        CatalogSong.from_file(path, fallback=fb)
 
 
 def test_bool_fields_from_fallback(
@@ -296,7 +296,7 @@ def test_bool_fields_from_fallback(
         is_vocal_attenuation_allowed=True,
         url="https://example.com/x",
     )
-    song = Song.from_file(path, fallback=fb)
+    song = CatalogSong.from_file(path, fallback=fb)
     assert song.has_lyrics is True
     assert song.has_time_synced_lyrics is True
     assert song.is_apple_digital_master is True

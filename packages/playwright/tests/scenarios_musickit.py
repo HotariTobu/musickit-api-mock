@@ -145,7 +145,7 @@ SET_QUEUE_AND_GET_ITEM = """async (songId) => {
 def assert_queue_item_resolved(result: _QueueItemResult, expected_id: str) -> None:
     assert result["id"] == expected_id, result
     assert result["title"] == "Silence"
-    assert result["artistName"] == "Test Artist"
+    assert result["artistName"] == "Test CatalogArtist"
 
 
 AUTHORIZE = """async () => {

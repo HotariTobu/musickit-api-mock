@@ -14,9 +14,9 @@ import pytest
 from musickit_api_mock import (
     Account,
     AccountResponseSuccess,
-    Album,
     Artwork,
     AuthorizeSuccess,
+    CatalogAlbum,
     FairPlayCertResponseSuccess,
     LibraryMusicVideo,
     LicenseResponse,
@@ -36,8 +36,8 @@ from musickit_api_mock import (
     Storefront,
     StorefrontResponseSuccess,
     WebPlaybackAsset,
+    WebPlaybackCatalogSong,
     WebPlaybackResponseSuccess,
-    WebPlaybackSong,
     WidevineCertResponseSuccess,
 )
 
@@ -68,7 +68,7 @@ from tests.scenarios_musickit import (
 if TYPE_CHECKING:
     from collections.abc import Callable
 
-    from musickit_api_mock import Song
+    from musickit_api_mock import CatalogSong
     from playwright.sync_api import Page
 
 
@@ -92,7 +92,7 @@ def test_configure_succeeds(
 def test_set_queue_resolves_song(
     mount_sync_page: Callable[..., Page],
     page_url: str,
-    silence_song: Song,
+    silence_song: CatalogSong,
     dev_token: str,
 ) -> None:
     mock = MusicKitApiMock()
@@ -160,7 +160,7 @@ def test_unauthorize_clears_authorization(
 def test_drm_playback_reaches_playing(
     mount_sync_page: Callable[..., Page],
     page_url: str,
-    silence_song: Song,
+    silence_song: CatalogSong,
     browser_name: str,
     dev_token: str,
 ) -> None:
@@ -182,7 +182,7 @@ def test_drm_playback_reaches_playing(
     mock.data.songs = {"s1": silence_song}
     mock.endpoints.web_playback = WebPlaybackResponseSuccess(
         song_list=[
-            WebPlaybackSong(
+            WebPlaybackCatalogSong(
                 song_id="s1",
                 hls_key_cert_url="https://s.mzstatic.com/skdtool_2021_certbundle.bin",
                 hls_key_server_url="https://play.itunes.apple.com/WebObjects/MZPlay.woa/wa/acquireWebPlaybackLicense",
@@ -215,7 +215,7 @@ def test_drm_playback_reaches_playing(
 def test_license_failure_aborts_playback(
     mount_sync_page: Callable[..., Page],
     page_url: str,
-    silence_song: Song,
+    silence_song: CatalogSong,
     browser_name: str,
     dev_token: str,
 ) -> None:
@@ -245,7 +245,7 @@ def test_license_failure_aborts_playback(
 def test_license_failure_variant_surfaces_as_media_playback_error(
     mount_sync_page: Callable[..., Page],
     page_url: str,
-    silence_song: Song,
+    silence_song: CatalogSong,
     browser_name: str,
     dev_token: str,
     license_response_factory: Callable[[], LicenseResponse],
@@ -277,7 +277,7 @@ def test_license_failure_variant_surfaces_as_media_playback_error(
 def test_skip_to_next_in_multi_track_queue(
     mount_sync_page: Callable[..., Page],
     page_url: str,
-    silence_song: Song,
+    silence_song: CatalogSong,
     browser_name: str,
     dev_token: str,
 ) -> None:
@@ -295,7 +295,7 @@ def test_skip_to_next_in_multi_track_queue(
 def test_set_queue_from_album_resolves_tracks(
     mount_sync_page: Callable[..., Page],
     page_url: str,
-    silence_song: Song,
+    silence_song: CatalogSong,
     dev_token: str,
 ) -> None:
     """``mk.setQueue({ album })`` resolves to the album's track ids."""
@@ -314,9 +314,9 @@ def test_set_queue_from_album_resolves_tracks(
     )
     mock.data.songs = {"s1": silence_song, "s2": silence_song}
     mock.data.albums = {
-        "a1": Album(
-            name="Test Album",
-            artist_name="Test Artist",
+        "a1": CatalogAlbum(
+            name="Test CatalogAlbum",
+            artist_name="Test CatalogArtist",
             artwork=Artwork(url="https://example.com/a.jpg", width=1, height=1),
             genre_names=[],
             track_count=2,
@@ -339,7 +339,7 @@ def test_set_queue_from_album_resolves_tracks(
 def test_set_queue_from_playlist_resolves_tracks(
     mount_sync_page: Callable[..., Page],
     page_url: str,
-    silence_song: Song,
+    silence_song: CatalogSong,
     dev_token: str,
 ) -> None:
     """``mk.setQueue({ playlist })`` resolves to the playlist's track ids."""
@@ -407,7 +407,7 @@ def test_set_queue_from_music_video_no_relationship_chain(
     mock.data.music_videos = {
         "mv1": MusicVideo(
             name="Test MV",
-            artist_name="Test Artist",
+            artist_name="Test CatalogArtist",
             artwork=Artwork(url="https://example.com/mv.jpg", width=1, height=1),
             duration_ms=30_000,
             genre_names=[],
@@ -459,7 +459,7 @@ def test_set_queue_from_library_music_video_no_relationship_chain(
     mock.data.library_music_videos = {
         "i.mv1": LibraryMusicVideo(
             name="Library MV",
-            artist_name="Test Artist",
+            artist_name="Test CatalogArtist",
             artwork=Artwork(url="https://example.com/lmv.jpg", width=1, height=1),
             duration_ms=30_000,
             genre_names=[],
@@ -486,7 +486,7 @@ def test_set_queue_from_library_music_video_no_relationship_chain(
 def test_set_queue_from_song_no_composers_chain(
     mount_sync_page: Callable[..., Page],
     page_url: str,
-    silence_song: Song,
+    silence_song: CatalogSong,
     dev_token: str,
 ) -> None:
     mock = MusicKitApiMock()

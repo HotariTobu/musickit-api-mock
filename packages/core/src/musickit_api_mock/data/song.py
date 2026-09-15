@@ -52,7 +52,7 @@ class HlsLayout:
 
 
 @dataclass
-class Song:
+class CatalogSong:
     """Apple Music catalog song.
 
     Holds the audio bytes the mock returns for HLS playback and preview,
@@ -75,7 +75,7 @@ class Song:
         is_mastered_for_itunes: Apple's "Mastered for iTunes" badge.
         is_vocal_attenuation_allowed: Whether vocal attenuation (Sing) is
             allowed.
-        url: Song landing-page URL on Apple Music.
+        url: CatalogSong landing-page URL on Apple Music.
         hls_layout: fMP4 segment layout for the HLS manifest.
         hls_segment: Raw bytes of the fMP4 segment served for HLS playback.
         preview_audio: Raw bytes the mock serves as the preview asset.
@@ -146,7 +146,7 @@ class Song:
         fallback: SongMetadataFallback | None = None,
         *,
         preview: PreviewRange | bytes | None = None,
-    ) -> Song:
+    ) -> CatalogSong:
         """Build a song by reading metadata and audio bytes from a file on disk.
 
         Reads tags and audio data from the file at ``audio_path`` and
@@ -183,7 +183,7 @@ class SongMetadataFallback:
     Attributes:
         title: Display title fallback.
         artist: Primary artist fallback.
-        album: Album-name fallback.
+        album: CatalogAlbum-name fallback.
         artwork: Cover-artwork fallback.
         genres: Genres fallback.
         release_date: ISO-8601 release-date fallback.
@@ -236,7 +236,9 @@ class PreviewRange:
     duration_sec: float
 
 
-type SongsSource = dict[str, Song] | Callable[[LookupContext], Song | None] | None
+type SongsSource = (
+    dict[str, CatalogSong] | Callable[[LookupContext], CatalogSong | None] | None
+)
 
 
 class _SongResolver:
@@ -246,6 +248,6 @@ class _SongResolver:
         """Bind to the ``DataSources.songs`` source via a callback."""
         self._get_source = get_source
 
-    def get(self, context: LookupContext) -> Song | None:
+    def get(self, context: LookupContext) -> CatalogSong | None:
         """Return the song for ``context.id`` or ``None`` if absent."""
         return _lookup_source(self._get_source(), "data.songs", context)
