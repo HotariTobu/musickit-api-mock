@@ -1,4 +1,4 @@
-"""Build a ``CatalogSong`` from an audio file: metadata extraction, HLS layout, preview range."""
+"""Build a ``CatalogSong`` or ``UploadedLibrarySong`` from an audio file: metadata extraction, HLS layout, preview range."""
 
 from __future__ import annotations
 
@@ -17,6 +17,10 @@ from musickit_api_mock.data.song import HlsChunk, HlsLayout
 if TYPE_CHECKING:
     from av.container import InputContainer
 
+    from musickit_api_mock.data.library_song import (
+        UploadedLibrarySong,
+        UploadedLibrarySongMetadataFallback,
+    )
     from musickit_api_mock.data.song import (
         CatalogSong,
         PreviewRange,
@@ -433,4 +437,63 @@ def _song_from_file(
         hls_layout=hls_layout,
         hls_segment=hls_segment,
         preview_audio=preview_audio,
+    )
+
+
+def _uploaded_missing(field: str) -> ValueError:
+    return ValueError(
+        f"UploadedLibrarySong.from_file: missing {field!r}."
+        " Set via UploadedLibrarySongMetadataFallback."
+    )
+
+
+def _uploaded_library_song_from_file(
+    cls: type,
+    audio_path: str,
+    fallback: UploadedLibrarySongMetadataFallback | None = None,
+) -> UploadedLibrarySong:
+    import av
+
+    from musickit_api_mock.data.library_song import (
+        UploadedLibrarySongMetadataFallback,
+    )
+
+    f = fallback or UploadedLibrarySongMetadataFallback()
+    container = av.open(audio_path)
+    try:
+        duration_us = container.duration or 0
+        duration_ms = int(duration_us / 1000) if duration_us else 0
+        meta = container.metadata
+        file_artwork = _extract_artwork(container)
+    finally:
+        container.close()
+
+    name = _meta_get(meta, "title") or f.name
+    if name is None:
+        raise _uploaded_missing("name")
+    artist_name = _meta_get(meta, "artist") or f.artist_name
+    if artist_name is None:
+        raise _uploaded_missing("artist_name")
+    artwork = file_artwork if file_artwork is not None else f.artwork
+    if artwork is None:
+        raise _uploaded_missing("artwork")
+    genre_names = _meta_genres(meta)
+    if genre_names is None:
+        genre_names = f.genre_names
+    if genre_names is None:
+        raise _uploaded_missing("genre_names")
+    if f.has_lyrics is None:
+        raise _uploaded_missing("has_lyrics")
+
+    return cls(
+        name=name,
+        artist_name=artist_name,
+        artwork=artwork,
+        duration_ms=duration_ms,
+        genre_names=genre_names,
+        has_lyrics=f.has_lyrics,
+        audio=Path(audio_path).read_bytes(),
+        album_name=_meta_get(meta, "album") or f.album_name,
+        disc_number=_parse_int_field(_meta_get(meta, "disc")) or f.disc_number,
+        track_number=_parse_int_field(_meta_get(meta, "track")) or f.track_number,
     )

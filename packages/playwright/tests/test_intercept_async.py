@@ -13,14 +13,14 @@ from musickit_api_mock import (
     AuthorizeSuccess,
     CatalogAlbum,
     CatalogArtist,
+    CatalogLibraryAlbum,
+    CatalogLibraryArtist,
+    CatalogLibrarySong,
     CatalogSong,
     Curator,
     Genre,
     HlsChunk,
     HlsLayout,
-    LibraryAlbum,
-    LibraryArtist,
-    LibrarySong,
     LicenseResponse,
     LicenseResponseGeoBlock,
     LicenseResponseSuccess,
@@ -448,13 +448,14 @@ async def test_catalog_song_library_endpoint_intercepted(
         )
     }
     mock.data.library_songs = {
-        "i.s1": LibrarySong(
+        "i.s1": CatalogLibrarySong(
             name="LT",
             artist_name="LA",
             artwork=Artwork(url="https://example.com/lib.jpg", width=300, height=300),
             duration_ms=1,
             genre_names=[],
             has_lyrics=False,
+            catalog_id="1",
         )
     }
     page = await mount_async_page(mock)
@@ -635,14 +636,17 @@ async def test_library_artist_albums_endpoint_intercepted(
 ) -> None:
     mock = MusicKitApiMock()
     _basic_storefront(mock)
-    mock.data.library_artists = {"r.ar1": LibraryArtist(name="LA", album_ids=["l.a1"])}
+    mock.data.library_artists = {
+        "r.ar1": CatalogLibraryArtist(name="LA", album_ids=["l.a1"], catalog_id="ar1")
+    }
     mock.data.library_albums = {
-        "l.a1": LibraryAlbum(
+        "l.a1": CatalogLibraryAlbum(
             name="LAlbum",
             artist_name="LA",
             artwork=_library_artwork(),
             genre_names=[],
             track_count=0,
+            catalog_id="a1",
         )
     }
     page = await mount_async_page(mock)
