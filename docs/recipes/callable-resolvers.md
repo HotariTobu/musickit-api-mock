@@ -1,6 +1,6 @@
 # Generate dynamic catalog responses from a pattern
 
-Every `mock.data.*` field accepts either a `dict[str, T]` keyed by id or a `Callable[[LookupContext], T | None]`. The callable form lets you generate a resource on demand instead of enumerating every id up front — useful when the test sweeps over hundreds of ids or when ids carry pattern-encoded metadata.
+Every `mock.data.*` field accepts either a `Mapping[str, T]` keyed by id (a plain `dict`) or a `Callable[[LookupContext], T | None]`. The callable form lets you generate a resource on demand instead of enumerating every id up front — useful when the test sweeps over hundreds of ids or when ids carry pattern-encoded metadata.
 
 ## Per-id factory
 

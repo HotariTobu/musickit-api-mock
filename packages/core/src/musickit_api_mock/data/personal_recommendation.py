@@ -6,7 +6,7 @@ The linked resources can mix types within a single recommendation
 own type. The ``contents`` relationship is default-included by Apple.
 """
 
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from typing import Literal
 
@@ -86,7 +86,7 @@ class PersonalRecommendation:
 
 
 type PersonalRecommendationsSource = (
-    dict[str, PersonalRecommendation]
+    Mapping[str, PersonalRecommendation]
     | Callable[[LookupContext], PersonalRecommendation | None]
     | None
 )

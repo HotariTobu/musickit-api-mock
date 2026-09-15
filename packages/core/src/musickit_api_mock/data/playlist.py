@@ -1,6 +1,6 @@
 """Catalog playlist resource."""
 
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from typing import Literal
 
@@ -57,7 +57,7 @@ class Playlist:
 
 
 type PlaylistsSource = (
-    dict[str, Playlist] | Callable[[LookupContext], Playlist | None] | None
+    Mapping[str, Playlist] | Callable[[LookupContext], Playlist | None] | None
 )
 
 

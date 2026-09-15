@@ -1,6 +1,6 @@
 """Library artist resource."""
 
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 
 from musickit_api_mock.data.lookup import LookupContext, _lookup_source
@@ -23,7 +23,7 @@ class LibraryArtist:
 
 
 type LibraryArtistsSource = (
-    dict[str, LibraryArtist] | Callable[[LookupContext], LibraryArtist | None] | None
+    Mapping[str, LibraryArtist] | Callable[[LookupContext], LibraryArtist | None] | None
 )
 
 

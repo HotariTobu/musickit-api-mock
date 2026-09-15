@@ -10,7 +10,7 @@ error parsing equivalent to the body-status path, so the mock emits HTTP 200
 with the failure code in the body and MusicKit's reaction is identical.
 """
 
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 
 from musickit_api_mock.key_system import KeySystem
@@ -162,19 +162,19 @@ class LicenseLiveRadioContext:
 
 type LicenseCatalogSongSetter = (
     LicenseResponse
-    | dict[str, LicenseResponse]
+    | Mapping[str, LicenseResponse]
     | Callable[[LicenseCatalogSongContext], LicenseResponse]
     | None
 )
 type LicenseHlsOffersSetter = (
     LicenseResponse
-    | dict[str, LicenseResponse]
+    | Mapping[str, LicenseResponse]
     | Callable[[LicenseHlsOffersContext], LicenseResponse]
     | None
 )
 type LicenseLiveRadioSetter = (
     LicenseResponse
-    | dict[str, LicenseResponse]
+    | Mapping[str, LicenseResponse]
     | Callable[[LicenseLiveRadioContext], LicenseResponse]
     | None
 )

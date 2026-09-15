@@ -6,7 +6,7 @@ The label surfaces inline when the album emits
 data of ``/v1/catalog/{sf}/albums/{id}/record-labels``.
 """
 
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 
 from musickit_api_mock.data.lookup import LookupContext, _lookup_source
@@ -32,7 +32,7 @@ class RecordLabel:
 
 
 type RecordLabelsSource = (
-    dict[str, RecordLabel] | Callable[[LookupContext], RecordLabel | None] | None
+    Mapping[str, RecordLabel] | Callable[[LookupContext], RecordLabel | None] | None
 )
 
 

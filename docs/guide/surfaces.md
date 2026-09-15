@@ -12,7 +12,7 @@ A `MusicKitApiMock` instance exposes three configuration surfaces. The split is 
 
 Each field accepts:
 
-- a **`dict[str, T]` keyed by id** — looked up on demand, or
+- a **`Mapping[str, T]` keyed by id** (a plain `dict`) — looked up on demand, or
 - a **`Callable[[LookupContext], T | None]`** — for dynamic resolution (e.g. load a `CatalogSong` for any id matching a pattern, or return `None` for not found).
 
 ```python
