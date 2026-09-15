@@ -87,6 +87,7 @@ class _WebPlaybackSongEntry(TypedDict, total=False):
     songId: str
     assets: list[dict[str, _JSONValue]]
     keyCert: str
+    needsPlaybackReporting: bool
 
 
 class _WebPlaybackResponseBody(TypedDict, total=False):
