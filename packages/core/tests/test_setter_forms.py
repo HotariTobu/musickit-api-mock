@@ -18,6 +18,7 @@ from __future__ import annotations
 import json
 from typing import TYPE_CHECKING, cast
 
+import pytest
 from musickit_api_mock import (
     Account,
     AccountResponse,
@@ -37,8 +38,11 @@ from musickit_api_mock import (
     StorefrontResponse,
     StorefrontResponseSuccess,
     WebPlaybackAsset,
+    WebPlaybackCatalogItemContext,
+    WebPlaybackCatalogLibrarySong,
     WebPlaybackCatalogSong,
     WebPlaybackContext,
+    WebPlaybackLibraryItemContext,
     WebPlaybackResponse,
     WebPlaybackResponseSuccess,
 )
@@ -179,11 +183,63 @@ def test_web_playback_dict_form_dispatches_on_salable_adam_id(
     assert parsed["songList"][0]["songId"] == "s1"
 
 
-def test_web_playback_callable_form_receives_context(mock: MusicKitApiMock) -> None:
-    captured: list[str] = []
+def test_web_playback_mapping_form_dispatches_on_universal_library_id(
+    mock: MusicKitApiMock,
+) -> None:
+    """Library-item bodies key the mapping form by ``universalLibraryId``."""
+    success_song = WebPlaybackCatalogLibrarySong(
+        song_id="s1",
+        hls_key_cert_url="https://s.mzstatic.com/skdtool_2021_certbundle.bin",
+        hls_key_server_url="https://play.itunes.apple.com/WebObjects/MZPlay.woa/wa/acquireWebPlaybackLicense",
+        widevine_cert_url="https://play.itunes.apple.com/WebObjects/MZPlay.woa/wa/widevineCert",
+        assets=[
+            WebPlaybackAsset(
+                flavor="28:cbcp32",
+                url="https://aod-ssl.itunes.apple.com/itunes-assets/s1/index.m3u8",
+            )
+        ],
+    )
+    web_playback_dict: dict[str, WebPlaybackResponse] = {
+        "i.abc": WebPlaybackResponseSuccess(song_list=[success_song]),
+    }
+    mock.endpoints.web_playback = web_playback_dict
+    body = json.dumps(
+        {"subscriptionAdamId": "s1", "universalLibraryId": "i.abc"}
+    ).encode()
+    status, raw = _post(
+        mock,
+        "https://play.itunes.apple.com/WebObjects/MZPlay.woa/wa/webPlayback",
+        body,
+    )
+    parsed = cast("_WebPlaybackResponseBody", raw)
+    assert status == 200
+    assert parsed["status"] == 0
+    assert parsed["songList"][0]["songId"] == "s1"
+
+
+def test_web_playback_mapping_form_rejects_library_item_without_universal_library_id(
+    mock: MusicKitApiMock,
+) -> None:
+    web_playback_dict: dict[str, WebPlaybackResponse] = {}
+    mock.endpoints.web_playback = web_playback_dict
+    body = json.dumps({"subscriptionAdamId": "s1"}).encode()
+    with pytest.raises(
+        ValueError, match=r"endpoints\.web_playback mapping form has no key"
+    ):
+        _post(
+            mock,
+            "https://play.itunes.apple.com/WebObjects/MZPlay.woa/wa/webPlayback",
+            body,
+        )
+
+
+def test_web_playback_callable_form_receives_catalog_item_context(
+    mock: MusicKitApiMock,
+) -> None:
+    captured: list[WebPlaybackContext] = []
 
     def fn(ctx: WebPlaybackContext) -> WebPlaybackResponse:
-        captured.append(ctx.salable_adam_id)
+        captured.append(ctx)
         return WebPlaybackResponseSuccess(song_list=[])
 
     mock.endpoints.web_playback = fn
@@ -193,7 +249,38 @@ def test_web_playback_callable_form_receives_context(mock: MusicKitApiMock) -> N
         "https://play.itunes.apple.com/WebObjects/MZPlay.woa/wa/webPlayback",
         body,
     )
-    assert captured == ["abc"]
+    assert captured == [WebPlaybackCatalogItemContext(salable_adam_id="abc")]
+
+
+def test_web_playback_callable_form_receives_library_item_context(
+    mock: MusicKitApiMock,
+) -> None:
+    captured: list[WebPlaybackContext] = []
+
+    def fn(ctx: WebPlaybackContext) -> WebPlaybackResponse:
+        captured.append(ctx)
+        return WebPlaybackResponseSuccess(song_list=[])
+
+    mock.endpoints.web_playback = fn
+    body = json.dumps(
+        {
+            "purchaseAdamId": "p1",
+            "subscriptionAdamId": "c1",
+            "universalLibraryId": "i.abc",
+        }
+    ).encode()
+    _post(
+        mock,
+        "https://play.itunes.apple.com/WebObjects/MZPlay.woa/wa/webPlayback",
+        body,
+    )
+    assert captured == [
+        WebPlaybackLibraryItemContext(
+            subscription_adam_id="c1",
+            universal_library_id="i.abc",
+            purchase_adam_id="p1",
+        )
+    ]
 
 
 # --- _resolve_with_context: static form for continuous_stations ------------------

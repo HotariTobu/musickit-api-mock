@@ -76,6 +76,7 @@ from musickit_api_mock.endpoints.responses.storefront import (
     StorefrontSetter,
 )
 from musickit_api_mock.endpoints.responses.web_playback import (
+    WebPlaybackCatalogItemContext,
     WebPlaybackContext,
     WebPlaybackResponse,
     WebPlaybackSetter,
@@ -107,8 +108,11 @@ class EndpointResponses:
             endpoint, keyed by adam id.
         license_live_radio: Override for the live-radio license acquisition
             endpoint, keyed by station id.
-        web_playback: Override for the web-playback endpoint, keyed by
-            salable adam id.
+        web_playback: Override for the web-playback endpoint, keyed by the
+            id MusicKit plays: the salable adam id of a catalog item, or the
+            universal library id of a library item. The mapping form raises
+            for a library item whose request carries no universal library
+            id.
         play_assets_catalog_song: Override for catalog-song play-assets,
             keyed by adam id.
         play_assets_live_audio: Override for live-audio play-assets, keyed
@@ -165,13 +169,15 @@ def _resolve_static(setter: _T | Callable[[], _T] | None, name: str) -> _T:
 def _resolve_keyed(
     setter: _T | Mapping[str, _T] | Callable[[_C], _T] | None,
     ctx: _C,
-    key: str,
+    key: str | None,
     name: str,
 ) -> _T:
     if setter is None:
         raise ValueError(f"{name} is not set")
     if isinstance(setter, Mapping):
         d = cast("Mapping[str, _T]", setter)
+        if key is None:
+            raise ValueError(f"{name} mapping form has no key for this request")
         if key not in d:
             raise ValueError(f"{name}[{key!r}] is not set")
         return d[key]
@@ -293,10 +299,15 @@ class _EndpointResolver:
 
     def web_playback(self, ctx: WebPlaybackContext) -> WebPlaybackResponse:
         """Resolve the ``web_playback`` setter for the given context."""
+        key = (
+            ctx.salable_adam_id
+            if isinstance(ctx, WebPlaybackCatalogItemContext)
+            else ctx.universal_library_id
+        )
         return _resolve_keyed(
             self._get_endpoints().web_playback,
             ctx,
-            ctx.salable_adam_id,
+            key,
             "endpoints.web_playback",
         )
 

@@ -4,12 +4,16 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from musickit_api_mock.endpoints.responses.web_playback import (
+    WebPlaybackCatalogLibrarySong,
+)
 from musickit_api_mock.endpoints.schema.builders import _strip_none
 
 if TYPE_CHECKING:
     from musickit_api_mock.endpoints.responses.web_playback import (
         WebPlaybackAsset,
         WebPlaybackResponseSuccess,
+        WebPlaybackSong,
     )
     from musickit_api_mock.json_value import _JSONValue
 
@@ -25,23 +29,24 @@ def _web_playback_asset(a: WebPlaybackAsset) -> dict[str, _JSONValue]:
     )
 
 
+def _web_playback_song(s: WebPlaybackSong) -> dict[str, _JSONValue]:
+    out: dict[str, _JSONValue] = {
+        "songId": s.song_id,
+        "hls-key-cert-url": s.hls_key_cert_url,
+        "hls-key-server-url": s.hls_key_server_url,
+        "widevine-cert-url": s.widevine_cert_url,
+        "hls-playlist-url": s.hls_playlist_url,
+        "assets": [_web_playback_asset(a) for a in s.assets],
+    }
+    if isinstance(s, WebPlaybackCatalogLibrarySong):
+        out["needsPlaybackReporting"] = True
+    return _strip_none(out)
+
+
 def _web_playback_success_body(
     resp: WebPlaybackResponseSuccess,
 ) -> dict[str, _JSONValue]:
-    songs: list[dict[str, _JSONValue]] = [
-        _strip_none(
-            {
-                "songId": s.song_id,
-                "hls-key-cert-url": s.hls_key_cert_url,
-                "hls-key-server-url": s.hls_key_server_url,
-                "widevine-cert-url": s.widevine_cert_url,
-                "hls-playlist-url": s.hls_playlist_url,
-                "assets": [_web_playback_asset(a) for a in s.assets],
-            }
-        )
-        for s in resp.song_list
-    ]
-    return {"songList": songs, "status": 0}
+    return {"songList": [_web_playback_song(s) for s in resp.song_list], "status": 0}
 
 
 def _web_playback_unsupported_body() -> dict[str, _JSONValue]:

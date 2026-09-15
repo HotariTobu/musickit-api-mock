@@ -1,5 +1,7 @@
+from __future__ import annotations
+
 import json
-from typing import cast
+from typing import TYPE_CHECKING, cast
 
 from musickit_api_mock import (
     MusicKitApiMock,
@@ -16,11 +18,15 @@ from musickit_api_mock import (
     Request,
     Station,
     WebPlaybackAsset,
+    WebPlaybackCatalogLibrarySong,
     WebPlaybackCatalogSong,
     WebPlaybackResponseGeoBlock,
     WebPlaybackResponseSuccess,
     WebPlaybackResponseUnsupportedError,
 )
+
+if TYPE_CHECKING:
+    from tests._apple_response import _WebPlaybackResponseBody
 
 
 def test_p02_web_playback(mock: MusicKitApiMock) -> None:
@@ -244,3 +250,74 @@ def test_p02_web_playback_unsupported_error(mock: MusicKitApiMock) -> None:
     assert resp.status == 200
     parsed = json.loads(resp.body)
     assert parsed["songList"] == []
+
+
+def _drm_fields() -> dict[str, str]:
+    return {
+        "hls_key_cert_url": "https://s.mzstatic.com/skdtool_2021_certbundle.bin",
+        "hls_key_server_url": "https://play.itunes.apple.com/WebObjects/MZPlay.woa/wa/acquireWebPlaybackLicense",
+        "widevine_cert_url": "https://play.itunes.apple.com/WebObjects/MZPlay.woa/wa/widevineCert",
+    }
+
+
+def _web_playback(
+    mock: MusicKitApiMock, body: dict[str, str]
+) -> _WebPlaybackResponseBody:
+    resp = mock.handle_request(
+        Request(
+            method="POST",
+            url="https://play.itunes.apple.com/WebObjects/MZPlay.woa/wa/webPlayback",
+            headers={},
+            body=json.dumps(body).encode(),
+        )
+    )
+    assert resp is not None
+    assert resp.status == 200
+    return cast("_WebPlaybackResponseBody", json.loads(resp.body))
+
+
+def test_p02_web_playback_catalog_song_omits_playback_reporting(
+    mock: MusicKitApiMock,
+) -> None:
+    mock.endpoints.web_playback = WebPlaybackResponseSuccess(
+        song_list=[
+            WebPlaybackCatalogSong(
+                song_id="1",
+                assets=[
+                    WebPlaybackAsset(
+                        flavor="28:cbcp32",
+                        url="https://aod-ssl.itunes.apple.com/itunes-assets/1/index.m3u8",
+                    )
+                ],
+                **_drm_fields(),
+            )
+        ]
+    )
+    song = _web_playback(mock, {"salableAdamId": "1"})["songList"][0]
+    assert song["songId"] == "1"
+    assert "needsPlaybackReporting" not in song
+
+
+def test_p02_web_playback_catalog_library_song_needs_playback_reporting(
+    mock: MusicKitApiMock,
+) -> None:
+    mock.endpoints.web_playback = WebPlaybackResponseSuccess(
+        song_list=[
+            WebPlaybackCatalogLibrarySong(
+                song_id="1",
+                assets=[
+                    WebPlaybackAsset(
+                        flavor="28:cbcp32",
+                        url="https://aod-ssl.itunes.apple.com/itunes-assets/1/index.m3u8",
+                    )
+                ],
+                **_drm_fields(),
+            )
+        ]
+    )
+    song = _web_playback(
+        mock, {"subscriptionAdamId": "1", "universalLibraryId": "i.abc"}
+    )["songList"][0]
+    assert song["songId"] == "1"
+    assert song["needsPlaybackReporting"] is True
+    assert "hls-key-cert-url" in song

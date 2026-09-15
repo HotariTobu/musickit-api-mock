@@ -32,7 +32,7 @@ class WebPlaybackAsset:
 
 @dataclass
 class WebPlaybackCatalogSong:
-    """Per-song web-playback payload (DRM URLs, asset list, optional HLS).
+    """Web-playback payload for a catalog song (DRM URLs, asset list, optional HLS).
 
     Attributes:
         hls_key_cert_url: FairPlay certificate endpoint for HLS playback.
@@ -53,6 +53,34 @@ class WebPlaybackCatalogSong:
 
 
 @dataclass
+class WebPlaybackCatalogLibrarySong:
+    """Web-playback payload for a library song that plays through its catalog song.
+
+    Carries the catalog song's DRM URLs and assets; the mock marks the
+    payload as needing playback reporting, as Apple does for library items.
+
+    Attributes:
+        hls_key_cert_url: FairPlay certificate endpoint for HLS playback.
+        hls_key_server_url: License-acquisition endpoint for HLS playback.
+        widevine_cert_url: Widevine certificate endpoint.
+        assets: Per-variant playback assets for the song.
+        song_id: Catalog song id the library song plays through.
+        hls_playlist_url: Optional HLS master-playlist URL when an HLS
+            rendition is available alongside the asset variants.
+    """
+
+    hls_key_cert_url: str
+    hls_key_server_url: str
+    widevine_cert_url: str
+    assets: list[WebPlaybackAsset]
+    song_id: str
+    hls_playlist_url: str | None = None
+
+
+WebPlaybackSong = WebPlaybackCatalogSong | WebPlaybackCatalogLibrarySong
+
+
+@dataclass
 class WebPlaybackResponseSuccess:
     """200 response carrying one or more song payloads.
 
@@ -60,7 +88,7 @@ class WebPlaybackResponseSuccess:
         song_list: Per-song web-playback payloads returned to the caller.
     """
 
-    song_list: list[WebPlaybackCatalogSong]
+    song_list: list[WebPlaybackSong]
 
 
 @dataclass
@@ -153,14 +181,36 @@ WebPlaybackResponse = (
 
 
 @dataclass
-class WebPlaybackContext:
-    """Context for the web-playback setter.
+class WebPlaybackCatalogItemContext:
+    """Context for a web-playback request MusicKit makes for a catalog item.
 
     Attributes:
         salable_adam_id: Salable adam id the web-playback request is for.
     """
 
     salable_adam_id: str
+
+
+@dataclass
+class WebPlaybackLibraryItemContext:
+    """Context for a web-playback request MusicKit makes for a library item.
+
+    MusicKit omits each field from the request body when the library item
+    has no value for it.
+
+    Attributes:
+        subscription_adam_id: Catalog song adam id the library item plays
+            through.
+        universal_library_id: Library id of the item.
+        purchase_adam_id: Purchased adam id of the item.
+    """
+
+    subscription_adam_id: str | None
+    universal_library_id: str | None
+    purchase_adam_id: str | None
+
+
+WebPlaybackContext = WebPlaybackCatalogItemContext | WebPlaybackLibraryItemContext
 
 
 type WebPlaybackSetter = (
