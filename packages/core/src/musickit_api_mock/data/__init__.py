@@ -1,7 +1,7 @@
 """Resource dataclasses (catalog and library) and shared building blocks."""
 
-from musickit_api_mock.data.album import Album
-from musickit_api_mock.data.artist import Artist
+from musickit_api_mock.data.album import CatalogAlbum
+from musickit_api_mock.data.artist import CatalogArtist
 from musickit_api_mock.data.curator import Curator
 from musickit_api_mock.data.genre import Genre
 from musickit_api_mock.data.grouping import Grouping
@@ -27,18 +27,19 @@ from musickit_api_mock.data.primitives import (
 )
 from musickit_api_mock.data.record_label import RecordLabel
 from musickit_api_mock.data.song import (
+    CatalogSong,
     HlsChunk,
     HlsLayout,
     PreviewRange,
-    Song,
     SongMetadataFallback,
 )
 from musickit_api_mock.data.station import Station
 
 __all__ = [
-    "Album",
-    "Artist",
     "Artwork",
+    "CatalogAlbum",
+    "CatalogArtist",
+    "CatalogSong",
     "Curator",
     "Description",
     "EditorialNotes",
@@ -60,7 +61,6 @@ __all__ = [
     "Preview",
     "PreviewRange",
     "RecordLabel",
-    "Song",
     "SongMetadataFallback",
     "Station",
     "StationContextPlayAsset",

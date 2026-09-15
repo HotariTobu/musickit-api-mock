@@ -4,7 +4,7 @@ A `MusicKitApiMock` instance exposes three configuration surfaces. The split is 
 
 | Surface | Holds | When to use |
 |---|---|---|
-| `mock.data.*` | Shared resource sources (songs, albums, playlists, artists, library items, ...) | When multiple endpoints should read the same resource (e.g. `/songs/<id>` and `/me/library/songs` both serve the same `Song`). |
+| `mock.data.*` | Shared resource sources (songs, albums, playlists, artists, library items, ...) | When multiple endpoints should read the same resource (e.g. `/songs/<id>` and `/me/library/songs` both serve the same `CatalogSong`). |
 | `mock.endpoints.*` | Per-endpoint HTTP response overrides (storefront, account, license, web playback, ...) | When you need to shape the HTTP response itself — status, error variants, success body. |
 | `mock.browser.*` | State consumed by the in-page JS shim (authorize response, EME key-system flavor) | When you need to control what the page sees from MusicKit JS's browser integrations — not the network. |
 
@@ -13,19 +13,19 @@ A `MusicKitApiMock` instance exposes three configuration surfaces. The split is 
 Each field accepts:
 
 - a **`dict[str, T]` keyed by id** — looked up on demand, or
-- a **`Callable[[LookupContext], T | None]`** — for dynamic resolution (e.g. load a `Song` for any id matching a pattern, or return `None` for not found).
+- a **`Callable[[LookupContext], T | None]`** — for dynamic resolution (e.g. load a `CatalogSong` for any id matching a pattern, or return `None` for not found).
 
 ```python
 # dict form
 mock.data.songs = {
-    "1000000001": Song.from_file("path/to/song.m4a"),
+    "1000000001": CatalogSong.from_file("path/to/song.m4a"),
 }
 
 # callable form
-def resolve_song(ctx: LookupContext) -> Song | None:
+def resolve_song(ctx: LookupContext) -> CatalogSong | None:
     if not ctx.id.startswith("test-"):
         return None
-    return Song.from_file(f"path/to/songs/{ctx.id}.m4a")
+    return CatalogSong.from_file(f"path/to/songs/{ctx.id}.m4a")
 
 mock.data.songs = resolve_song
 ```

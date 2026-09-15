@@ -31,7 +31,7 @@ from tests.scenarios_musickit import (
 if TYPE_CHECKING:
     from collections.abc import Callable
 
-    from musickit_api_mock import Song
+    from musickit_api_mock import CatalogSong
     from playwright.sync_api import Page
 
 
@@ -44,7 +44,7 @@ pytestmark = [
 def test_pause_and_resume(
     mount_sync_page: Callable[..., Page],
     page_url: str,
-    silence_song: Song,
+    silence_song: CatalogSong,
     browser_name: str,
     dev_token: str,
 ) -> None:
@@ -59,7 +59,7 @@ def test_pause_and_resume(
 def test_seek_to_time_during_playback(
     mount_sync_page: Callable[..., Page],
     page_url: str,
-    silence_song: Song,
+    silence_song: CatalogSong,
     browser_name: str,
     dev_token: str,
 ) -> None:
@@ -76,7 +76,7 @@ def test_seek_to_time_during_playback(
 def test_stop_during_playback(
     mount_sync_page: Callable[..., Page],
     page_url: str,
-    silence_song: Song,
+    silence_song: CatalogSong,
     browser_name: str,
     dev_token: str,
 ) -> None:
@@ -91,7 +91,7 @@ def test_stop_during_playback(
 def test_jump_to_non_adjacent_index(
     mount_sync_page: Callable[..., Page],
     page_url: str,
-    silence_song: Song,
+    silence_song: CatalogSong,
     browser_name: str,
     dev_token: str,
 ) -> None:

@@ -9,10 +9,11 @@ import pytest
 from musickit_api_mock import (
     Account,
     AccountResponseSuccess,
-    Album,
-    Artist,
     Artwork,
     AuthorizeSuccess,
+    CatalogAlbum,
+    CatalogArtist,
+    CatalogSong,
     Curator,
     Genre,
     HlsChunk,
@@ -31,7 +32,6 @@ from musickit_api_mock import (
     Playlist,
     Preview,
     RecordLabel,
-    Song,
     Station,
     Storefront,
     StorefrontResponseSuccess,
@@ -418,7 +418,7 @@ async def test_catalog_song_library_endpoint_intercepted(
     _basic_storefront(mock)
     art = Artwork(url="https://example.com/a.jpg", width=640, height=640)
     mock.data.songs = {
-        "1": Song(
+        "1": CatalogSong(
             title="T",
             artist="A",
             album="Al",
@@ -470,8 +470,8 @@ def _library_artwork() -> Artwork:
     return Artwork(url="https://example.com/lib.jpg", width=300, height=300)
 
 
-def _make_artist(*, station_id: str | None = None) -> Artist:
-    return Artist(
+def _make_artist(*, station_id: str | None = None) -> CatalogArtist:
+    return CatalogArtist(
         name="A",
         genre_names=[],
         url="https://music.apple.com/us/artist/ar1",
@@ -495,8 +495,8 @@ def _make_station() -> Station:
     )
 
 
-def _make_minimal_song() -> Song:
-    return Song(
+def _make_minimal_song() -> CatalogSong:
+    return CatalogSong(
         title="T",
         artist="A",
         album="Al",
@@ -569,7 +569,7 @@ async def test_album_record_labels_endpoint_intercepted(
     mock = MusicKitApiMock()
     _basic_storefront(mock)
     mock.data.albums = {
-        "a1": Album(
+        "a1": CatalogAlbum(
             name="Al",
             artist_name="A",
             artwork=_catalog_artwork(),

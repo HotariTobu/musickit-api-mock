@@ -12,14 +12,14 @@ from musickit_api_mock.endpoints.schema.builders import (
 from musickit_api_mock.endpoints.schema.play_params import _play_params_album
 
 if TYPE_CHECKING:
-    from musickit_api_mock.data.album import Album
+    from musickit_api_mock.data.album import CatalogAlbum
     from musickit_api_mock.json_value import _JSONValue
 
 
 def _album_resource(
     sf: str,
     album_id: str,
-    album: Album,
+    album: CatalogAlbum,
     *,
     relationships: dict[str, _JSONValue] | None = None,
     extend_editorial_artwork: bool = False,

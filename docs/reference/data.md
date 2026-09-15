@@ -8,9 +8,9 @@ Shared resource sources and dataclasses used by the data configuration surface.
 
 ## Catalog resources
 
-::: musickit_api_mock.Song
-::: musickit_api_mock.Album
-::: musickit_api_mock.Artist
+::: musickit_api_mock.CatalogSong
+::: musickit_api_mock.CatalogAlbum
+::: musickit_api_mock.CatalogArtist
 ::: musickit_api_mock.Playlist
 ::: musickit_api_mock.MusicVideo
 ::: musickit_api_mock.Station

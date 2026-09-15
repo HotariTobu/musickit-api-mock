@@ -17,7 +17,7 @@ from tests.scenarios_musickit import (
 if TYPE_CHECKING:
     from collections.abc import Awaitable, Callable
 
-    from musickit_api_mock import Song
+    from musickit_api_mock import CatalogSong
     from playwright.async_api import Page as AsyncPage
 
 
@@ -30,7 +30,7 @@ pytestmark = [
 async def test_single_song_repeat_loops(
     mount_async_page: Callable[..., Awaitable[AsyncPage]],
     page_url: str,
-    short_silence_song: Song,
+    short_silence_song: CatalogSong,
     browser_name: str,
     dev_token: str,
 ) -> None:

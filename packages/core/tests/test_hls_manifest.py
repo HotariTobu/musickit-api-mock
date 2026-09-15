@@ -14,7 +14,7 @@ from __future__ import annotations
 
 from typing import cast
 
-from musickit_api_mock import MusicKitApiMock, Request, Song
+from musickit_api_mock import CatalogSong, MusicKitApiMock, Request
 
 
 def _fetch_manifest(mock: MusicKitApiMock, song_id: str) -> str:
@@ -43,9 +43,9 @@ def test_manifest_emits_required_directives(mock: MusicKitApiMock) -> None:
 def test_manifest_target_duration_matches_layout(
     mock: MusicKitApiMock,
 ) -> None:
-    """Target duration in manifest equals ``Song.hls_layout.target_duration_sec``."""
+    """Target duration in manifest equals ``CatalogSong.hls_layout.target_duration_sec``."""
     body = _fetch_manifest(mock, "1")
-    songs = cast("dict[str, Song]", mock.data.songs)
+    songs = cast("dict[str, CatalogSong]", mock.data.songs)
     expected = songs["1"].hls_layout.target_duration_sec
     assert f"#EXT-X-TARGETDURATION:{expected}" in body
 
@@ -55,7 +55,7 @@ def test_manifest_emits_one_chunk_block_per_layout_chunk(
 ) -> None:
     """Each ``HlsChunk`` produces one ``EXTINF`` + one ``EXT-X-BYTERANGE``."""
     body = _fetch_manifest(mock, "1")
-    songs = cast("dict[str, Song]", mock.data.songs)
+    songs = cast("dict[str, CatalogSong]", mock.data.songs)
     expected_chunks = len(songs["1"].hls_layout.chunks)
     assert body.count("#EXTINF:") == expected_chunks
     assert body.count("#EXT-X-BYTERANGE:") == expected_chunks
@@ -103,13 +103,13 @@ def test_manifest_kid_differs_per_song_id() -> None:
     """The KID (and thus the data: URI) is derived deterministically from the song id."""
     from musickit_api_mock import (
         Artwork,
+        CatalogSong,
         HlsChunk,
         HlsLayout,
-        Song,
     )
 
-    def _song(title: str) -> Song:
-        return Song(
+    def _song(title: str) -> CatalogSong:
+        return CatalogSong(
             title=title,
             artist="A",
             album="Al",
