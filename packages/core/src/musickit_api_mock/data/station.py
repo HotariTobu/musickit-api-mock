@@ -1,6 +1,6 @@
 """Catalog radio station resource."""
 
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from typing import Literal
 
@@ -49,7 +49,7 @@ class Station:
 
 
 type StationsSource = (
-    dict[str, Station] | Callable[[LookupContext], Station | None] | None
+    Mapping[str, Station] | Callable[[LookupContext], Station | None] | None
 )
 
 

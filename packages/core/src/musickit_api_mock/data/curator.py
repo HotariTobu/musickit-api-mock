@@ -6,7 +6,7 @@ the default response. The ref's ``type`` field is one of ``apple-curators``
 ``?include=curator`` embeds full Curator attributes inline.
 """
 
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from typing import Literal
 
@@ -44,7 +44,7 @@ class Curator:
 
 
 type CuratorsSource = (
-    dict[str, Curator] | Callable[[LookupContext], Curator | None] | None
+    Mapping[str, Curator] | Callable[[LookupContext], Curator | None] | None
 )
 
 

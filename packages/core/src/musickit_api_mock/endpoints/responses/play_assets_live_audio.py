@@ -1,6 +1,6 @@
 """Live-audio play-assets family (radio family)."""
 
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 
 
@@ -80,7 +80,7 @@ PlayAssetsLiveAudioResponse = (
 
 type PlayAssetsLiveAudioSetter = (
     PlayAssetsLiveAudioResponse
-    | dict[str, PlayAssetsLiveAudioResponse]
+    | Mapping[str, PlayAssetsLiveAudioResponse]
     | Callable[[PlayAssetsLiveAudioContext], PlayAssetsLiveAudioResponse]
     | None
 )

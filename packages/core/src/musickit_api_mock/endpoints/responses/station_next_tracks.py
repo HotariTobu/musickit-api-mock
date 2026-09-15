@@ -1,6 +1,6 @@
 """Context and setter type alias for the station next-tracks endpoint."""
 
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 
 
@@ -18,5 +18,5 @@ class StationNextTracksContext:
 
 
 type StationNextTracksSetter = (
-    dict[str, list[str]] | Callable[[StationNextTracksContext], list[str]] | None
+    Mapping[str, list[str]] | Callable[[StationNextTracksContext], list[str]] | None
 )

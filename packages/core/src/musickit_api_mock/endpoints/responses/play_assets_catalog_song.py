@@ -1,6 +1,6 @@
 """Catalog-song play-assets family."""
 
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 
 
@@ -62,7 +62,7 @@ PlayAssetsCatalogSongResponse = (
 
 type PlayAssetsCatalogSongSetter = (
     PlayAssetsCatalogSongResponse
-    | dict[str, PlayAssetsCatalogSongResponse]
+    | Mapping[str, PlayAssetsCatalogSongResponse]
     | Callable[[PlayAssetsCatalogSongContext], PlayAssetsCatalogSongResponse]
     | None
 )

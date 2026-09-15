@@ -12,11 +12,11 @@ A `MusicKitApiMock` instance exposes three configuration surfaces. The split is 
 
 Each field accepts:
 
-- a **`dict[str, T]` keyed by id** — looked up on demand, or
+- a **`Mapping[str, T]` keyed by id** (a plain `dict`) — looked up on demand, or
 - a **`Callable[[LookupContext], T | None]`** — for dynamic resolution (e.g. load a `CatalogSong` for any id matching a pattern, or return `None` for not found).
 
 ```python
-# dict form
+# mapping form
 mock.data.songs = {
     "1000000001": CatalogSong.from_file("path/to/song.m4a"),
 }
@@ -34,7 +34,7 @@ Endpoints that read the same resource compose their response from this shared so
 
 ## `mock.endpoints.*` — per-endpoint HTTP responses
 
-Accepted shapes vary by field — some accept only a response value or callable; others also accept a `dict` keyed by id. See each field's type in the [reference](../reference/endpoints.md) for the exact union.
+Accepted shapes vary by field — some accept only a response value or callable; others also accept a `Mapping` keyed by id (a plain `dict`). See each field's type in the [reference](../reference/endpoints.md) for the exact union.
 
 Use these to drive error scenarios (subscription expired, DRM failure, content unavailable, ...) or to override success-body details that aren't derivable from `mock.data`. Common forms:
 

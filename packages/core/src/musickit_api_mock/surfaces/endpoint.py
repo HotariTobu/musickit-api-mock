@@ -9,7 +9,7 @@ The resolver receives the DTO via a callback so user re-assignment of
 lookup.
 """
 
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from typing import TypeVar, cast
 
@@ -92,7 +92,7 @@ class EndpointResponses:
 
     Each setter overrides or parametrizes one specific endpoint's response.
     Fields default to ``None``; reading an unset setter raises ``ValueError``.
-    Each setter's accepted shape (static value, callable arity, dict keying)
+    Each setter's accepted shape (static value, callable arity, mapping keying)
     is on its type alias.
 
     Attributes:
@@ -163,15 +163,15 @@ def _resolve_static(setter: _T | Callable[[], _T] | None, name: str) -> _T:
 
 
 def _resolve_keyed(
-    setter: _T | dict[str, _T] | Callable[[_C], _T] | None,
+    setter: _T | Mapping[str, _T] | Callable[[_C], _T] | None,
     ctx: _C,
     key: str,
     name: str,
 ) -> _T:
     if setter is None:
         raise ValueError(f"{name} is not set")
-    if isinstance(setter, dict):
-        d = cast("dict[str, _T]", setter)
+    if isinstance(setter, Mapping):
+        d = cast("Mapping[str, _T]", setter)
         if key not in d:
             raise ValueError(f"{name}[{key!r}] is not set")
         return d[key]
