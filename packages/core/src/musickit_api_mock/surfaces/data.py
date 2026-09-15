@@ -1,7 +1,7 @@
 """Shared resource sources DTO + library-internal lookup composer.
 
 The DTO carries user-assigned resource sources (catalog and library, as
-``dict`` or ``Callable``). The composer wires the per-resource sub-resolvers
+``Mapping`` or ``Callable``). The composer wires the per-resource sub-resolvers
 (each defined alongside its dataclass under ``data/``) into one access
 point; reading an unset (default ``None``) source through any sub-resolver
 raises ``ValueError``.
@@ -58,7 +58,7 @@ class DataSources:
 
     Each field accepts an id-keyed mapping. Callable lookups are also
     accepted where per-id resolution is sufficient; ``genres``,
-    ``record_labels``, and ``personal_recommendations`` require the dict
+    ``record_labels``, and ``personal_recommendations`` require the mapping
     form because their endpoints enumerate ids. Fields default to ``None``;
     reading an unset source raises ``ValueError``.
 

@@ -92,7 +92,7 @@ class EndpointResponses:
 
     Each setter overrides or parametrizes one specific endpoint's response.
     Fields default to ``None``; reading an unset setter raises ``ValueError``.
-    Each setter's accepted shape (static value, callable arity, dict keying)
+    Each setter's accepted shape (static value, callable arity, mapping keying)
     is on its type alias.
 
     Attributes:

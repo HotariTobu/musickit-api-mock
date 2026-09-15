@@ -67,7 +67,7 @@ def resolve_song(ctx: LookupContext) -> CatalogSong | None:
 mock.data.songs = resolve_song
 ```
 
-Returning `None` from the resolver signals "no such id" — the endpoint reading the source then produces the same not-found response it would for an unknown dict key.
+Returning `None` from the resolver signals "no such id" — the endpoint reading the source then produces the same not-found response it would for an unknown mapping key.
 
 ## Locale-aware resolution
 
@@ -87,6 +87,6 @@ The mock does not fabricate a locale from the storefront slug; `ctx.locale` is `
 
 A callable for `mock.data.songs` should resolve only the song. If the song's album / artist / genre relationships matter, populate the matching `mock.data.albums` / `mock.data.artists` / `mock.data.genres` sources too — each resource has its own source, by design. Cross-resource synthesis inside one resolver is a sign the wrong source is being asked to do the work.
 
-## Batch endpoints need a dict
+## Batch endpoints need a mapping
 
-Some endpoints enumerate the full id set (e.g. the `/v1/catalog/<storefront>/genres` listing). Those require a `dict` source — callable sources can't be enumerated by design. The mock raises a descriptive `ValueError` if a batch endpoint hits a callable source; switch that specific resource to a dict.
+Some endpoints enumerate the full id set (e.g. the `/v1/catalog/<storefront>/genres` listing). Those require a `Mapping` source (a plain `dict`) — callable sources can't be enumerated by design. The mock raises a descriptive `ValueError` if a batch endpoint hits a callable source; switch that specific resource to a mapping.
