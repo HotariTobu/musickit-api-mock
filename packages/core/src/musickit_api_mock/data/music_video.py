@@ -1,6 +1,6 @@
 """Catalog music-video resource."""
 
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 
 from musickit_api_mock.data.lookup import LookupContext, _lookup_source
@@ -61,7 +61,7 @@ class MusicVideo:
 
 
 type MusicVideosSource = (
-    dict[str, MusicVideo] | Callable[[LookupContext], MusicVideo | None] | None
+    Mapping[str, MusicVideo] | Callable[[LookupContext], MusicVideo | None] | None
 )
 
 

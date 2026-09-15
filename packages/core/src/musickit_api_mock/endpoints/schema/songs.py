@@ -1,4 +1,4 @@
-"""CatalogSong resource JSON shape builder and preview URL helper."""
+"""Song resource JSON shape builder and preview URL helper."""
 
 from __future__ import annotations
 

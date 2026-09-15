@@ -6,7 +6,7 @@ variant is triggered by an empty ``songList``; the other 13 carry a numeric
 ``failureType`` matching MKError.Reason.
 """
 
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 
 from musickit_api_mock.json_value import _JSONValue
@@ -187,7 +187,7 @@ WebPlaybackContext = WebPlaybackCatalogItemContext | WebPlaybackLibraryItemConte
 
 type WebPlaybackSetter = (
     WebPlaybackResponse
-    | dict[str, WebPlaybackResponse]
+    | Mapping[str, WebPlaybackResponse]
     | Callable[[WebPlaybackContext], WebPlaybackResponse]
     | None
 )

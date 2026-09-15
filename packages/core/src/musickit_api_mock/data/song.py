@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
@@ -183,7 +183,7 @@ class SongMetadataFallback:
     Attributes:
         title: Display title fallback.
         artist: Primary artist fallback.
-        album: CatalogAlbum-name fallback.
+        album: Album-name fallback.
         artwork: Cover-artwork fallback.
         genres: Genres fallback.
         release_date: ISO-8601 release-date fallback.
@@ -237,7 +237,7 @@ class PreviewRange:
 
 
 type SongsSource = (
-    dict[str, CatalogSong] | Callable[[LookupContext], CatalogSong | None] | None
+    Mapping[str, CatalogSong] | Callable[[LookupContext], CatalogSong | None] | None
 )
 
 

@@ -29,6 +29,9 @@ from musickit_api_mock import (
     RecordLabel,
     Request,
     Station,
+    UploadedLibraryAlbum,
+    UploadedLibraryArtist,
+    UploadedLibrarySong,
 )
 
 if TYPE_CHECKING:
@@ -485,16 +488,55 @@ def test_library_artist_albums_empty_when_album_ids_none(
     assert body["data"] == []
 
 
-def test_library_artist_catalog_empty_when_catalog_id_none(
+def test_library_artist_catalog_404_for_uploaded_artist(
     mock: MusicKitApiMock,
 ) -> None:
-    la = _library_artists(mock)["r.ar1"]
-    mock.data.library_artists = {"r.ar1": replace(la, catalog_id=None)}
+    mock.data.library_artists = {"r.ar1": UploadedLibraryArtist(name="Uploaded")}
     status, body = _get(
         mock, "https://api.music.apple.com/v1/me/library/artists/r.ar1/catalog"
     )
-    assert status == 200
-    assert body["data"] == []
+    assert status == 404
+    assert body["errors"][0]["status"] == "404"
+
+
+def test_library_album_catalog_404_for_uploaded_album(
+    mock: MusicKitApiMock, artwork_library: Artwork
+) -> None:
+    mock.data.library_albums = {
+        "l.a1": UploadedLibraryAlbum(
+            name="Uploaded",
+            artist_name="Uploaded",
+            artwork=artwork_library,
+            genre_names=[],
+            track_count=1,
+        )
+    }
+    status, body = _get(
+        mock, "https://api.music.apple.com/v1/me/library/albums/l.a1/catalog"
+    )
+    assert status == 404
+    assert body["errors"][0]["status"] == "404"
+
+
+def test_library_song_catalog_404_for_uploaded_song(
+    mock: MusicKitApiMock, artwork_library: Artwork
+) -> None:
+    mock.data.library_songs = {
+        "i.s1": UploadedLibrarySong(
+            name="Uploaded",
+            artist_name="Uploaded",
+            artwork=artwork_library,
+            duration_ms=1000,
+            genre_names=[],
+            has_lyrics=False,
+            audio=b"",
+        )
+    }
+    status, body = _get(
+        mock, "https://api.music.apple.com/v1/me/library/songs/i.s1/catalog"
+    )
+    assert status == 404
+    assert body["errors"][0]["status"] == "404"
 
 
 def test_song_genres_empty_when_genre_ids_none(mock: MusicKitApiMock) -> None:

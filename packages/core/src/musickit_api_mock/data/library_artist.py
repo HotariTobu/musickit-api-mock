@@ -1,29 +1,44 @@
 """Library artist resource."""
 
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 
 from musickit_api_mock.data.lookup import LookupContext, _lookup_source
 
 
 @dataclass
-class LibraryArtist:
-    """User-library artist.
+class CatalogLibraryArtist:
+    """User-library artist linked to an Apple Music catalog artist.
+
+    Attributes:
+        name: Display name of the artist.
+        catalog_id: Catalog artist id the library artist is linked to,
+            resolved for ``?include=catalog``.
+        album_ids: Library album ids credited to the artist.
+    """
+
+    name: str
+    catalog_id: str
+    album_ids: list[str] | None = None
+
+
+@dataclass
+class UploadedLibraryArtist:
+    """User-library artist known only from uploaded songs, with no catalog counterpart.
 
     Attributes:
         name: Display name of the artist.
         album_ids: Library album ids credited to the artist.
-        catalog_id: Catalog artist id linking back to the catalog counterpart,
-            used to resolve ``?include=catalog``.
     """
 
     name: str
     album_ids: list[str] | None = None
-    catalog_id: str | None = None
 
+
+LibraryArtist = CatalogLibraryArtist | UploadedLibraryArtist
 
 type LibraryArtistsSource = (
-    dict[str, LibraryArtist] | Callable[[LookupContext], LibraryArtist | None] | None
+    Mapping[str, LibraryArtist] | Callable[[LookupContext], LibraryArtist | None] | None
 )
 
 

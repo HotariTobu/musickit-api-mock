@@ -315,8 +315,8 @@ def test_set_queue_from_album_resolves_tracks(
     mock.data.songs = {"s1": silence_song, "s2": silence_song}
     mock.data.albums = {
         "a1": CatalogAlbum(
-            name="Test CatalogAlbum",
-            artist_name="Test CatalogArtist",
+            name="Test Album",
+            artist_name="Test Artist",
             artwork=Artwork(url="https://example.com/a.jpg", width=1, height=1),
             genre_names=[],
             track_count=2,
@@ -407,7 +407,7 @@ def test_set_queue_from_music_video_no_relationship_chain(
     mock.data.music_videos = {
         "mv1": MusicVideo(
             name="Test MV",
-            artist_name="Test CatalogArtist",
+            artist_name="Test Artist",
             artwork=Artwork(url="https://example.com/mv.jpg", width=1, height=1),
             duration_ms=30_000,
             genre_names=[],
@@ -459,7 +459,7 @@ def test_set_queue_from_library_music_video_no_relationship_chain(
     mock.data.library_music_videos = {
         "i.mv1": LibraryMusicVideo(
             name="Library MV",
-            artist_name="Test CatalogArtist",
+            artist_name="Test Artist",
             artwork=Artwork(url="https://example.com/lmv.jpg", width=1, height=1),
             duration_ms=30_000,
             genre_names=[],

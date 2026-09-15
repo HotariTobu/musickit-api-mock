@@ -12,7 +12,7 @@ storefront slug or any other source. Dict sources ignore the locale (an
 id-only mapping is the simplest contract).
 """
 
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from typing import TypeVar, cast
 
@@ -40,21 +40,21 @@ class LookupContext:
 
 
 def _lookup_source(
-    source: dict[str, _T] | Callable[[LookupContext], _T | None] | None,
+    source: Mapping[str, _T] | Callable[[LookupContext], _T | None] | None,
     name: str,
     context: LookupContext,
 ) -> _T | None:
     if source is None:
         raise ValueError(f"{name} is not set")
-    if isinstance(source, dict):
-        d = cast("dict[str, _T]", source)
+    if isinstance(source, Mapping):
+        d = cast("Mapping[str, _T]", source)
         return d.get(context.id)
     fn = cast("Callable[[LookupContext], _T | None]", source)
     return fn(context)
 
 
 def _list_source_ids(
-    source: dict[str, _T] | Callable[[LookupContext], _T | None] | None,
+    source: Mapping[str, _T] | Callable[[LookupContext], _T | None] | None,
     name: str,
 ) -> list[str]:
     """Return all ids when the source is a dict.
@@ -65,8 +65,8 @@ def _list_source_ids(
     """
     if source is None:
         raise ValueError(f"{name} is not set")
-    if isinstance(source, dict):
-        d = cast("dict[str, _T]", source)
+    if isinstance(source, Mapping):
+        d = cast("Mapping[str, _T]", source)
         return list(d.keys())
     raise ValueError(
         f"{name} is a callable source; list-all batch endpoints require a dict source"

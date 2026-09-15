@@ -93,7 +93,7 @@ def test_q11_library_artist_minimal(mock: MusicKitApiMock) -> None:
     status, body = _get(mock, "https://api.music.apple.com/v1/me/library/artists/r.ar1")
     assert status == 200
     attrs = body["data"][0]["attributes"]
-    assert attrs == {"name": "Lib CatalogArtist"}
+    assert attrs == {"name": "Lib Artist"}
 
 
 def test_q12_library_music_video(mock: MusicKitApiMock) -> None:
@@ -169,7 +169,7 @@ def test_library_song_include_catalog(mock: MusicKitApiMock) -> None:
     catalog_data = rels["catalog"]["data"][0]
     assert catalog_data["id"] == "1"
     assert catalog_data["type"] == "songs"
-    assert catalog_data["attributes"]["name"] == "Test CatalogSong"
+    assert catalog_data["attributes"]["name"] == "Test Song"
 
 
 def test_library_song_no_include_no_catalog(mock: MusicKitApiMock) -> None:
@@ -190,7 +190,7 @@ def test_library_album_include_catalog(mock: MusicKitApiMock) -> None:
     catalog_data = rels["catalog"]["data"][0]
     assert catalog_data["id"] == "a1"
     assert catalog_data["type"] == "albums"
-    assert catalog_data["attributes"]["name"] == "Test CatalogAlbum"
+    assert catalog_data["attributes"]["name"] == "Test Album"
 
 
 def test_library_invalid_language_tag_400(mock: MusicKitApiMock) -> None:

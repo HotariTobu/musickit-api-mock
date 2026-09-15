@@ -24,13 +24,13 @@ from musickit_api_mock import (
     Artwork,
     CatalogAlbum,
     CatalogArtist,
+    CatalogLibraryAlbum,
+    CatalogLibraryArtist,
+    CatalogLibrarySong,
     CatalogSong,
     HlsChunk,
     HlsLayout,
-    LibraryAlbum,
-    LibraryArtist,
     LibraryPlaylist,
-    LibrarySong,
     MusicKitApiMock,
     Request,
     Storefront,
@@ -186,13 +186,14 @@ def test_library_song_optional_fields_absent_when_none(
 ) -> None:
     """``LibrarySong``'s optional fields default to ``None`` and are stripped."""
     bare_mock.data.library_songs = {
-        "i.s1": LibrarySong(
+        "i.s1": CatalogLibrarySong(
             name="N",
             artist_name="A",
             artwork=Artwork(url="x", width=1, height=1),
             duration_ms=1,
             genre_names=[],
             has_lyrics=False,
+            catalog_id="1",
         )
     }
     body = _get(bare_mock, "https://api.music.apple.com/v1/me/library/songs/i.s1")
@@ -209,12 +210,13 @@ def test_library_album_optional_fields_absent_when_none(
     bare_mock: MusicKitApiMock,
 ) -> None:
     bare_mock.data.library_albums = {
-        "l.a1": LibraryAlbum(
+        "l.a1": CatalogLibraryAlbum(
             name="N",
             artist_name="A",
             artwork=Artwork(url="x", width=1, height=1),
             genre_names=[],
             track_count=0,
+            catalog_id="a1",
         )
     }
     body = _get(bare_mock, "https://api.music.apple.com/v1/me/library/albums/l.a1")
@@ -228,12 +230,13 @@ def test_library_album_relationships_absent_when_ids_none(
     bare_mock: MusicKitApiMock,
 ) -> None:
     bare_mock.data.library_albums = {
-        "l.a1": LibraryAlbum(
+        "l.a1": CatalogLibraryAlbum(
             name="N",
             artist_name="A",
             artwork=Artwork(url="x", width=1, height=1),
             genre_names=[],
             track_count=0,
+            catalog_id="a1",
         )
     }
     # ``include=tracks,artists`` is requested but library_album.{track,artist}_ids
@@ -269,7 +272,9 @@ def test_library_playlist_optional_fields_absent_when_none(
 
 
 def test_library_artist_minimal_emits_only_name(bare_mock: MusicKitApiMock) -> None:
-    bare_mock.data.library_artists = {"r.ar1": LibraryArtist(name="A")}
+    bare_mock.data.library_artists = {
+        "r.ar1": CatalogLibraryArtist(name="A", catalog_id="ar1")
+    }
     body = _get(bare_mock, "https://api.music.apple.com/v1/me/library/artists/r.ar1")
     attrs = body["data"][0]["attributes"]
     assert attrs == {"name": "A"}

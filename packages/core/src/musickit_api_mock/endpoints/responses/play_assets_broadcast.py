@@ -1,6 +1,6 @@
 """Broadcast play-assets family (radio family)."""
 
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 
 from musickit_api_mock.json_value import _JSONValue
@@ -79,7 +79,7 @@ PlayAssetsBroadcastResponse = (
 
 type PlayAssetsBroadcastSetter = (
     PlayAssetsBroadcastResponse
-    | dict[str, PlayAssetsBroadcastResponse]
+    | Mapping[str, PlayAssetsBroadcastResponse]
     | Callable[[PlayAssetsBroadcastContext], PlayAssetsBroadcastResponse]
     | None
 )

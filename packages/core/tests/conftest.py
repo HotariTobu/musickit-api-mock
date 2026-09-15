@@ -7,6 +7,9 @@ from musickit_api_mock import (
     Artwork,
     CatalogAlbum,
     CatalogArtist,
+    CatalogLibraryAlbum,
+    CatalogLibraryArtist,
+    CatalogLibrarySong,
     CatalogSong,
     Curator,
     Genre,
@@ -63,9 +66,9 @@ def artwork_library() -> Artwork:
 @pytest.fixture
 def song(artwork_catalog: Artwork) -> CatalogSong:
     return CatalogSong(
-        title="Test CatalogSong",
-        artist="Test CatalogArtist",
-        album="Test CatalogAlbum",
+        title="Test Song",
+        artist="Test Artist",
+        album="Test Album",
         duration_ms=180_000,
         artwork=artwork_catalog,
         genres=["Pop"],
@@ -105,8 +108,8 @@ def song(artwork_catalog: Artwork) -> CatalogSong:
 @pytest.fixture
 def album(artwork_catalog: Artwork) -> CatalogAlbum:
     return CatalogAlbum(
-        name="Test CatalogAlbum",
-        artist_name="Test CatalogArtist",
+        name="Test Album",
+        artist_name="Test Artist",
         artwork=artwork_catalog,
         genre_names=["Pop"],
         release_date="2020-01-01",
@@ -140,7 +143,7 @@ def album(artwork_catalog: Artwork) -> CatalogAlbum:
 @pytest.fixture
 def artist(artwork_catalog: Artwork) -> CatalogArtist:
     return CatalogArtist(
-        name="Test CatalogArtist",
+        name="Test Artist",
         artwork=artwork_catalog,
         genre_names=["Pop"],
         url="https://music.apple.com/us/artist/ar1",
@@ -156,7 +159,7 @@ def artist(artwork_catalog: Artwork) -> CatalogArtist:
 def music_video(artwork_catalog: Artwork) -> MusicVideo:
     return MusicVideo(
         name="Test MV",
-        artist_name="Test CatalogArtist",
+        artist_name="Test Artist",
         artwork=artwork_catalog,
         duration_ms=210_000,
         genre_names=["Pop"],
@@ -238,10 +241,10 @@ def station(artwork_catalog: Artwork) -> Station:
 
 @pytest.fixture
 def library_song(artwork_library: Artwork) -> LibrarySong:
-    return LibrarySong(
-        name="Lib CatalogSong",
-        artist_name="Lib CatalogArtist",
-        album_name="Lib CatalogAlbum",
+    return CatalogLibrarySong(
+        name="Lib Song",
+        artist_name="Lib Artist",
+        album_name="Lib Album",
         artwork=artwork_library,
         disc_number=1,
         duration_ms=180_000,
@@ -256,9 +259,9 @@ def library_song(artwork_library: Artwork) -> LibrarySong:
 
 @pytest.fixture
 def library_album(artwork_library: Artwork) -> LibraryAlbum:
-    return LibraryAlbum(
-        name="Lib CatalogAlbum",
-        artist_name="Lib CatalogArtist",
+    return CatalogLibraryAlbum(
+        name="Lib Album",
+        artist_name="Lib Artist",
         artwork=artwork_library,
         date_added="2024-01-01",
         genre_names=["Pop"],
@@ -287,8 +290,8 @@ def library_playlist() -> LibraryPlaylist:
 
 @pytest.fixture
 def library_artist() -> LibraryArtist:
-    return LibraryArtist(
-        name="Lib CatalogArtist",
+    return CatalogLibraryArtist(
+        name="Lib Artist",
         album_ids=["l.a1"],
         catalog_id="ar1",
     )
@@ -298,7 +301,7 @@ def library_artist() -> LibraryArtist:
 def library_music_video(artwork_library: Artwork) -> LibraryMusicVideo:
     return LibraryMusicVideo(
         name="Lib MV",
-        artist_name="Lib CatalogArtist",
+        artist_name="Lib Artist",
         artwork=artwork_library,
         duration_ms=200_000,
         genre_names=["Pop"],

@@ -21,8 +21,8 @@ def make_song(song_id: str, *, title: str) -> CatalogSong:
     media_segment = b"mock media segment"
     return CatalogSong(
         title=title,
-        artist="Test CatalogArtist",
-        album="Test CatalogAlbum",
+        artist="Test Artist",
+        album="Test Album",
         duration_ms=180_000,
         artwork=Artwork(
             url="https://example.test/artwork/{w}x{h}.{f}",

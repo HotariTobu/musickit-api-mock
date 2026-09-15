@@ -115,8 +115,8 @@ def test_extracts_metadata_from_file(
     path = make_audio(
         metadata={
             "title": "File Title",
-            "artist": "File CatalogArtist",
-            "album": "File CatalogAlbum",
+            "artist": "File Artist",
+            "album": "File Album",
             "date": "2023",
             "track": "5",
             "disc": "2",
@@ -127,8 +127,8 @@ def test_extracts_metadata_from_file(
     )
     song = CatalogSong.from_file(path, fallback=_full_fallback(artwork_library))
     assert song.title == "File Title"
-    assert song.artist == "File CatalogArtist"
-    assert song.album == "File CatalogAlbum"
+    assert song.artist == "File Artist"
+    assert song.album == "File Album"
     assert song.release_date == "2023"
     assert song.track_number == 5
     assert song.disc_number == 2
@@ -182,8 +182,8 @@ def test_falls_back_when_file_has_no_metadata(
     path = make_audio(metadata=None, with_artwork=True)
     fb = SongMetadataFallback(
         title="FB Title",
-        artist="FB CatalogArtist",
-        album="FB CatalogAlbum",
+        artist="FB Artist",
+        album="FB Album",
         artwork=artwork_library,
         genres=["Pop"],
         release_date="2020-01-01",
@@ -200,8 +200,8 @@ def test_falls_back_when_file_has_no_metadata(
     )
     song = CatalogSong.from_file(path, fallback=fb)
     assert song.title == "FB Title"
-    assert song.artist == "FB CatalogArtist"
-    assert song.album == "FB CatalogAlbum"
+    assert song.artist == "FB Artist"
+    assert song.album == "FB Album"
     assert song.genres == ["Pop"]
     assert song.release_date == "2020-01-01"
     assert song.track_number == 3

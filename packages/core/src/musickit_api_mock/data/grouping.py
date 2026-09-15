@@ -6,7 +6,7 @@ The grouping surfaces inline when an apple-curator emits
 ``/v1/catalog/{sf}/apple-curators/{id}/grouping``.
 """
 
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 
 from musickit_api_mock.data.lookup import LookupContext, _lookup_source
@@ -29,7 +29,7 @@ class Grouping:
 
 
 type GroupingsSource = (
-    dict[str, Grouping] | Callable[[LookupContext], Grouping | None] | None
+    Mapping[str, Grouping] | Callable[[LookupContext], Grouping | None] | None
 )
 
 

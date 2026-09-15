@@ -20,7 +20,7 @@ def test_q01_song_batch_valid(mock: MusicKitApiMock) -> None:
     assert status == 200
     assert body["data"][0]["id"] == "1"
     assert body["data"][0]["type"] == "songs"
-    assert body["data"][0]["attributes"]["name"] == "Test CatalogSong"
+    assert body["data"][0]["attributes"]["name"] == "Test Song"
 
 
 def test_q01_missing_id_resolves_to_empty(mock: MusicKitApiMock) -> None:
@@ -265,7 +265,7 @@ def test_song_singular_include_composers(mock: MusicKitApiMock) -> None:
 
 
 def test_song_batch_include_albums_deep_emit(mock: MusicKitApiMock) -> None:
-    """``?include=albums`` on song output emits full CatalogAlbum attrs inline."""
+    """``?include=albums`` on song output emits full album attrs inline."""
     status, body = _get(
         mock, "https://api.music.apple.com/v1/catalog/us/songs?ids=1&include=albums"
     )
@@ -273,7 +273,7 @@ def test_song_batch_include_albums_deep_emit(mock: MusicKitApiMock) -> None:
     rel_album = body["data"][0]["relationships"]["albums"]["data"][0]
     assert rel_album["id"] == "a1"
     assert "attributes" in rel_album
-    assert rel_album["attributes"]["name"] == "Test CatalogAlbum"
+    assert rel_album["attributes"]["name"] == "Test Album"
 
 
 def test_song_relationship_albums_endpoint(mock: MusicKitApiMock) -> None:
@@ -503,7 +503,7 @@ def test_data_artists_callable_resolves_per_id() -> None:
         if ctx.id != "ar-x":
             return None
         return CatalogArtist(
-            name=f"CatalogArtist {ctx.id}",
+            name=f"Artist {ctx.id}",
             artwork=Artwork(url="x", width=1, height=1),
             genre_names=[],
             url="x",
@@ -515,7 +515,7 @@ def test_data_artists_callable_resolves_per_id() -> None:
     status, body = _get(m, "https://api.music.apple.com/v1/catalog/us/artists?ids=ar-x")
     assert status == 200
     assert body["data"][0]["id"] == "ar-x"
-    assert body["data"][0]["attributes"]["name"] == "CatalogArtist ar-x"
+    assert body["data"][0]["attributes"]["name"] == "Artist ar-x"
 
 
 def test_locale_callable_resolver_receives_request_locale() -> None:

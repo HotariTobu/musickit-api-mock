@@ -17,6 +17,9 @@ from musickit_api_mock import (
     Account,
     AccountResponseSuccess,
     Artwork,
+    CatalogLibraryAlbum,
+    CatalogLibraryArtist,
+    CatalogLibrarySong,
     Curator,
     LibraryAlbum,
     LibraryArtist,
@@ -197,13 +200,14 @@ def test_data_library_songs_callable() -> None:
     def resolver(ctx: LookupContext) -> LibrarySong | None:
         if ctx.id != "i.s-x":
             return None
-        return LibrarySong(
+        return CatalogLibrarySong(
             name=f"LS {ctx.id}",
             artist_name="A",
             artwork=_aw(),
             duration_ms=1,
             genre_names=[],
             has_lyrics=False,
+            catalog_id="1",
         )
 
     m.data.library_songs = resolver
@@ -218,12 +222,13 @@ def test_data_library_albums_callable() -> None:
     def resolver(ctx: LookupContext) -> LibraryAlbum | None:
         if ctx.id != "l.a-x":
             return None
-        return LibraryAlbum(
+        return CatalogLibraryAlbum(
             name=f"LA {ctx.id}",
             artist_name="A",
             artwork=_aw(),
             genre_names=[],
             track_count=0,
+            catalog_id="a1",
         )
 
     m.data.library_albums = resolver
@@ -259,7 +264,7 @@ def test_data_library_artists_callable() -> None:
     def resolver(ctx: LookupContext) -> LibraryArtist | None:
         if ctx.id != "r.ar-x":
             return None
-        return LibraryArtist(name=f"LAR {ctx.id}")
+        return CatalogLibraryArtist(name=f"LAR {ctx.id}", catalog_id="ar1")
 
     m.data.library_artists = resolver
     status, body = _get(m, "https://api.music.apple.com/v1/me/library/artists/r.ar-x")

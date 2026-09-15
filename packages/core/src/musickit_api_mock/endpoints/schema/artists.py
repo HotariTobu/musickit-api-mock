@@ -1,4 +1,4 @@
-"""CatalogArtist resource JSON shape builder."""
+"""Artist resource JSON shape builder."""
 
 from __future__ import annotations
 

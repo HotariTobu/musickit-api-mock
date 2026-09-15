@@ -6,7 +6,7 @@ own dataclass. Genres surface inline when the parent emits
 standalone ``/v1/catalog/{sf}/{resource}/{id}/genres`` endpoints.
 """
 
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 
 from musickit_api_mock.data.lookup import LookupContext, _lookup_source
@@ -29,7 +29,7 @@ class Genre:
     parent_name: str | None = None
 
 
-type GenresSource = dict[str, Genre] | Callable[[LookupContext], Genre | None] | None
+type GenresSource = Mapping[str, Genre] | Callable[[LookupContext], Genre | None] | None
 
 
 class _GenreResolver:

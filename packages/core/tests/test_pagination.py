@@ -89,7 +89,7 @@ def test_song_albums_pagination_emits_next_when_overflowing(
         artist_ids=song.artist_ids,
         composer_ids=song.composer_ids,
     )
-    mock.data.albums = lambda ctx: _stub_album(f"CatalogAlbum {ctx.id}")
+    mock.data.albums = lambda ctx: _stub_album(f"Album {ctx.id}")
 
     body = _get(mock, "https://api.music.apple.com/v1/catalog/us/songs/1/albums")
     assert len(body["data"]) == 10
