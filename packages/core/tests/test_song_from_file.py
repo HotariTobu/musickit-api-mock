@@ -1,16 +1,20 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Protocol
+from pathlib import Path
+from typing import Protocol
 
 import av
 import pytest
 from av.audio.frame import AudioFrame
 from av.packet import Packet
 from av.stream import Disposition
-from musickit_api_mock import Artwork, CatalogSong, SongMetadataFallback
-
-if TYPE_CHECKING:
-    from pathlib import Path
+from musickit_api_mock import (
+    Artwork,
+    CatalogSong,
+    SongMetadataFallback,
+    UploadedLibrarySong,
+    UploadedLibrarySongMetadataFallback,
+)
 
 _TINY_PNG = bytes.fromhex(
     "89504e470d0a1a0a"
@@ -302,3 +306,65 @@ def test_bool_fields_from_fallback(
     assert song.is_apple_digital_master is True
     assert song.is_mastered_for_itunes is False
     assert song.is_vocal_attenuation_allowed is True
+
+
+def test_uploaded_library_song_from_file_extracts_metadata_and_audio(
+    make_audio: AudioFactory,
+) -> None:
+    path = make_audio(
+        metadata={
+            "title": "Upload Title",
+            "artist": "Upload Artist",
+            "album": "Upload Album",
+            "track": "3/10",
+            "disc": "1",
+            "genre": "Soundtrack",
+        },
+        with_artwork=True,
+    )
+    song = UploadedLibrarySong.from_file(
+        path, UploadedLibrarySongMetadataFallback(has_lyrics=False)
+    )
+    assert song.name == "Upload Title"
+    assert song.artist_name == "Upload Artist"
+    assert song.album_name == "Upload Album"
+    assert song.track_number == 3
+    assert song.disc_number == 1
+    assert song.genre_names == ["Soundtrack"]
+    assert song.has_lyrics is False
+    assert song.duration_ms > 0
+    assert song.audio == Path(path).read_bytes()
+
+
+def test_uploaded_library_song_from_file_falls_back_when_tags_missing(
+    make_audio: AudioFactory, artwork_library: Artwork
+) -> None:
+    path = make_audio(metadata=None, with_artwork=False)
+    song = UploadedLibrarySong.from_file(
+        path,
+        UploadedLibrarySongMetadataFallback(
+            name="FB Name",
+            artist_name="FB Artist",
+            artwork=artwork_library,
+            genre_names=["FB"],
+            has_lyrics=True,
+        ),
+    )
+    assert song.name == "FB Name"
+    assert song.artist_name == "FB Artist"
+    assert song.artwork == artwork_library
+    assert song.genre_names == ["FB"]
+    assert song.album_name is None
+
+
+def test_uploaded_library_song_from_file_missing_required_field_raises(
+    make_audio: AudioFactory, artwork_library: Artwork
+) -> None:
+    path = make_audio(metadata=None, with_artwork=False)
+    with pytest.raises(ValueError, match="missing 'name'"):
+        UploadedLibrarySong.from_file(
+            path,
+            UploadedLibrarySongMetadataFallback(
+                artwork=artwork_library, genre_names=[], has_lyrics=False
+            ),
+        )

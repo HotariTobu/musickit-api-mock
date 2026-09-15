@@ -106,5 +106,6 @@ nav:
       - DRM license failure: recipes/drm-license-failure.md
       - Multiple storefronts: recipes/multi-storefront.md
       - Callable resolvers: recipes/callable-resolvers.md
+      - Uploaded library song: recipes/uploaded-library-song.md
       - Bind to a browser context: recipes/bind-to-context.md
       - Swap authorize between tests: recipes/swap-authorize-between-tests.md
