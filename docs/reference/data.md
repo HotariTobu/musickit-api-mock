@@ -19,8 +19,14 @@ Shared resource sources and dataclasses used by the data configuration surface.
 ## Library resources
 
 ::: musickit_api_mock.LibrarySong
+::: musickit_api_mock.CatalogLibrarySong
+::: musickit_api_mock.UploadedLibrarySong
 ::: musickit_api_mock.LibraryAlbum
+::: musickit_api_mock.CatalogLibraryAlbum
+::: musickit_api_mock.UploadedLibraryAlbum
 ::: musickit_api_mock.LibraryArtist
+::: musickit_api_mock.CatalogLibraryArtist
+::: musickit_api_mock.UploadedLibraryArtist
 ::: musickit_api_mock.LibraryMusicVideo
 ::: musickit_api_mock.LibraryPlaylist
 
@@ -43,6 +49,7 @@ Shared resource sources and dataclasses used by the data configuration surface.
 ::: musickit_api_mock.HlsChunk
 ::: musickit_api_mock.HlsLayout
 ::: musickit_api_mock.SongMetadataFallback
+::: musickit_api_mock.UploadedLibrarySongMetadataFallback
 
 ## Lookup callback context
 
