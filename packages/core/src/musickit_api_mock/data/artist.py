@@ -8,7 +8,7 @@ from musickit_api_mock.data.primitives.artwork import Artwork
 
 
 @dataclass
-class Artist:
+class CatalogArtist:
     """Apple Music catalog artist.
 
     Attributes:
@@ -35,7 +35,9 @@ class Artist:
     station_id: str | None = None
 
 
-type ArtistsSource = dict[str, Artist] | Callable[[LookupContext], Artist | None] | None
+type ArtistsSource = (
+    dict[str, CatalogArtist] | Callable[[LookupContext], CatalogArtist | None] | None
+)
 
 
 class _ArtistResolver:
@@ -45,6 +47,6 @@ class _ArtistResolver:
         """Bind to the ``DataSources.artists`` source via a callback."""
         self._get_source = get_source
 
-    def get(self, context: LookupContext) -> Artist | None:
+    def get(self, context: LookupContext) -> CatalogArtist | None:
         """Return the artist for ``context.id`` or ``None`` if absent."""
         return _lookup_source(self._get_source(), "data.artists", context)

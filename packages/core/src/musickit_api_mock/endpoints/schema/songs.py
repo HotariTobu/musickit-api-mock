@@ -12,7 +12,7 @@ from musickit_api_mock.endpoints.schema.builders import (
 from musickit_api_mock.endpoints.schema.play_params import _play_params_song
 
 if TYPE_CHECKING:
-    from musickit_api_mock.data.song import Song
+    from musickit_api_mock.data.song import CatalogSong
     from musickit_api_mock.json_value import _JSONValue
 
 
@@ -23,7 +23,7 @@ def _preview_url_for(song_id: str) -> str:
 def _song_resource(
     sf: str,
     song_id: str,
-    song: Song,
+    song: CatalogSong,
     *,
     relationships: dict[str, _JSONValue] | None = None,
     include_play_assets: bool = False,

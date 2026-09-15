@@ -1,6 +1,6 @@
 """Per-resource attribute emit verification.
 
-Each resource (Song, Album, Artist, Playlist, MusicVideo, Station, plus
+Each resource (CatalogSong, CatalogAlbum, CatalogArtist, Playlist, MusicVideo, Station, plus
 their library counterparts) carries a documented Apple Music API
 attribute set. The tests below pin the fixture-value → JSON-attribute
 mapping for every field the schema layer emits, so a regression in any
@@ -20,8 +20,9 @@ import json
 from typing import TYPE_CHECKING, cast
 
 from musickit_api_mock import (
-    Album,
-    Artist,
+    CatalogAlbum,
+    CatalogArtist,
+    CatalogSong,
     LibraryAlbum,
     LibraryArtist,
     LibraryMusicVideo,
@@ -31,7 +32,6 @@ from musickit_api_mock import (
     MusicVideo,
     Playlist,
     Request,
-    Song,
     Station,
 )
 
@@ -55,7 +55,7 @@ def _attrs(body: _AppleResponse) -> dict[str, _JSONValue]:
 
 
 def test_song_attributes_emit_configured_fields(
-    mock: MusicKitApiMock, song: Song
+    mock: MusicKitApiMock, song: CatalogSong
 ) -> None:
     body = _get(mock, "https://api.music.apple.com/v1/catalog/us/songs?ids=1")
     attrs = _attrs(body)
@@ -83,7 +83,7 @@ def test_song_attributes_emit_configured_fields(
 
 
 def test_album_attributes_emit_configured_fields(
-    mock: MusicKitApiMock, album: Album
+    mock: MusicKitApiMock, album: CatalogAlbum
 ) -> None:
     body = _get(mock, "https://api.music.apple.com/v1/catalog/us/albums?ids=a1")
     attrs = _attrs(body)
@@ -105,7 +105,7 @@ def test_album_attributes_emit_configured_fields(
 
 
 def test_artist_attributes_emit_configured_fields(
-    mock: MusicKitApiMock, artist: Artist
+    mock: MusicKitApiMock, artist: CatalogArtist
 ) -> None:
     body = _get(mock, "https://api.music.apple.com/v1/catalog/us/artists?ids=ar1")
     attrs = _attrs(body)

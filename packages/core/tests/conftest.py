@@ -4,9 +4,10 @@ import pytest
 from musickit_api_mock import (
     Account,
     AccountResponseSuccess,
-    Album,
-    Artist,
     Artwork,
+    CatalogAlbum,
+    CatalogArtist,
+    CatalogSong,
     Curator,
     Genre,
     Grouping,
@@ -25,7 +26,6 @@ from musickit_api_mock import (
     Playlist,
     Preview,
     RecordLabel,
-    Song,
     Station,
     Storefront,
     StorefrontResponseSuccess,
@@ -61,8 +61,8 @@ def artwork_library() -> Artwork:
 
 
 @pytest.fixture
-def song(artwork_catalog: Artwork) -> Song:
-    return Song(
+def song(artwork_catalog: Artwork) -> CatalogSong:
+    return CatalogSong(
         title="Test Song",
         artist="Test Artist",
         album="Test Album",
@@ -103,8 +103,8 @@ def song(artwork_catalog: Artwork) -> Song:
 
 
 @pytest.fixture
-def album(artwork_catalog: Artwork) -> Album:
-    return Album(
+def album(artwork_catalog: Artwork) -> CatalogAlbum:
+    return CatalogAlbum(
         name="Test Album",
         artist_name="Test Artist",
         artwork=artwork_catalog,
@@ -138,8 +138,8 @@ def album(artwork_catalog: Artwork) -> Album:
 
 
 @pytest.fixture
-def artist(artwork_catalog: Artwork) -> Artist:
-    return Artist(
+def artist(artwork_catalog: Artwork) -> CatalogArtist:
+    return CatalogArtist(
         name="Test Artist",
         artwork=artwork_catalog,
         genre_names=["Pop"],
@@ -369,9 +369,9 @@ def account() -> Account:
 
 @pytest.fixture
 def mock(
-    song: Song,
-    album: Album,
-    artist: Artist,
+    song: CatalogSong,
+    album: CatalogAlbum,
+    artist: CatalogArtist,
     music_video: MusicVideo,
     playlist: Playlist,
     station: Station,

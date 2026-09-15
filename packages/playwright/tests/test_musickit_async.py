@@ -8,9 +8,9 @@ import pytest
 from musickit_api_mock import (
     Account,
     AccountResponseSuccess,
-    Album,
     Artwork,
     AuthorizeSuccess,
+    CatalogAlbum,
     FairPlayCertResponseSuccess,
     LibraryMusicVideo,
     LicenseResponse,
@@ -30,8 +30,8 @@ from musickit_api_mock import (
     Storefront,
     StorefrontResponseSuccess,
     WebPlaybackAsset,
+    WebPlaybackCatalogSong,
     WebPlaybackResponseSuccess,
-    WebPlaybackSong,
     WidevineCertResponseSuccess,
 )
 
@@ -62,7 +62,7 @@ from tests.scenarios_musickit import (
 if TYPE_CHECKING:
     from collections.abc import Awaitable, Callable
 
-    from musickit_api_mock import Song
+    from musickit_api_mock import CatalogSong
     from playwright.async_api import Page as AsyncPage
 
 
@@ -86,7 +86,7 @@ async def test_configure_succeeds(
 async def test_set_queue_resolves_song(
     mount_async_page: Callable[..., Awaitable[AsyncPage]],
     page_url: str,
-    silence_song: Song,
+    silence_song: CatalogSong,
     dev_token: str,
 ) -> None:
     mock = MusicKitApiMock()
@@ -154,7 +154,7 @@ async def test_unauthorize_clears_authorization(
 async def test_drm_playback_reaches_playing(
     mount_async_page: Callable[..., Awaitable[AsyncPage]],
     page_url: str,
-    silence_song: Song,
+    silence_song: CatalogSong,
     browser_name: str,
     dev_token: str,
 ) -> None:
@@ -176,7 +176,7 @@ async def test_drm_playback_reaches_playing(
     mock.data.songs = {"s1": silence_song}
     mock.endpoints.web_playback = WebPlaybackResponseSuccess(
         song_list=[
-            WebPlaybackSong(
+            WebPlaybackCatalogSong(
                 song_id="s1",
                 hls_key_cert_url="https://s.mzstatic.com/skdtool_2021_certbundle.bin",
                 hls_key_server_url="https://play.itunes.apple.com/WebObjects/MZPlay.woa/wa/acquireWebPlaybackLicense",
@@ -209,7 +209,7 @@ async def test_drm_playback_reaches_playing(
 async def test_license_failure_aborts_playback(
     mount_async_page: Callable[..., Awaitable[AsyncPage]],
     page_url: str,
-    silence_song: Song,
+    silence_song: CatalogSong,
     browser_name: str,
     dev_token: str,
 ) -> None:
@@ -239,7 +239,7 @@ async def test_license_failure_aborts_playback(
 async def test_license_failure_variant_surfaces_as_media_playback_error(
     mount_async_page: Callable[..., Awaitable[AsyncPage]],
     page_url: str,
-    silence_song: Song,
+    silence_song: CatalogSong,
     browser_name: str,
     dev_token: str,
     license_response_factory: Callable[[], LicenseResponse],
@@ -263,7 +263,7 @@ async def test_license_failure_variant_surfaces_as_media_playback_error(
 async def test_skip_to_next_in_multi_track_queue(
     mount_async_page: Callable[..., Awaitable[AsyncPage]],
     page_url: str,
-    silence_song: Song,
+    silence_song: CatalogSong,
     browser_name: str,
     dev_token: str,
 ) -> None:
@@ -281,7 +281,7 @@ async def test_skip_to_next_in_multi_track_queue(
 async def test_set_queue_from_album_resolves_tracks(
     mount_async_page: Callable[..., Awaitable[AsyncPage]],
     page_url: str,
-    silence_song: Song,
+    silence_song: CatalogSong,
     dev_token: str,
 ) -> None:
     """``mk.setQueue({ album })`` resolves to the album's track ids."""
@@ -300,7 +300,7 @@ async def test_set_queue_from_album_resolves_tracks(
     )
     mock.data.songs = {"s1": silence_song, "s2": silence_song}
     mock.data.albums = {
-        "a1": Album(
+        "a1": CatalogAlbum(
             name="Test Album",
             artist_name="Test Artist",
             artwork=Artwork(url="https://example.com/a.jpg", width=1, height=1),
@@ -327,7 +327,7 @@ async def test_set_queue_from_album_resolves_tracks(
 async def test_set_queue_from_playlist_resolves_tracks(
     mount_async_page: Callable[..., Awaitable[AsyncPage]],
     page_url: str,
-    silence_song: Song,
+    silence_song: CatalogSong,
     dev_token: str,
 ) -> None:
     """``mk.setQueue({ playlist })`` resolves to the playlist's track ids."""
@@ -476,7 +476,7 @@ async def test_set_queue_from_library_music_video_no_relationship_chain(
 async def test_set_queue_from_song_no_composers_chain(
     mount_async_page: Callable[..., Awaitable[AsyncPage]],
     page_url: str,
-    silence_song: Song,
+    silence_song: CatalogSong,
     dev_token: str,
 ) -> None:
     mock = MusicKitApiMock()

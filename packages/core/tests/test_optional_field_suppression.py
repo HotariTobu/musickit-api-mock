@@ -6,7 +6,7 @@ The schema layer runs every attribute dict through ``_strip_none`` so a
 ``assert <key> not in attrs`` for the optional fields, exercising the
 strip path uniformly across resource types.
 
-The relationship-block suppression case (``Song.album_ids = None`` →
+The relationship-block suppression case (``CatalogSong.album_ids = None`` →
 ``relationships.albums`` is absent) is covered alongside in the same
 file because the same ``None``-as-absent semantics drives both attribute
 strip and relationship omission.
@@ -21,9 +21,10 @@ import pytest
 from musickit_api_mock import (
     Account,
     AccountResponseSuccess,
-    Album,
-    Artist,
     Artwork,
+    CatalogAlbum,
+    CatalogArtist,
+    CatalogSong,
     HlsChunk,
     HlsLayout,
     LibraryAlbum,
@@ -32,7 +33,6 @@ from musickit_api_mock import (
     LibrarySong,
     MusicKitApiMock,
     Request,
-    Song,
     Storefront,
     StorefrontResponseSuccess,
 )
@@ -66,8 +66,8 @@ def bare_mock() -> MusicKitApiMock:
     return m
 
 
-def _minimal_song() -> Song:
-    return Song(
+def _minimal_song() -> CatalogSong:
+    return CatalogSong(
         title="T",
         artist="A",
         album="Al",
@@ -109,7 +109,7 @@ def test_song_optional_fields_absent_when_none(bare_mock: MusicKitApiMock) -> No
 
 
 def test_song_relationships_absent_when_ids_none(bare_mock: MusicKitApiMock) -> None:
-    """``Song.album_ids = None`` ⇒ ``relationships.albums`` is not emitted."""
+    """``CatalogSong.album_ids = None`` ⇒ ``relationships.albums`` is not emitted."""
     bare_mock.data.songs = {"1": _minimal_song()}
     body = _get(bare_mock, "https://api.music.apple.com/v1/catalog/us/songs/1")
     item = body["data"][0]
@@ -118,8 +118,8 @@ def test_song_relationships_absent_when_ids_none(bare_mock: MusicKitApiMock) -> 
     assert "artists" not in rels
 
 
-def _minimal_album() -> Album:
-    return Album(
+def _minimal_album() -> CatalogAlbum:
+    return CatalogAlbum(
         name="Al",
         artist_name="A",
         artwork=Artwork(url="x", width=1, height=1),
@@ -158,7 +158,7 @@ def test_album_relationships_absent_when_ids_none(bare_mock: MusicKitApiMock) ->
 
 def test_artist_optional_artwork_absent_when_none(bare_mock: MusicKitApiMock) -> None:
     bare_mock.data.artists = {
-        "ar1": Artist(name="A", genre_names=[], url="x", artwork=None)
+        "ar1": CatalogArtist(name="A", genre_names=[], url="x", artwork=None)
     }
     body = _get(bare_mock, "https://api.music.apple.com/v1/catalog/us/artists?ids=ar1")
     attrs = body["data"][0]["attributes"]
@@ -169,7 +169,7 @@ def test_artist_relationships_absent_when_album_ids_none(
     bare_mock: MusicKitApiMock,
 ) -> None:
     bare_mock.data.artists = {
-        "ar1": Artist(
+        "ar1": CatalogArtist(
             name="A",
             artwork=Artwork(url="x", width=1, height=1),
             genre_names=[],

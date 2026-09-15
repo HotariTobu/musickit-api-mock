@@ -1,4 +1,4 @@
-"""Build a ``Song`` from an audio file: metadata extraction, HLS layout, preview range."""
+"""Build a ``CatalogSong`` from an audio file: metadata extraction, HLS layout, preview range."""
 
 from __future__ import annotations
 
@@ -17,7 +17,11 @@ from musickit_api_mock.data.song import HlsChunk, HlsLayout
 if TYPE_CHECKING:
     from av.container import InputContainer
 
-    from musickit_api_mock.data.song import PreviewRange, Song, SongMetadataFallback
+    from musickit_api_mock.data.song import (
+        CatalogSong,
+        PreviewRange,
+        SongMetadataFallback,
+    )
 
 
 def _meta_get(meta: dict[str, str], *names: str) -> str | None:
@@ -63,7 +67,7 @@ _INT_FILE_FIELDS: dict[str, tuple[str, ...]] = {
 
 def _missing(field: str) -> ValueError:
     return ValueError(
-        f"Song.from_file: missing {field!r}. Set via SongMetadataFallback."
+        f"CatalogSong.from_file: missing {field!r}. Set via SongMetadataFallback."
     )
 
 
@@ -365,7 +369,7 @@ def _song_from_file(
     fallback: SongMetadataFallback | None = None,
     *,
     preview: PreviewRange | bytes | None = None,
-) -> Song:
+) -> CatalogSong:
     import av
 
     from musickit_api_mock.data.song import PreviewRange, SongMetadataFallback
@@ -399,7 +403,7 @@ def _song_from_file(
     artwork = file_artwork if file_artwork is not None else f.artwork
     if artwork is None:
         raise ValueError(
-            "Song.from_file: missing artwork. Provide via SongMetadataFallback.artwork."
+            "CatalogSong.from_file: missing artwork. Provide via SongMetadataFallback.artwork."
         )
 
     return cls(

@@ -14,7 +14,7 @@ from musickit_api_mock.endpoints.schema.play_params import _play_params_station
 from musickit_api_mock.endpoints.schema.songs import _song_resource
 
 if TYPE_CHECKING:
-    from musickit_api_mock.data.song import Song
+    from musickit_api_mock.data.song import CatalogSong
     from musickit_api_mock.data.station import Station
     from musickit_api_mock.endpoints.responses.continuous_stations import (
         ContinuousStation,
@@ -67,7 +67,7 @@ def _continuous_station_envelope(
     cs: ContinuousStation,
     sf: str,
     *,
-    tracks: list[tuple[str, Song]] | None,
+    tracks: list[tuple[str, CatalogSong]] | None,
 ) -> dict[str, _JSONValue]:
     station_id = _stable_hash("continuous", cs.station.name)
     station_dict = {

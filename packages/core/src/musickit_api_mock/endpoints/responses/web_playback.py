@@ -31,7 +31,7 @@ class WebPlaybackAsset:
 
 
 @dataclass
-class WebPlaybackSong:
+class WebPlaybackCatalogSong:
     """Per-song web-playback payload (DRM URLs, asset list, optional HLS).
 
     Attributes:
@@ -60,7 +60,7 @@ class WebPlaybackResponseSuccess:
         song_list: Per-song web-playback payloads returned to the caller.
     """
 
-    song_list: list[WebPlaybackSong]
+    song_list: list[WebPlaybackCatalogSong]
 
 
 @dataclass

@@ -26,7 +26,7 @@ from tests.scenarios_musickit import (
 if TYPE_CHECKING:
     from collections.abc import Callable
 
-    from musickit_api_mock import Song
+    from musickit_api_mock import CatalogSong
     from playwright.sync_api import Page
 
 
@@ -39,7 +39,7 @@ pytestmark = [
 def test_single_song_repeat_loops(
     mount_sync_page: Callable[..., Page],
     page_url: str,
-    short_silence_song: Song,
+    short_silence_song: CatalogSong,
     browser_name: str,
     dev_token: str,
 ) -> None:

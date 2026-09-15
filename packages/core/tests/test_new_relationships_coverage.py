@@ -14,9 +14,10 @@ from dataclasses import replace
 from typing import TYPE_CHECKING, cast
 
 from musickit_api_mock import (
-    Album,
-    Artist,
     Artwork,
+    CatalogAlbum,
+    CatalogArtist,
+    CatalogSong,
     Curator,
     Description,
     Genre,
@@ -27,7 +28,6 @@ from musickit_api_mock import (
     Playlist,
     RecordLabel,
     Request,
-    Song,
     Station,
 )
 
@@ -43,16 +43,16 @@ def _get(mock: MusicKitApiMock, url: str) -> tuple[int, _AppleResponse]:
     return resp.status, json.loads(resp.body)
 
 
-def _songs(mock: MusicKitApiMock) -> dict[str, Song]:
-    return cast("dict[str, Song]", mock.data.songs)
+def _songs(mock: MusicKitApiMock) -> dict[str, CatalogSong]:
+    return cast("dict[str, CatalogSong]", mock.data.songs)
 
 
-def _albums(mock: MusicKitApiMock) -> dict[str, Album]:
-    return cast("dict[str, Album]", mock.data.albums)
+def _albums(mock: MusicKitApiMock) -> dict[str, CatalogAlbum]:
+    return cast("dict[str, CatalogAlbum]", mock.data.albums)
 
 
-def _artists(mock: MusicKitApiMock) -> dict[str, Artist]:
-    return cast("dict[str, Artist]", mock.data.artists)
+def _artists(mock: MusicKitApiMock) -> dict[str, CatalogArtist]:
+    return cast("dict[str, CatalogArtist]", mock.data.artists)
 
 
 def _music_videos(mock: MusicKitApiMock) -> dict[str, MusicVideo]:
@@ -383,7 +383,7 @@ def test_song_library_returns_empty_when_library_song_id_is_none(
     mock: MusicKitApiMock,
 ) -> None:
     song = _songs(mock)["1"]
-    assert isinstance(song, Song)
+    assert isinstance(song, CatalogSong)
     mock.data.songs = {"1": replace(song, library_song_id=None)}
     status, body = _get(
         mock, "https://api.music.apple.com/v1/catalog/us/songs/1/library"
@@ -396,7 +396,7 @@ def test_song_station_returns_empty_when_station_id_is_none(
     mock: MusicKitApiMock,
 ) -> None:
     song = _songs(mock)["1"]
-    assert isinstance(song, Song)
+    assert isinstance(song, CatalogSong)
     mock.data.songs = {"1": replace(song, station_id=None)}
     status, body = _get(
         mock, "https://api.music.apple.com/v1/catalog/us/songs/1/station"
@@ -409,7 +409,7 @@ def test_album_library_returns_empty_when_library_album_id_is_none(
     mock: MusicKitApiMock,
 ) -> None:
     album = _albums(mock)["a1"]
-    assert isinstance(album, Album)
+    assert isinstance(album, CatalogAlbum)
     mock.data.albums = {"a1": replace(album, library_album_id=None)}
     status, body = _get(
         mock, "https://api.music.apple.com/v1/catalog/us/albums/a1/library"
@@ -422,7 +422,7 @@ def test_artist_station_returns_empty_when_station_id_is_none(
     mock: MusicKitApiMock,
 ) -> None:
     artist = _artists(mock)["ar1"]
-    assert isinstance(artist, Artist)
+    assert isinstance(artist, CatalogArtist)
     mock.data.artists = {"ar1": replace(artist, station_id=None)}
     status, body = _get(
         mock, "https://api.music.apple.com/v1/catalog/us/artists/ar1/station"
@@ -499,7 +499,7 @@ def test_library_artist_catalog_empty_when_catalog_id_none(
 
 def test_song_genres_empty_when_genre_ids_none(mock: MusicKitApiMock) -> None:
     song = _songs(mock)["1"]
-    assert isinstance(song, Song)
+    assert isinstance(song, CatalogSong)
     mock.data.songs = {"1": replace(song, genre_ids=None)}
     status, body = _get(
         mock, "https://api.music.apple.com/v1/catalog/us/songs/1/genres"

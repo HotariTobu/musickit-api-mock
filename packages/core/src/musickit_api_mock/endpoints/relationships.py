@@ -75,12 +75,12 @@ from musickit_api_mock.endpoints.schema import (
 from musickit_api_mock.transport.response_builders import _json_response
 
 if TYPE_CHECKING:
-    from musickit_api_mock.data.album import Album
-    from musickit_api_mock.data.artist import Artist
+    from musickit_api_mock.data.album import CatalogAlbum
+    from musickit_api_mock.data.artist import CatalogArtist
     from musickit_api_mock.data.curator import Curator
     from musickit_api_mock.data.library_album import LibraryAlbum
     from musickit_api_mock.data.personal_recommendation import PersonalRecommendation
-    from musickit_api_mock.data.song import Song
+    from musickit_api_mock.data.song import CatalogSong
     from musickit_api_mock.json_value import _JSONValue
     from musickit_api_mock.mock import MusicKitApiMock
     from musickit_api_mock.surfaces.data import _DataResolver
@@ -90,7 +90,7 @@ if TYPE_CHECKING:
 def _build_artist_sub_rels(
     sf: str,
     artist_id: str,
-    artist: Artist,
+    artist: CatalogArtist,
     *,
     locale: str | None,
     includes: set[str],
@@ -128,7 +128,7 @@ def _build_artist_sub_rels(
 def _build_album_sub_rels(
     sf: str,
     album_id: str,
-    album: Album,
+    album: CatalogAlbum,
     *,
     locale: str | None,
     includes: set[str],
@@ -166,7 +166,7 @@ def _build_album_sub_rels(
 def _build_song_sub_rels(
     sf: str,
     song_id: str,
-    song: Song,
+    song: CatalogSong,
     *,
     locale: str | None,
     includes: set[str],

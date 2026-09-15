@@ -18,11 +18,11 @@ from typing import TYPE_CHECKING, cast
 from urllib.parse import parse_qs, urlparse
 
 from musickit_api_mock import (
-    Album,
     Artwork,
+    CatalogAlbum,
+    CatalogSong,
     MusicKitApiMock,
     Request,
-    Song,
 )
 
 if TYPE_CHECKING:
@@ -36,8 +36,8 @@ def _get(mock: MusicKitApiMock, url: str) -> _AppleResponse:
     return json.loads(resp.body)
 
 
-def _stub_album(name: str) -> Album:
-    return Album(
+def _stub_album(name: str) -> CatalogAlbum:
+    return CatalogAlbum(
         name=name,
         artist_name="A",
         artwork=Artwork(url="x", width=1, height=1),
@@ -55,12 +55,12 @@ def _stub_album(name: str) -> Album:
 
 
 def test_song_albums_pagination_emits_next_when_overflowing(
-    mock: MusicKitApiMock, song: Song
+    mock: MusicKitApiMock, song: CatalogSong
 ) -> None:
     """``/songs/<id>/albums`` (page_size=10): 11 ids → first page + ``next``."""
     album_ids = [f"a{i}" for i in range(11)]
-    songs = cast("dict[str, Song]", mock.data.songs)
-    songs["1"] = Song(
+    songs = cast("dict[str, CatalogSong]", mock.data.songs)
+    songs["1"] = CatalogSong(
         title=song.title,
         artist=song.artist,
         album=song.album,

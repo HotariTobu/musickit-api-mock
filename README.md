@@ -26,7 +26,7 @@ The Playwright adapter depends on the core package transitively. Install only th
 ```python
 from musickit_api_mock import (
     MusicKitApiMock,
-    Song,
+    CatalogSong,
     Storefront,
     StorefrontResponseSuccess,
 )
@@ -37,7 +37,7 @@ mock = MusicKitApiMock()
 
 # Shared resource data: songs keyed by catalog id.
 mock.data.songs = {
-    "1000000001": Song.from_file("tests/fixtures/silence.m4a"),
+    "1000000001": CatalogSong.from_file("tests/fixtures/silence.m4a"),
 }
 
 # Endpoint-level response: storefront resolution.

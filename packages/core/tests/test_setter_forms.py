@@ -37,10 +37,10 @@ from musickit_api_mock import (
     StorefrontResponse,
     StorefrontResponseSuccess,
     WebPlaybackAsset,
+    WebPlaybackCatalogSong,
     WebPlaybackContext,
     WebPlaybackResponse,
     WebPlaybackResponseSuccess,
-    WebPlaybackSong,
 )
 
 if TYPE_CHECKING:
@@ -151,7 +151,7 @@ def test_web_playback_dict_form_dispatches_on_salable_adam_id(
     mock: MusicKitApiMock,
 ) -> None:
     """``endpoints.web_playback = {<id>: <response>}`` keys on ``salableAdamId``."""
-    success_song = WebPlaybackSong(
+    success_song = WebPlaybackCatalogSong(
         song_id="s1",
         hls_key_cert_url="https://s.mzstatic.com/skdtool_2021_certbundle.bin",
         hls_key_server_url="https://play.itunes.apple.com/WebObjects/MZPlay.woa/wa/acquireWebPlaybackLicense",

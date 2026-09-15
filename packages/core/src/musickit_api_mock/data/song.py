@@ -52,7 +52,7 @@ class HlsLayout:
 
 
 @dataclass
-class Song:
+class CatalogSong:
     """Apple Music catalog song.
 
     Holds the audio bytes the mock returns for HLS playback and preview,
@@ -146,7 +146,7 @@ class Song:
         fallback: SongMetadataFallback | None = None,
         *,
         preview: PreviewRange | bytes | None = None,
-    ) -> Song:
+    ) -> CatalogSong:
         """Build a song by reading metadata and audio bytes from a file on disk.
 
         Reads tags and audio data from the file at ``audio_path`` and
@@ -236,7 +236,9 @@ class PreviewRange:
     duration_sec: float
 
 
-type SongsSource = dict[str, Song] | Callable[[LookupContext], Song | None] | None
+type SongsSource = (
+    dict[str, CatalogSong] | Callable[[LookupContext], CatalogSong | None] | None
+)
 
 
 class _SongResolver:
@@ -246,6 +248,6 @@ class _SongResolver:
         """Bind to the ``DataSources.songs`` source via a callback."""
         self._get_source = get_source
 
-    def get(self, context: LookupContext) -> Song | None:
+    def get(self, context: LookupContext) -> CatalogSong | None:
         """Return the song for ``context.id`` or ``None`` if absent."""
         return _lookup_source(self._get_source(), "data.songs", context)

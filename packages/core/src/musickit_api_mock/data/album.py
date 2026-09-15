@@ -9,7 +9,7 @@ from musickit_api_mock.data.primitives.editorial_notes import EditorialNotes
 
 
 @dataclass
-class Album:
+class CatalogAlbum:
     """Apple Music catalog album.
 
     Attributes:
@@ -69,7 +69,9 @@ class Album:
     library_album_id: str | None = None
 
 
-type AlbumsSource = dict[str, Album] | Callable[[LookupContext], Album | None] | None
+type AlbumsSource = (
+    dict[str, CatalogAlbum] | Callable[[LookupContext], CatalogAlbum | None] | None
+)
 
 
 class _AlbumResolver:
@@ -79,6 +81,6 @@ class _AlbumResolver:
         """Bind to the ``DataSources.albums`` source via a callback."""
         self._get_source = get_source
 
-    def get(self, context: LookupContext) -> Album | None:
+    def get(self, context: LookupContext) -> CatalogAlbum | None:
         """Return the album for ``context.id`` or ``None`` if absent."""
         return _lookup_source(self._get_source(), "data.albums", context)
