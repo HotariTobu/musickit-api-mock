@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from musickit_api_mock.data.library_song import CatalogLibrarySong
 from musickit_api_mock.endpoints.schema.builders import _stable_hash
 
 if TYPE_CHECKING:
@@ -44,16 +45,21 @@ def _play_params_station(station_id: str, station: Station) -> dict[str, _JSONVa
 def _play_params_library_song(
     library_song_id: str, library_song: LibrarySong
 ) -> dict[str, _JSONValue]:
-    out: dict[str, _JSONValue] = {
+    if isinstance(library_song, CatalogLibrarySong):
+        return {
+            "id": library_song_id,
+            "kind": "song",
+            "isLibrary": True,
+            "reporting": True,
+            "reportingId": library_song.catalog_id,
+            "catalogId": library_song.catalog_id,
+        }
+    return {
         "id": library_song_id,
         "kind": "song",
         "isLibrary": True,
         "reporting": False,
-        "reportingId": _stable_hash(library_song_id),
     }
-    if library_song.catalog_id is not None:
-        out["catalogId"] = library_song.catalog_id
-    return out
 
 
 def _play_params_library_album(album_id: str) -> dict[str, _JSONValue]:

@@ -24,13 +24,16 @@ from musickit_api_mock import (
     WebPlaybackCatalogSong,
     WebPlaybackResponse,
     WebPlaybackResponseSuccess,
+    WebPlaybackUploadedLibraryAsset,
+    WebPlaybackUploadedLibraryAssetMetadata,
+    WebPlaybackUploadedLibrarySong,
     WidevineCertResponseSuccess,
 )
 
 if TYPE_CHECKING:
     from pathlib import Path
 
-    from musickit_api_mock import CatalogSong, LicenseResponse
+    from musickit_api_mock import CatalogSong, LicenseResponse, UploadedLibrarySong
 
 
 def make_test_jwt(
@@ -149,6 +152,62 @@ def make_playback_ready_mock(
     # noise in stderr during DRM tests.
     mock.endpoints.play_activity = PlayActivityResponseSuccess()
     mock.browser.eme_flavor = "com.apple.fps" if is_webkit else "com.widevine.alpha"
+    mock.browser.authorize_response = AuthorizeSuccess(
+        user_token="user-token", cid="cid", restricted=0
+    )
+    return mock
+
+
+def make_uploaded_playback_ready_mock(
+    songs: dict[str, UploadedLibrarySong],
+    browser_name: str,
+) -> MusicKitApiMock:
+    """Wire a mock that plays uploaded library songs from their raw audio.
+
+    Sets storefront, account, the library songs, a per-song ``web_playback``
+    dict keyed by library id whose asset points at the mock's uploaded-audio
+    route, the browser-appropriate ``eme_flavor`` (MusicKit probes EME at
+    configure time even though no DRM chain is involved), and a stock
+    ``authorize_response``.
+    """
+    mock = MusicKitApiMock()
+    mock.endpoints.storefront = StorefrontResponseSuccess(
+        storefront=Storefront(
+            id="us",
+            name="United States",
+            default_language_tag="en-US",
+            supported_language_tags=["en-US"],
+            explicit_content_policy="allowed",
+        )
+    )
+    mock.endpoints.account = AccountResponseSuccess(
+        account=Account(subscription_active=True, subscription_storefront="us")
+    )
+    mock.data.library_songs = songs
+    web_playback_map: dict[str, WebPlaybackResponse] = {
+        library_id: WebPlaybackResponseSuccess(
+            song_list=[
+                WebPlaybackUploadedLibrarySong(
+                    asset=WebPlaybackUploadedLibraryAsset(
+                        url=f"https://store-001.blobstore.apple.com/uploads/{library_id}/audio",
+                        metadata=WebPlaybackUploadedLibraryAssetMetadata(
+                            item_name=song.name,
+                            artist_name=song.artist_name,
+                            playlist_name=song.album_name or "",
+                            duration=song.duration_ms,
+                            kind="song",
+                        ),
+                    )
+                )
+            ]
+        )
+        for library_id, song in songs.items()
+    }
+    mock.endpoints.web_playback = web_playback_map
+    mock.endpoints.play_activity = PlayActivityResponseSuccess()
+    mock.browser.eme_flavor = (
+        "com.apple.fps" if browser_name == "webkit" else "com.widevine.alpha"
+    )
     mock.browser.authorize_response = AuthorizeSuccess(
         user_token="user-token", cid="cid", restricted=0
     )

@@ -214,6 +214,40 @@ PLAY_AND_AWAIT_PLAYING = """async (songId) => {
 }"""
 
 
+# Play an uploaded library song: no DRM chain, so resolve as soon as the
+# player reaches state=2 and verify the raw audio route was fetched.
+PLAY_UPLOAD_AND_AWAIT_PLAYING = """async (songId) => {
+    await window.__mk.setQueue({ songs: [songId] });
+    const states = [];
+    const reachedPlaying = new Promise((resolve, reject) => {
+        window.__mk.addEventListener('playbackStateDidChange', (e) => {
+            states.push(e.state);
+            if (e.state === 2) resolve({ states, fetches: window._fetches });
+        });
+        window.__mk.addEventListener('mediaPlaybackError', (e) => {
+            reject(new Error('mediaPlaybackError: ' + JSON.stringify({
+                code: e.errorCode, status: e.status, name: e.name,
+            }) + ', fetches=' + JSON.stringify(window._fetches)));
+        });
+        setTimeout(() => {
+            reject(new Error('timeout, states=' + JSON.stringify(states) + ', fetches=' + JSON.stringify(window._fetches)));
+        }, 30000);
+    });
+    window.__mk.changeToMediaAtIndex(0).catch(() => {});
+    return await reachedPlaying;
+}"""
+
+
+def assert_reached_playing_from_upload(result: _PlayingResult) -> None:
+    assert isinstance(result, dict), result
+    states = result.get("states")
+    fetches = result.get("fetches") or []
+    assert isinstance(states, list), result
+    assert 2 in states, result
+    assert any("webPlayback" in f for f in fetches), result
+    assert not _called_license_endpoint(fetches), result
+
+
 def _called_license_endpoint(fetches: list[str]) -> bool:
     return any(
         f.startswith("POST ") and "acquireWebPlaybackLicense" in f for f in fetches

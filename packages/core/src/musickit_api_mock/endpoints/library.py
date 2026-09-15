@@ -4,6 +4,9 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from musickit_api_mock.data.library_album import UploadedLibraryAlbum
+from musickit_api_mock.data.library_artist import UploadedLibraryArtist
+from musickit_api_mock.data.library_song import UploadedLibrarySong
 from musickit_api_mock.data.lookup import LookupContext
 from musickit_api_mock.endpoints.pagination import (
     _LIBRARY_ALBUM_ARTISTS,
@@ -66,12 +69,12 @@ def _build_library_song_catalog_rel(
     """Build ``relationships.catalog`` for a library song (``?include=catalog``).
 
     Resolves the linked catalog song via ``catalog_id`` and emits the full
-    catalog song shape inline. Returns ``None`` when the library song has
-    no ``catalog_id`` set.
+    catalog song shape inline. An uploaded library song emits an empty
+    block, as Apple does for a song with no catalog counterpart.
     """
-    if library_song.catalog_id is None:
-        return None
     href = f"/v1/me/library/songs/{library_id}/catalog"
+    if isinstance(library_song, UploadedLibrarySong):
+        return _singleton_relationship_block(href, [])
     catalog_song = mock._data_resolver.song.get(
         LookupContext(library_song.catalog_id, locale)
     )
@@ -90,9 +93,9 @@ def _build_library_album_catalog_rel(
     *,
     locale: str | None,
 ) -> dict[str, _JSONValue] | None:
-    if library_album.catalog_id is None:
-        return None
     href = f"/v1/me/library/albums/{library_id}/catalog"
+    if isinstance(library_album, UploadedLibraryAlbum):
+        return _singleton_relationship_block(href, [])
     catalog_album = mock._data_resolver.album.get(
         LookupContext(library_album.catalog_id, locale)
     )
@@ -181,17 +184,20 @@ def _build_library_artist_rels(
         )
         if albums_block is not None:
             rels["albums"] = albums_block
-    if "catalog" in includes and library_artist.catalog_id is not None:
+    if "catalog" in includes:
         sf = _user_storefront_slug(mock)
         href = f"/v1/me/library/artists/{library_id}/catalog"
-        catalog_artist = resolver.artist.get(
-            LookupContext(library_artist.catalog_id, locale)
-        )
-        if catalog_artist is None:
+        if isinstance(library_artist, UploadedLibraryArtist):
             rels["catalog"] = _singleton_relationship_block(href, [])
         else:
+            catalog_artist = resolver.artist.get(
+                LookupContext(library_artist.catalog_id, locale)
+            )
             rels["catalog"] = _singleton_relationship_block(
-                href, [_artist_resource(sf, library_artist.catalog_id, catalog_artist)]
+                href,
+                []
+                if catalog_artist is None
+                else [_artist_resource(sf, library_artist.catalog_id, catalog_artist)],
             )
     return rels
 

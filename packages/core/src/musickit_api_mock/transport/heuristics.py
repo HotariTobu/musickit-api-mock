@@ -15,7 +15,12 @@ _UNRELATED_HOSTS = frozenset(
         "js-cdn.music.apple.com",
     }
 )
-_APPLE_SUFFIXES = (".music.apple.com", ".itunes.apple.com", ".mzstatic.com")
+_APPLE_SUFFIXES = (
+    ".music.apple.com",
+    ".itunes.apple.com",
+    ".mzstatic.com",
+    ".blobstore.apple.com",
+)
 
 
 def _is_musickit_related(req: Request) -> bool:

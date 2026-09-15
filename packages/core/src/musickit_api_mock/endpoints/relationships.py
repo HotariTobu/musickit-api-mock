@@ -11,6 +11,9 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from musickit_api_mock.data.library_album import UploadedLibraryAlbum
+from musickit_api_mock.data.library_artist import UploadedLibraryArtist
+from musickit_api_mock.data.library_song import UploadedLibrarySong
 from musickit_api_mock.data.lookup import LookupContext, _list_source_ids
 from musickit_api_mock.endpoints.pagination import (
     _ARTIST_ALBUMS,
@@ -57,6 +60,7 @@ from musickit_api_mock.endpoints.schema import (
     _catalog_ref,
     _curator_resource,
     _empty_ids_400_envelope,
+    _generic_error_envelope,
     _genre_resource,
     _grouping_resource,
     _library_album_resource,
@@ -953,13 +957,15 @@ def _handle_library_song_catalog(
     library_song = mock._data_resolver.library_song.get(
         LookupContext(library_song_id, locale)
     )
-    if library_song is None or library_song.catalog_id is None:
+    if library_song is None:
         return _json_response({"data": []})
+    if isinstance(library_song, UploadedLibrarySong):
+        return _json_response(_generic_error_envelope(404), status=404)
     catalog_song = mock._data_resolver.song.get(
         LookupContext(library_song.catalog_id, locale)
     )
     if catalog_song is None:
-        return _json_response({"data": []})
+        return _json_response(_generic_error_envelope(404), status=404)
     sf = _user_storefront_slug(mock)
     return _json_response(
         {"data": [_song_resource(sf, library_song.catalog_id, catalog_song)]}
@@ -977,13 +983,15 @@ def _handle_library_album_catalog(
     library_album = mock._data_resolver.library_album.get(
         LookupContext(library_album_id, locale)
     )
-    if library_album is None or library_album.catalog_id is None:
+    if library_album is None:
         return _json_response({"data": []})
+    if isinstance(library_album, UploadedLibraryAlbum):
+        return _json_response(_generic_error_envelope(404), status=404)
     catalog_album = mock._data_resolver.album.get(
         LookupContext(library_album.catalog_id, locale)
     )
     if catalog_album is None:
-        return _json_response({"data": []})
+        return _json_response(_generic_error_envelope(404), status=404)
     sf = _user_storefront_slug(mock)
     return _json_response(
         {"data": [_album_resource(sf, library_album.catalog_id, catalog_album)]}
@@ -1059,13 +1067,15 @@ def _handle_library_artist_catalog(
     library_artist = mock._data_resolver.library_artist.get(
         LookupContext(library_artist_id, locale)
     )
-    if library_artist is None or library_artist.catalog_id is None:
+    if library_artist is None:
         return _json_response({"data": []})
+    if isinstance(library_artist, UploadedLibraryArtist):
+        return _json_response(_generic_error_envelope(404), status=404)
     catalog_artist = mock._data_resolver.artist.get(
         LookupContext(library_artist.catalog_id, locale)
     )
     if catalog_artist is None:
-        return _json_response({"data": []})
+        return _json_response(_generic_error_envelope(404), status=404)
     sf = _user_storefront_slug(mock)
     return _json_response(
         {"data": [_artist_resource(sf, library_artist.catalog_id, catalog_artist)]}
