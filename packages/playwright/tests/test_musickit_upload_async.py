@@ -20,6 +20,8 @@ from tests.scenarios_musickit import (
     LOAD_AND_CONFIGURE,
     PLAY_UPLOAD_AND_AWAIT_PLAYING,
     assert_reached_playing_from_upload,
+    assert_uploaded_audio_served,
+    is_uploaded_audio_response,
 )
 
 if TYPE_CHECKING:
@@ -57,6 +59,11 @@ async def test_uploaded_library_song_plays_from_raw_audio(
     await page.goto(page_url)
     await page.evaluate(LOAD_AND_CONFIGURE, dev_token)
     await page.evaluate(AUTHORIZE)
-    assert_reached_playing_from_upload(
-        await page.evaluate(PLAY_UPLOAD_AND_AWAIT_PLAYING, "i.upload1")
-    )
+    async with page.expect_response(
+        lambda r: is_uploaded_audio_response(r.url), timeout=30000
+    ) as audio:
+        assert_reached_playing_from_upload(
+            await page.evaluate(PLAY_UPLOAD_AND_AWAIT_PLAYING, "i.upload1")
+        )
+    response = await audio.value
+    assert_uploaded_audio_served(response.status, response.headers.get("content-type"))

@@ -215,7 +215,9 @@ PLAY_AND_AWAIT_PLAYING = """async (songId) => {
 
 
 # Play an uploaded library song: no DRM chain, so resolve as soon as the
-# player reaches state=2 and verify the raw audio route was fetched.
+# player reaches state=2. The <audio> element's request for the raw audio
+# is not a fetch() call and never lands in window._fetches; the test
+# observes it through Playwright's response events instead.
 PLAY_UPLOAD_AND_AWAIT_PLAYING = """async (songId) => {
     await window.__mk.setQueue({ songs: [songId] });
     const states = [];
@@ -246,6 +248,15 @@ def assert_reached_playing_from_upload(result: _PlayingResult) -> None:
     assert 2 in states, result
     assert any("webPlayback" in f for f in fetches), result
     assert not _called_license_endpoint(fetches), result
+
+
+def is_uploaded_audio_response(url: str) -> bool:
+    return ".blobstore.apple.com/" in url and url.split("?")[0].endswith("/audio")
+
+
+def assert_uploaded_audio_served(status: int, content_type: str | None) -> None:
+    assert status == 200, status
+    assert content_type == "audio/mp4", content_type
 
 
 def _called_license_endpoint(fetches: list[str]) -> bool:
