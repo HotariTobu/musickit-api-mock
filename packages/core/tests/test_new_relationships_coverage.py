@@ -548,7 +548,9 @@ def test_library_song_catalog_404_for_uploaded_song(
         ("artists", "r.ar1", "https://api.music.apple.com/v1/me/library/artists/r.ar1"),
     ],
 )
-@pytest.mark.parametrize("suffix", ["?include=catalog", "/catalog"])
+@pytest.mark.parametrize(
+    "suffix", ["", "?include=albums", "?include=catalog", "/catalog"]
+)
 def test_library_catalog_id_without_catalog_entry_raises(
     mock: MusicKitApiMock, kind: str, library_id: str, url: str, suffix: str
 ) -> None:

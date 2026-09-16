@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING
 from musickit_api_mock.data.library_album import UploadedLibraryAlbum
 from musickit_api_mock.data.library_artist import UploadedLibraryArtist
 from musickit_api_mock.data.library_song import UploadedLibrarySong
-from musickit_api_mock.data.lookup import LookupContext
+from musickit_api_mock.data.lookup import LookupContext, _dangling_catalog_id
 from musickit_api_mock.endpoints.pagination import (
     _LIBRARY_ALBUM_ARTISTS,
     _LIBRARY_ALBUM_TRACKS,
@@ -84,15 +84,6 @@ def _build_library_song_catalog_rel(
         )
     return _singleton_relationship_block(
         href, [_song_resource(sf, library_song.catalog_id, catalog_song)]
-    )
-
-
-def _dangling_catalog_id(
-    library_source: str, library_id: str, catalog_source: str, catalog_id: str
-) -> ValueError:
-    return ValueError(
-        f"{library_source}[{library_id!r}].catalog_id {catalog_id!r}"
-        f" has no entry in {catalog_source}"
     )
 
 

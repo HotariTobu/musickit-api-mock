@@ -17,9 +17,6 @@ from musickit_api_mock import (
     Account,
     AccountResponseSuccess,
     Artwork,
-    CatalogLibraryAlbum,
-    CatalogLibraryArtist,
-    CatalogLibrarySong,
     Curator,
     LibraryAlbum,
     LibraryArtist,
@@ -35,6 +32,9 @@ from musickit_api_mock import (
     Station,
     Storefront,
     StorefrontResponseSuccess,
+    UploadedLibraryAlbum,
+    UploadedLibraryArtist,
+    UploadedLibrarySong,
 )
 
 if TYPE_CHECKING:
@@ -200,14 +200,14 @@ def test_data_library_songs_callable() -> None:
     def resolver(ctx: LookupContext) -> LibrarySong | None:
         if ctx.id != "i.s-x":
             return None
-        return CatalogLibrarySong(
+        return UploadedLibrarySong(
             name=f"LS {ctx.id}",
             artist_name="A",
             artwork=_aw(),
             duration_ms=1,
             genre_names=[],
             has_lyrics=False,
-            catalog_id="1",
+            audio=b"",
         )
 
     m.data.library_songs = resolver
@@ -222,13 +222,12 @@ def test_data_library_albums_callable() -> None:
     def resolver(ctx: LookupContext) -> LibraryAlbum | None:
         if ctx.id != "l.a-x":
             return None
-        return CatalogLibraryAlbum(
+        return UploadedLibraryAlbum(
             name=f"LA {ctx.id}",
             artist_name="A",
             artwork=_aw(),
             genre_names=[],
             track_count=0,
-            catalog_id="a1",
         )
 
     m.data.library_albums = resolver
@@ -264,7 +263,7 @@ def test_data_library_artists_callable() -> None:
     def resolver(ctx: LookupContext) -> LibraryArtist | None:
         if ctx.id != "r.ar-x":
             return None
-        return CatalogLibraryArtist(name=f"LAR {ctx.id}", catalog_id="ar1")
+        return UploadedLibraryArtist(name=f"LAR {ctx.id}")
 
     m.data.library_artists = resolver
     status, body = _get(m, "https://api.music.apple.com/v1/me/library/artists/r.ar-x")

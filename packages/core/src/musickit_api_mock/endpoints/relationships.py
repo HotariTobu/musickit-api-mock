@@ -14,7 +14,11 @@ from typing import TYPE_CHECKING
 from musickit_api_mock.data.library_album import UploadedLibraryAlbum
 from musickit_api_mock.data.library_artist import UploadedLibraryArtist
 from musickit_api_mock.data.library_song import UploadedLibrarySong
-from musickit_api_mock.data.lookup import LookupContext, _list_source_ids
+from musickit_api_mock.data.lookup import (
+    LookupContext,
+    _dangling_catalog_id,
+    _list_source_ids,
+)
 from musickit_api_mock.endpoints.pagination import (
     _ARTIST_ALBUMS,
     _CATALOG_ALBUM_ARTISTS,
@@ -949,10 +953,7 @@ def _handle_library_artist_albums(
 def _handle_library_song_catalog(
     mock: MusicKitApiMock, req: Request, library_song_id: str
 ) -> Response:
-    from musickit_api_mock.endpoints.library import (
-        _dangling_catalog_id,
-        _user_storefront_slug,
-    )
+    from musickit_api_mock.endpoints.library import _user_storefront_slug
 
     locale, err = _check_and_resolve_locale(req, storefront_slug=None, mock=mock)
     if err is not None:
@@ -980,10 +981,7 @@ def _handle_library_song_catalog(
 def _handle_library_album_catalog(
     mock: MusicKitApiMock, req: Request, library_album_id: str
 ) -> Response:
-    from musickit_api_mock.endpoints.library import (
-        _dangling_catalog_id,
-        _user_storefront_slug,
-    )
+    from musickit_api_mock.endpoints.library import _user_storefront_slug
 
     locale, err = _check_and_resolve_locale(req, storefront_slug=None, mock=mock)
     if err is not None:
@@ -1072,10 +1070,7 @@ def _handle_library_playlist_catalog(
 def _handle_library_artist_catalog(
     mock: MusicKitApiMock, req: Request, library_artist_id: str
 ) -> Response:
-    from musickit_api_mock.endpoints.library import (
-        _dangling_catalog_id,
-        _user_storefront_slug,
-    )
+    from musickit_api_mock.endpoints.library import _user_storefront_slug
 
     locale, err = _check_and_resolve_locale(req, storefront_slug=None, mock=mock)
     if err is not None:

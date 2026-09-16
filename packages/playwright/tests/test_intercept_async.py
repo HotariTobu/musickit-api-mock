@@ -13,8 +13,6 @@ from musickit_api_mock import (
     AuthorizeSuccess,
     CatalogAlbum,
     CatalogArtist,
-    CatalogLibraryAlbum,
-    CatalogLibraryArtist,
     CatalogLibrarySong,
     CatalogSong,
     Curator,
@@ -35,6 +33,8 @@ from musickit_api_mock import (
     Station,
     Storefront,
     StorefrontResponseSuccess,
+    UploadedLibraryAlbum,
+    UploadedLibraryArtist,
 )
 
 from tests.scenarios_intercept import (
@@ -637,16 +637,15 @@ async def test_library_artist_albums_endpoint_intercepted(
     mock = MusicKitApiMock()
     _basic_storefront(mock)
     mock.data.library_artists = {
-        "r.ar1": CatalogLibraryArtist(name="LA", album_ids=["l.a1"], catalog_id="ar1")
+        "r.ar1": UploadedLibraryArtist(name="LA", album_ids=["l.a1"])
     }
     mock.data.library_albums = {
-        "l.a1": CatalogLibraryAlbum(
+        "l.a1": UploadedLibraryAlbum(
             name="LAlbum",
             artist_name="LA",
             artwork=_library_artwork(),
             genre_names=[],
             track_count=0,
-            catalog_id="a1",
         )
     }
     page = await mount_async_page(mock)

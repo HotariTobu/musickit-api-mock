@@ -3,7 +3,11 @@
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 
-from musickit_api_mock.data.lookup import LookupContext, _lookup_source
+from musickit_api_mock.data.lookup import (
+    LookupContext,
+    _dangling_catalog_id,
+    _lookup_source,
+)
 from musickit_api_mock.data.primitives.artwork import Artwork
 
 
@@ -76,12 +80,28 @@ type LibraryAlbumsSource = (
 
 
 class _LibraryAlbumResolver:
-    """Library-internal lookup over ``DataSources.library_albums``."""
+    """Library-internal lookup over ``DataSources.library_albums``.
 
-    def __init__(self, get_source: Callable[[], LibraryAlbumsSource]) -> None:
-        """Bind to the ``DataSources.library_albums`` source via a callback."""
+    A catalog-linked album resolves only when its catalog counterpart
+    exists; a dangling ``catalog_id`` raises on every lookup.
+    """
+
+    def __init__(
+        self,
+        get_source: Callable[[], LibraryAlbumsSource],
+        get_catalog: Callable[[LookupContext], object | None],
+    ) -> None:
+        """Bind to the ``DataSources.library_albums`` source and the catalog album lookup."""
         self._get_source = get_source
+        self._get_catalog = get_catalog
 
     def get(self, context: LookupContext) -> LibraryAlbum | None:
         """Return the library album for ``context.id`` or ``None`` if absent."""
-        return _lookup_source(self._get_source(), "data.library_albums", context)
+        album = _lookup_source(self._get_source(), "data.library_albums", context)
+        if isinstance(album, CatalogLibraryAlbum) and (
+            self._get_catalog(LookupContext(album.catalog_id, context.locale)) is None
+        ):
+            raise _dangling_catalog_id(
+                "data.library_albums", context.id, "data.albums", album.catalog_id
+            )
+        return album
