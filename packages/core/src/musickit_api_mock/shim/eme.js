@@ -272,6 +272,14 @@
     var DATA_KEY_REGEX = /#EXT-X-KEY:METHOD=ISO-23001-7[^\n]*URI="data:[^,]*;base64,([^"]+)"/;
     var M3U8_REGEX = /\.m3u8(\?|#|$)/;
     var BLOB_REGEX = /^blob:/;
+    // Raw audio of an uploaded library song, served from the mock's
+    // blobstore route. Played through the synthetic element like HLS so
+    // playback does not depend on the engine's AAC decoder.
+    var UPLOADED_AUDIO_REGEX = /^https:\/\/[^/]+\.blobstore\.apple\.com\/[^?#]*\/audio(\?|#|$)/;
+    var WEB_PLAYBACK_REGEX = /\/webPlayback(\?|#|$)/;
+    function isSyntheticUrl(value) {
+      return typeof value === "string" && (M3U8_REGEX.test(value) || BLOB_REGEX.test(value) || UPLOADED_AUDIO_REGEX.test(value));
+    }
     var CACHE_TTL_MS = 30000;
     // Fallback for manifests that carry no per-segment durations (e.g. a master
     // playlist, or a live stream): the synthetic element reports an open-ended
@@ -382,6 +390,31 @@
       window.fetch = function (input, init) {
         var url = inputUrl(input);
         var p = origFetch.call(this, input, init);
+        if (typeof url === "string" && WEB_PLAYBACK_REGEX.test(url)) {
+          // An uploaded song's duration is only known from its web-playback
+          // asset metadata; record it so the synthetic element ends where
+          // the real file would.
+          return p.then(function (response) {
+            return response.clone().json().then(
+              function (body) {
+                var songs = body && body.songList;
+                if (Array.isArray(songs)) {
+                  songs.forEach(function (song) {
+                    if (!song || String(song.songId) !== "-1" || !Array.isArray(song.assets)) return;
+                    song.assets.forEach(function (asset) {
+                      var ms = asset && asset.metadata && asset.metadata.duration;
+                      if (asset && typeof asset.URL === "string" && typeof ms === "number" && ms > 0) {
+                        durationByUrl[asset.URL] = ms / 1000;
+                      }
+                    });
+                  });
+                }
+                return response;
+              },
+              function () { return response; }
+            );
+          });
+        }
         if (typeof url !== "string" || !M3U8_REGEX.test(url)) return p;
         // Defer the resolution returned to the caller until the body has been
         // read and the cache populated, otherwise the player's downstream
@@ -438,6 +471,14 @@
       srcByEl.set(mediaEl, value);
       ns.__currentSyntheticMediaElement = mediaEl;
       ensureState(mediaEl);
+      if (UPLOADED_AUDIO_REGEX.test(value)) {
+        // No key chain for a raw file: fetch it once so the request reaches
+        // the mock's route the way the native load would, then report the
+        // load progression the engine would produce.
+        try { origFetch.call(window, value, { method: "GET" }).catch(function () {}); } catch (_) {}
+        dispatchLoadProgression(mediaEl);
+        return;
+      }
       if (!maybeDispatchEncrypted(mediaEl, value)) {
         pendingMediaByUrl[value] = pendingMediaByUrl[value] || [];
         pendingMediaByUrl[value].push(mediaEl);
@@ -596,7 +637,7 @@
         // start a load that will fail (missing CDM / decoder / segment
         // format) and surface stall or error states the EME chain
         // synthesis can't recover from.
-        if (typeof value === "string" && (M3U8_REGEX.test(value) || BLOB_REGEX.test(value))) {
+        if (isSyntheticUrl(value)) {
           activateSyntheticSrc(this, value);
           return;
         }
@@ -610,7 +651,7 @@
       var origRemoveAttribute = proto.removeAttribute;
       try {
         proto.setAttribute = function (name, value) {
-          if (String(name).toLowerCase() === "src" && typeof value === "string" && (M3U8_REGEX.test(value) || BLOB_REGEX.test(value))) {
+          if (String(name).toLowerCase() === "src" && isSyntheticUrl(value)) {
             // Some engines/player paths assign media URLs through the content
             // attribute rather than the WebIDL property. Route those through
             // the same synthetic path; otherwise Firefox starts a native HLS
