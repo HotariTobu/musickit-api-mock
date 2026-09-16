@@ -949,7 +949,10 @@ def _handle_library_artist_albums(
 def _handle_library_song_catalog(
     mock: MusicKitApiMock, req: Request, library_song_id: str
 ) -> Response:
-    from musickit_api_mock.endpoints.library import _user_storefront_slug
+    from musickit_api_mock.endpoints.library import (
+        _dangling_catalog_id,
+        _user_storefront_slug,
+    )
 
     locale, err = _check_and_resolve_locale(req, storefront_slug=None, mock=mock)
     if err is not None:
@@ -965,7 +968,9 @@ def _handle_library_song_catalog(
         LookupContext(library_song.catalog_id, locale)
     )
     if catalog_song is None:
-        return _json_response(_generic_error_envelope(404), status=404)
+        raise _dangling_catalog_id(
+            "data.library_songs", library_song_id, "data.songs", library_song.catalog_id
+        )
     sf = _user_storefront_slug(mock)
     return _json_response(
         {"data": [_song_resource(sf, library_song.catalog_id, catalog_song)]}
@@ -975,7 +980,10 @@ def _handle_library_song_catalog(
 def _handle_library_album_catalog(
     mock: MusicKitApiMock, req: Request, library_album_id: str
 ) -> Response:
-    from musickit_api_mock.endpoints.library import _user_storefront_slug
+    from musickit_api_mock.endpoints.library import (
+        _dangling_catalog_id,
+        _user_storefront_slug,
+    )
 
     locale, err = _check_and_resolve_locale(req, storefront_slug=None, mock=mock)
     if err is not None:
@@ -991,7 +999,12 @@ def _handle_library_album_catalog(
         LookupContext(library_album.catalog_id, locale)
     )
     if catalog_album is None:
-        return _json_response(_generic_error_envelope(404), status=404)
+        raise _dangling_catalog_id(
+            "data.library_albums",
+            library_album_id,
+            "data.albums",
+            library_album.catalog_id,
+        )
     sf = _user_storefront_slug(mock)
     return _json_response(
         {"data": [_album_resource(sf, library_album.catalog_id, catalog_album)]}
@@ -1059,7 +1072,10 @@ def _handle_library_playlist_catalog(
 def _handle_library_artist_catalog(
     mock: MusicKitApiMock, req: Request, library_artist_id: str
 ) -> Response:
-    from musickit_api_mock.endpoints.library import _user_storefront_slug
+    from musickit_api_mock.endpoints.library import (
+        _dangling_catalog_id,
+        _user_storefront_slug,
+    )
 
     locale, err = _check_and_resolve_locale(req, storefront_slug=None, mock=mock)
     if err is not None:
@@ -1075,7 +1091,12 @@ def _handle_library_artist_catalog(
         LookupContext(library_artist.catalog_id, locale)
     )
     if catalog_artist is None:
-        return _json_response(_generic_error_envelope(404), status=404)
+        raise _dangling_catalog_id(
+            "data.library_artists",
+            library_artist_id,
+            "data.artists",
+            library_artist.catalog_id,
+        )
     sf = _user_storefront_slug(mock)
     return _json_response(
         {"data": [_artist_resource(sf, library_artist.catalog_id, catalog_artist)]}

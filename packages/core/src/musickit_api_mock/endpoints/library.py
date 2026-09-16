@@ -79,9 +79,20 @@ def _build_library_song_catalog_rel(
         LookupContext(library_song.catalog_id, locale)
     )
     if catalog_song is None:
-        return _singleton_relationship_block(href, [])
+        raise _dangling_catalog_id(
+            "data.library_songs", library_id, "data.songs", library_song.catalog_id
+        )
     return _singleton_relationship_block(
         href, [_song_resource(sf, library_song.catalog_id, catalog_song)]
+    )
+
+
+def _dangling_catalog_id(
+    library_source: str, library_id: str, catalog_source: str, catalog_id: str
+) -> ValueError:
+    return ValueError(
+        f"{library_source}[{library_id!r}].catalog_id {catalog_id!r}"
+        f" has no entry in {catalog_source}"
     )
 
 
@@ -100,7 +111,9 @@ def _build_library_album_catalog_rel(
         LookupContext(library_album.catalog_id, locale)
     )
     if catalog_album is None:
-        return _singleton_relationship_block(href, [])
+        raise _dangling_catalog_id(
+            "data.library_albums", library_id, "data.albums", library_album.catalog_id
+        )
     return _singleton_relationship_block(
         href, [_album_resource(sf, library_album.catalog_id, catalog_album)]
     )
@@ -193,11 +206,15 @@ def _build_library_artist_rels(
             catalog_artist = resolver.artist.get(
                 LookupContext(library_artist.catalog_id, locale)
             )
+            if catalog_artist is None:
+                raise _dangling_catalog_id(
+                    "data.library_artists",
+                    library_id,
+                    "data.artists",
+                    library_artist.catalog_id,
+                )
             rels["catalog"] = _singleton_relationship_block(
-                href,
-                []
-                if catalog_artist is None
-                else [_artist_resource(sf, library_artist.catalog_id, catalog_artist)],
+                href, [_artist_resource(sf, library_artist.catalog_id, catalog_artist)]
             )
     return rels
 

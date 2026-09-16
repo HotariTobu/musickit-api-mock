@@ -13,6 +13,7 @@ import json
 from dataclasses import replace
 from typing import TYPE_CHECKING, cast
 
+import pytest
 from musickit_api_mock import (
     Artwork,
     CatalogAlbum,
@@ -537,6 +538,28 @@ def test_library_song_catalog_404_for_uploaded_song(
     )
     assert status == 404
     assert body["errors"][0]["status"] == "404"
+
+
+@pytest.mark.parametrize(
+    ("kind", "library_id", "url"),
+    [
+        ("songs", "i.s1", "https://api.music.apple.com/v1/me/library/songs/i.s1"),
+        ("albums", "l.a1", "https://api.music.apple.com/v1/me/library/albums/l.a1"),
+        ("artists", "r.ar1", "https://api.music.apple.com/v1/me/library/artists/r.ar1"),
+    ],
+)
+@pytest.mark.parametrize("suffix", ["?include=catalog", "/catalog"])
+def test_library_catalog_id_without_catalog_entry_raises(
+    mock: MusicKitApiMock, kind: str, library_id: str, url: str, suffix: str
+) -> None:
+    source = getattr(mock.data, f"library_{kind}")
+    item = replace(source[library_id], catalog_id="missing")
+    setattr(mock.data, f"library_{kind}", {library_id: item})
+    with pytest.raises(
+        ValueError,
+        match=rf"data\.library_{kind}\['{library_id}'\]\.catalog_id 'missing' has no entry in data\.{kind}",
+    ):
+        _get(mock, url + suffix)
 
 
 def test_song_genres_empty_when_genre_ids_none(mock: MusicKitApiMock) -> None:
