@@ -770,9 +770,9 @@
       if (!mk || mk.__musickitApiMockPlaybackTimePatched) return mk;
       mk.__musickitApiMockPlaybackTimePatched = true;
       var origSeekToTime = mk.seekToTime;
-      var desc = Object.getOwnPropertyDescriptor(mk, "currentPlaybackTime");
-      if (!desc && Object.getPrototypeOf(mk)) {
-        desc = Object.getOwnPropertyDescriptor(Object.getPrototypeOf(mk), "currentPlaybackTime");
+      var desc = null;
+      for (var owner = mk; owner && !desc; owner = Object.getPrototypeOf(owner)) {
+        desc = Object.getOwnPropertyDescriptor(owner, "currentPlaybackTime");
       }
       var origCurrentPlaybackTimeGet = desc && desc.get;
       try {

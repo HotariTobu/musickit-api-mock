@@ -45,6 +45,7 @@ class _UnauthorizeResult(TypedDict, total=False):
 class _PlayingResult(TypedDict, total=False):
     states: list[int]
     fetches: list[str]
+    playbackTime: float
 
 
 class _PlaybackErrorResult(TypedDict, total=False):
@@ -214,17 +215,27 @@ PLAY_AND_AWAIT_PLAYING = """async (songId) => {
 }"""
 
 
-# Play an uploaded library song: no DRM chain, so resolve as soon as the
-# player reaches state=2. The <audio> element's request for the raw audio
-# is not a fetch() call and never lands in window._fetches; the test
-# observes it through Playwright's response events instead.
+# Play an uploaded library song: no DRM chain, so resolve once the player
+# reaches state=2 and its clock has advanced. The <audio> element's request
+# for the raw audio is not a fetch() call and never lands in
+# window._fetches; the test observes it through Playwright's response
+# events instead.
 PLAY_UPLOAD_AND_AWAIT_PLAYING = """async (songId) => {
     await window.__mk.setQueue({ songs: [songId] });
     const states = [];
     const reachedPlaying = new Promise((resolve, reject) => {
+        let clockHandle = null;
         window.__mk.addEventListener('playbackStateDidChange', (e) => {
             states.push(e.state);
-            if (e.state === 2) resolve({ states, fetches: window._fetches });
+            if (e.state === 2 && clockHandle === null) {
+                clockHandle = setInterval(() => {
+                    const t = window.__mk.currentPlaybackTime;
+                    if (t >= 1) {
+                        clearInterval(clockHandle);
+                        resolve({ states, fetches: window._fetches, playbackTime: t });
+                    }
+                }, 100);
+            }
         });
         window.__mk.addEventListener('mediaPlaybackError', (e) => {
             reject(new Error('mediaPlaybackError: ' + JSON.stringify({
@@ -246,6 +257,9 @@ def assert_reached_playing_from_upload(result: _PlayingResult) -> None:
     fetches = result.get("fetches") or []
     assert isinstance(states, list), result
     assert 2 in states, result
+    playback_time = result.get("playbackTime")
+    assert isinstance(playback_time, (int, float)), result
+    assert playback_time >= 1, result
     assert any("webPlayback" in f for f in fetches), result
     assert not _called_license_endpoint(fetches), result
 
