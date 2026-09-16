@@ -60,7 +60,7 @@ async def test_uploaded_library_song_plays_from_raw_audio(
     await page.evaluate(LOAD_AND_CONFIGURE, dev_token)
     await page.evaluate(AUTHORIZE)
     async with page.expect_response(
-        lambda r: is_uploaded_audio_response(r.url), timeout=30000
+        lambda r: is_uploaded_audio_response(r.url) and r.status != 0, timeout=30000
     ) as audio:
         assert_reached_playing_from_upload(
             await page.evaluate(PLAY_UPLOAD_AND_AWAIT_PLAYING, "i.upload1")
