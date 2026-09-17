@@ -1246,7 +1246,7 @@
 </span><span id="__span-0-13"><a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a>    <span class="p">),</span>
 </span><span id="__span-0-14"><a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a><span class="p">}</span>
 </span></code></pre></div>
-<p><code>from_file</code> reads the title, artist, album, genre, track / disc numbers, duration, and embedded artwork from the file and keeps the file bytes as the served audio. Anything the file lacks comes from the fallback; a required field missing from both raises <code>ValueError</code>.</p>
+<p><code>from_file</code> reads the title, artist, album, genre, track / disc numbers, duration, and embedded artwork from the file and transcodes the audio to AAC in an M4A container, as Apple does for uploads. Anything the file lacks comes from the fallback; a required field missing from both raises <code>ValueError</code>.</p>
 <h2 id="answer-the-web-playback-request">Answer the web-playback request<a class="headerlink" href="#answer-the-web-playback-request" title="Permanent link">&para;</a></h2>
 <p>When MusicKit plays the song it posts <code>{"universalLibraryId": "i.abc123"}</code> to the web-playback endpoint, so key the setter by the library id and point the asset at a <code>blobstore.apple.com</code> URL whose second path segment is the library id:</p>
 <div class="language-python highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">musickit_api_mock</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
@@ -1275,7 +1275,7 @@
 </span><span id="__span-1-24"><a id="__codelineno-1-24" name="__codelineno-1-24" href="#__codelineno-1-24"></a>    <span class="p">),</span>
 </span><span id="__span-1-25"><a id="__codelineno-1-25" name="__codelineno-1-25" href="#__codelineno-1-25"></a><span class="p">}</span>
 </span></code></pre></div>
-<p>The mock serves <code>https://&lt;store&gt;.blobstore.apple.com/&lt;bucket&gt;/&lt;library song id&gt;/audio</code> from the registered song's audio bytes with <code>Content-Type: audio/mp4</code>; the store label and bucket segment are free-form, and a signing query string is ignored.</p>
+<p>The mock serves <code>https://&lt;store&gt;.blobstore.apple.com/&lt;bucket&gt;/&lt;library song id&gt;/audio</code> from the registered song's audio with <code>Content-Type: audio/x-m4a</code>; the store label and bucket segment are free-form, and a signing query string is ignored.</p>
 
 
 
