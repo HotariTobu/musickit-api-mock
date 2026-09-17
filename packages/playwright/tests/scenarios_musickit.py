@@ -273,6 +273,14 @@ def assert_uploaded_audio_served(status: int, content_type: str | None) -> None:
     assert content_type == "audio/mp4", content_type
 
 
+def assert_upload_playback_failed(result: _PlaybackErrorResult) -> None:
+    """The engines report an audio src that cannot be loaded as MEDIA_PLAYBACK."""
+    assert isinstance(result, dict), result
+    assert result.get("errorCode") == "MEDIA_PLAYBACK", result
+    fetches = result.get("fetches") or []
+    assert not _called_license_endpoint(fetches), result
+
+
 def _called_license_endpoint(fetches: list[str]) -> bool:
     return any(
         f.startswith("POST ") and "acquireWebPlaybackLicense" in f for f in fetches

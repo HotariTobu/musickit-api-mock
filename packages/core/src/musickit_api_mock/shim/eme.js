@@ -472,11 +472,23 @@
       ns.__currentSyntheticMediaElement = mediaEl;
       ensureState(mediaEl);
       if (UPLOADED_AUDIO_REGEX.test(value)) {
-        // No key chain for a raw file: fetch it once so the request reaches
-        // the mock's route the way the native load would, then report the
-        // load progression the engine would produce.
-        try { origFetch.call(window, value, { method: "GET" }).catch(function () {}); } catch (_) {}
-        dispatchLoadProgression(mediaEl);
+        // No key chain for a raw file: fetch it the way the native load
+        // would, then report the load progression the engine produces on
+        // success or the error it produces when the fetch fails.
+        var s = ensureState(mediaEl);
+        var settle = function (ok) {
+          if (srcByEl.get(mediaEl) !== value) return;
+          if (ok) dispatchLoadProgression(mediaEl);
+          else failSyntheticLoad(mediaEl, s);
+        };
+        try {
+          origFetch.call(window, value, { method: "GET" }).then(
+            function (response) { settle(response.ok); },
+            function () { settle(false); }
+          );
+        } catch (_) {
+          settle(false);
+        }
         return;
       }
       if (!maybeDispatchEncrypted(mediaEl, value)) {
@@ -491,7 +503,7 @@
     function ensureState(mediaEl) {
       var s = STATE.get(mediaEl);
       if (!s) {
-        s = { playing: false, seeking: false, ended: false, simCurrentTime: 0, lastTickMs: null, tickHandle: null };
+        s = { playing: false, seeking: false, ended: false, simCurrentTime: 0, lastTickMs: null, tickHandle: null, loadError: null };
         STATE.set(mediaEl, s);
       }
       return s;
@@ -503,6 +515,20 @@
       STATE.delete(mediaEl);
       if (ns.__currentSyntheticMediaElement === mediaEl) ns.__currentSyntheticMediaElement = null;
     }
+    // Deliver an event to the MusicKit handlers the suppression below has
+    // detached, for the failures the shim itself decides to surface.
+    var invokeSuppressedListeners = function () {};
+    function failSyntheticLoad(mediaEl, s) {
+      // What the engines report for an audio src that 404s or fails at the
+      // network layer: MEDIA_ERR_SRC_NOT_SUPPORTED, HAVE_NOTHING, NETWORK_NO_SOURCE.
+      s.loadError = { code: 4, message: "", MEDIA_ERR_ABORTED: 1, MEDIA_ERR_NETWORK: 2, MEDIA_ERR_DECODE: 3, MEDIA_ERR_SRC_NOT_SUPPORTED: 4 };
+      s.playing = false;
+      s.lastTickMs = null;
+      stopTick(s);
+      var event = new Event("error");
+      try { mediaEl.dispatchEvent(event); } catch (_) {}
+      invokeSuppressedListeners(mediaEl, "error", event);
+    }
     (function () {
       // MusicKit may register native media error/stall handlers before src is
       // assigned. Keep unrelated page media untouched by only suppressing
@@ -512,6 +538,15 @@
       var origRemove = proto.removeEventListener;
       if (typeof origAdd !== "function" || typeof origRemove !== "function") return;
       var wrappedByEl = new WeakMap();
+      invokeSuppressedListeners = function (el, type, event) {
+        (wrappedByEl.get(el) || []).slice().forEach(function (record) {
+          if (record.type !== type) return;
+          try {
+            if (typeof record.fn === "function") record.fn.call(el, event);
+            else if (record.fn && typeof record.fn.handleEvent === "function") record.fn.handleEvent(event);
+          } catch (_) {}
+        });
+      };
       function captureOf(opts) {
         return !!(opts === true || (opts && typeof opts === "object" && opts.capture));
       }
@@ -677,9 +712,9 @@
       } catch (_) {}
     })();
     overrideAccessor("paused", function (el, s) { return !s.playing; });
-    overrideAccessor("error", function () { return null; });
-    overrideAccessor("readyState", function () { return 4; });
-    overrideAccessor("networkState", function () { return 1; });
+    overrideAccessor("error", function (el, s) { return s.loadError; });
+    overrideAccessor("readyState", function (el, s) { return s.loadError ? 0 : 4; });
+    overrideAccessor("networkState", function (el, s) { return s.loadError ? 3 : 1; });
     overrideAccessor("seeking", function (el, s) { return !!s.seeking; });
     overrideAccessor("ended", function (el, s) { return !!s.ended; });
     overrideAccessor("duration", function (el) { return durationFor(el); });
@@ -730,6 +765,9 @@
       });
     });
     overrideMethod("play", function (el, s) {
+      if (s.loadError) {
+        return Promise.reject(new DOMException("The element has no supported sources.", "NotSupportedError"));
+      }
       // Native HTMLMediaElement semantics: play() at the end rewinds to 0.
       if (s.ended) {
         s.simCurrentTime = 0;
