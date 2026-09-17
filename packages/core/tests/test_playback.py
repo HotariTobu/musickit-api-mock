@@ -392,7 +392,7 @@ def test_uploaded_audio_route_serves_library_song_audio(
     )
     assert resp is not None
     assert resp.status == 200
-    assert resp.headers["Content-Type"] == "audio/mp4"
+    assert resp.headers["Content-Type"] == "audio/x-m4a"
     assert resp.body == b"m4a-bytes"
 
 

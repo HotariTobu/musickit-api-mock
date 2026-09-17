@@ -32,7 +32,7 @@ def _handle_hls_manifest(mock: MusicKitApiMock, song_id: str) -> Response:
         return _empty_response(status=404)
     key_system = _resolve_eme_flavor(mock.browser.eme_flavor)
     manifest = _compose_manifest(song.hls_layout, key_system, song_id)
-    return _bytes_response(manifest, content_type="application/vnd.apple.mpegurl")
+    return _bytes_response(manifest, content_type="application/x-mpegURL")
 
 
 def _handle_hls_segment(mock: MusicKitApiMock, song_id: str) -> Response:

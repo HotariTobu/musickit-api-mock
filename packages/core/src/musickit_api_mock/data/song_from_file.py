@@ -300,12 +300,17 @@ def _build_byte_range_hls(audio_path: str) -> tuple[HlsLayout, bytes]:
                 },
             )
             try:
-                out_stream = out_container.add_stream_from_template(in_stream)
+                out_stream = out_container.add_stream(
+                    "aac", rate=in_stream.rate or 44100
+                )
                 for packet in in_container.demux(in_stream):
                     if packet.dts is None:
                         continue
-                    packet.stream = out_stream
-                    out_container.mux(packet)
+                    for frame in packet.decode():
+                        for out_packet in out_stream.encode(frame):
+                            out_container.mux(out_packet)
+                for out_packet in out_stream.encode(None):
+                    out_container.mux(out_packet)
             finally:
                 out_container.close()
         finally:
@@ -492,7 +497,7 @@ def _uploaded_library_song_from_file(
         duration_ms=duration_ms,
         genre_names=genre_names,
         has_lyrics=f.has_lyrics,
-        audio=Path(audio_path).read_bytes(),
+        audio=_build_preview(audio_path, 0.0, None),
         album_name=_meta_get(meta, "album") or f.album_name,
         disc_number=_parse_int_field(_meta_get(meta, "disc")) or f.disc_number,
         track_number=_parse_int_field(_meta_get(meta, "track")) or f.track_number,

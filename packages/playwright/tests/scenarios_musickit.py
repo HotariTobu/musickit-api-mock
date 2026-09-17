@@ -270,7 +270,7 @@ def is_uploaded_audio_response(url: str) -> bool:
 
 def assert_uploaded_audio_served(status: int, content_type: str | None) -> None:
     assert status == 200, status
-    assert content_type == "audio/mp4", content_type
+    assert content_type == "audio/x-m4a", content_type
 
 
 def assert_upload_playback_failed(result: _PlaybackErrorResult) -> None:

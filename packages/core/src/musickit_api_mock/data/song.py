@@ -58,7 +58,7 @@ class CatalogSong:
     Holds the audio bytes the mock returns for HLS playback and preview,
     plus the layout the mock needs to compose the HLS manifest at serve
     time. The ``from_file`` constructor sources these from an audio file on
-    disk.
+    disk, transcoding the audio to AAC as Apple does for its catalog.
 
     Attributes:
         title: Display title of the song.
