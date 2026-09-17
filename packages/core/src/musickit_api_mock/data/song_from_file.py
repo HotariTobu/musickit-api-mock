@@ -15,7 +15,9 @@ from musickit_api_mock.data.primitives.artwork import Artwork
 from musickit_api_mock.data.song import HlsChunk, HlsLayout
 
 if TYPE_CHECKING:
-    from av.container import InputContainer
+    from av.audio.stream import AudioStream
+    from av.container import InputContainer, OutputContainer
+    from av.packet import Packet
 
     from musickit_api_mock.data.library_song import (
         UploadedLibrarySong,
@@ -278,6 +280,49 @@ def _parse_hls_layout(manifest_text: str) -> HlsLayout:
     )
 
 
+_SERVED_SAMPLE_RATE = 44100
+_SERVED_BIT_RATE_PER_CHANNEL = 128_000
+
+
+def _add_served_stream(
+    out_container: OutputContainer, in_stream: AudioStream
+) -> tuple[AudioStream, bool]:
+    if in_stream.codec_context.name == "aac":
+        return out_container.add_stream_from_template(in_stream), True
+    channels = in_stream.layout.nb_channels
+    return out_container.add_stream(
+        "aac",
+        rate=_SERVED_SAMPLE_RATE,
+        layout=f"{channels}c",
+        bit_rate=_SERVED_BIT_RATE_PER_CHANNEL * channels,
+    ), False
+
+
+def _transfer_packet(
+    packet: Packet,
+    out_container: OutputContainer,
+    out_stream: AudioStream,
+    *,
+    copy: bool,
+) -> None:
+    if copy:
+        packet.stream = out_stream
+        out_container.mux(packet)
+        return
+    for frame in packet.decode():
+        for out_packet in out_stream.encode(frame):
+            out_container.mux(out_packet)
+
+
+def _flush_served_stream(
+    out_container: OutputContainer, out_stream: AudioStream, *, copy: bool
+) -> None:
+    if copy:
+        return
+    for out_packet in out_stream.encode(None):
+        out_container.mux(out_packet)
+
+
 def _build_byte_range_hls(audio_path: str) -> tuple[HlsLayout, bytes]:
     import av
 
@@ -300,17 +345,12 @@ def _build_byte_range_hls(audio_path: str) -> tuple[HlsLayout, bytes]:
                 },
             )
             try:
-                out_stream = out_container.add_stream(
-                    "aac", rate=in_stream.rate or 44100
-                )
+                out_stream, copy = _add_served_stream(out_container, in_stream)
                 for packet in in_container.demux(in_stream):
                     if packet.dts is None:
                         continue
-                    for frame in packet.decode():
-                        for out_packet in out_stream.encode(frame):
-                            out_container.mux(out_packet)
-                for out_packet in out_stream.encode(None):
-                    out_container.mux(out_packet)
+                    _transfer_packet(packet, out_container, out_stream, copy=copy)
+                _flush_served_stream(out_container, out_stream, copy=copy)
             finally:
                 out_container.close()
         finally:
@@ -341,30 +381,18 @@ def _build_preview(
                 )
             out_container = av.open(out_path, "w", format="ipod")
             try:
-                out_stream = out_container.add_stream(
-                    "aac", rate=in_stream.rate or 44100
-                )
+                out_stream, copy = _add_served_stream(out_container, in_stream)
                 end_sec = start_sec + duration_sec if duration_sec is not None else None
-                done = False
                 for packet in in_container.demux(in_stream):
-                    if done:
-                        break
                     if packet.pts is None:
                         continue
-                    for frame in packet.decode():
-                        if frame.pts is None or frame.time_base is None:
-                            t = 0.0
-                        else:
-                            t = float(frame.pts) * float(frame.time_base)
-                        if t < start_sec:
-                            continue
-                        if end_sec is not None and t >= end_sec:
-                            done = True
-                            break
-                        for outp in out_stream.encode(frame):
-                            out_container.mux(outp)
-                for outp in out_stream.encode(None):
-                    out_container.mux(outp)
+                    t = float(packet.pts) * float(packet.time_base)
+                    if start_sec > 0 and t < start_sec:
+                        continue
+                    if end_sec is not None and t >= end_sec:
+                        break
+                    _transfer_packet(packet, out_container, out_stream, copy=copy)
+                _flush_served_stream(out_container, out_stream, copy=copy)
             finally:
                 out_container.close()
         finally:
