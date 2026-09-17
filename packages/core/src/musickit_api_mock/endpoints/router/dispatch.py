@@ -17,6 +17,7 @@ from musickit_api_mock.endpoints import (
     preview,
     relationships,
     station,
+    uploaded_audio,
 )
 
 if TYPE_CHECKING:
@@ -289,6 +290,10 @@ def _dispatch(
             return hls._handle_hls_segment(mock, kwargs["song_id"])
         case "preview.preview":
             return preview._handle_preview(mock, kwargs["song_id"])
+        case "uploaded_audio.audio":
+            return uploaded_audio._handle_uploaded_audio(
+                mock, kwargs["library_song_id"]
+            )
         case "browser.authorize_response":
             return browser._handle_authorize_response(mock)
         case "browser.eme_flavor":

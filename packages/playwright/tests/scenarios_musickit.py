@@ -45,6 +45,7 @@ class _UnauthorizeResult(TypedDict, total=False):
 class _PlayingResult(TypedDict, total=False):
     states: list[int]
     fetches: list[str]
+    playbackTime: float
 
 
 class _PlaybackErrorResult(TypedDict, total=False):
@@ -212,6 +213,72 @@ PLAY_AND_AWAIT_PLAYING = """async (songId) => {
     window.__mk.changeToMediaAtIndex(0).catch(() => {});
     return await reachedPlaying;
 }"""
+
+
+# Play an uploaded library song: no DRM chain, so resolve once the player
+# reaches state=2 and its clock has advanced. The <audio> element's request
+# for the raw audio is not a fetch() call and never lands in
+# window._fetches; the test observes it through Playwright's response
+# events instead.
+PLAY_UPLOAD_AND_AWAIT_PLAYING = """async (songId) => {
+    await window.__mk.setQueue({ songs: [songId] });
+    const states = [];
+    const reachedPlaying = new Promise((resolve, reject) => {
+        let clockHandle = null;
+        window.__mk.addEventListener('playbackStateDidChange', (e) => {
+            states.push(e.state);
+            if (e.state === 2 && clockHandle === null) {
+                clockHandle = setInterval(() => {
+                    const t = window.__mk.currentPlaybackTime;
+                    if (t >= 1) {
+                        clearInterval(clockHandle);
+                        resolve({ states, fetches: window._fetches, playbackTime: t });
+                    }
+                }, 100);
+            }
+        });
+        window.__mk.addEventListener('mediaPlaybackError', (e) => {
+            reject(new Error('mediaPlaybackError: ' + JSON.stringify({
+                code: e.errorCode, status: e.status, name: e.name,
+            }) + ', fetches=' + JSON.stringify(window._fetches)));
+        });
+        setTimeout(() => {
+            reject(new Error('timeout, states=' + JSON.stringify(states) + ', fetches=' + JSON.stringify(window._fetches)));
+        }, 30000);
+    });
+    window.__mk.changeToMediaAtIndex(0).catch(() => {});
+    return await reachedPlaying;
+}"""
+
+
+def assert_reached_playing_from_upload(result: _PlayingResult) -> None:
+    assert isinstance(result, dict), result
+    states = result.get("states")
+    fetches = result.get("fetches") or []
+    assert isinstance(states, list), result
+    assert 2 in states, result
+    playback_time = result.get("playbackTime")
+    assert isinstance(playback_time, (int, float)), result
+    assert playback_time >= 1, result
+    assert any("webPlayback" in f for f in fetches), result
+    assert not _called_license_endpoint(fetches), result
+
+
+def is_uploaded_audio_response(url: str) -> bool:
+    return ".blobstore.apple.com/" in url and url.split("?")[0].endswith("/audio")
+
+
+def assert_uploaded_audio_served(status: int, content_type: str | None) -> None:
+    assert status == 200, status
+    assert content_type == "audio/mp4", content_type
+
+
+def assert_upload_playback_failed(result: _PlaybackErrorResult) -> None:
+    """The engines report an audio src that cannot be loaded as MEDIA_PLAYBACK."""
+    assert isinstance(result, dict), result
+    assert result.get("errorCode") == "MEDIA_PLAYBACK", result
+    fetches = result.get("fetches") or []
+    assert not _called_license_endpoint(fetches), result
 
 
 def _called_license_endpoint(fetches: list[str]) -> bool:

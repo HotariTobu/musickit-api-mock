@@ -141,12 +141,18 @@ class _DataResolver:
         self.personal_recommendation = _PersonalRecommendationResolver(
             lambda: get_data().personal_recommendations
         )
-        self.library_song = _LibrarySongResolver(lambda: get_data().library_songs)
-        self.library_album = _LibraryAlbumResolver(lambda: get_data().library_albums)
+        self.library_song = _LibrarySongResolver(
+            lambda: get_data().library_songs, self.song.get
+        )
+        self.library_album = _LibraryAlbumResolver(
+            lambda: get_data().library_albums, self.album.get
+        )
         self.library_playlist = _LibraryPlaylistResolver(
             lambda: get_data().library_playlists
         )
-        self.library_artist = _LibraryArtistResolver(lambda: get_data().library_artists)
+        self.library_artist = _LibraryArtistResolver(
+            lambda: get_data().library_artists, self.artist.get
+        )
         self.library_music_video = _LibraryMusicVideoResolver(
             lambda: get_data().library_music_videos
         )

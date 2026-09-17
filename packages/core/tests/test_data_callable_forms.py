@@ -32,6 +32,9 @@ from musickit_api_mock import (
     Station,
     Storefront,
     StorefrontResponseSuccess,
+    UploadedLibraryAlbum,
+    UploadedLibraryArtist,
+    UploadedLibrarySong,
 )
 
 if TYPE_CHECKING:
@@ -197,13 +200,14 @@ def test_data_library_songs_callable() -> None:
     def resolver(ctx: LookupContext) -> LibrarySong | None:
         if ctx.id != "i.s-x":
             return None
-        return LibrarySong(
+        return UploadedLibrarySong(
             name=f"LS {ctx.id}",
             artist_name="A",
             artwork=_aw(),
             duration_ms=1,
             genre_names=[],
             has_lyrics=False,
+            audio=b"",
         )
 
     m.data.library_songs = resolver
@@ -218,7 +222,7 @@ def test_data_library_albums_callable() -> None:
     def resolver(ctx: LookupContext) -> LibraryAlbum | None:
         if ctx.id != "l.a-x":
             return None
-        return LibraryAlbum(
+        return UploadedLibraryAlbum(
             name=f"LA {ctx.id}",
             artist_name="A",
             artwork=_aw(),
@@ -259,7 +263,7 @@ def test_data_library_artists_callable() -> None:
     def resolver(ctx: LookupContext) -> LibraryArtist | None:
         if ctx.id != "r.ar-x":
             return None
-        return LibraryArtist(name=f"LAR {ctx.id}")
+        return UploadedLibraryArtist(name=f"LAR {ctx.id}")
 
     m.data.library_artists = resolver
     status, body = _get(m, "https://api.music.apple.com/v1/me/library/artists/r.ar-x")

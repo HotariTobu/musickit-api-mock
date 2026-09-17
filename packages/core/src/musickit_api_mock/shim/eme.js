@@ -272,6 +272,14 @@
     var DATA_KEY_REGEX = /#EXT-X-KEY:METHOD=ISO-23001-7[^\n]*URI="data:[^,]*;base64,([^"]+)"/;
     var M3U8_REGEX = /\.m3u8(\?|#|$)/;
     var BLOB_REGEX = /^blob:/;
+    // Raw audio of an uploaded library song, served from the mock's
+    // blobstore route. Played through the synthetic element like HLS so
+    // playback does not depend on the engine's AAC decoder.
+    var UPLOADED_AUDIO_REGEX = /^https:\/\/[^/]+\.blobstore\.apple\.com\/[^?#]*\/audio(\?|#|$)/;
+    var WEB_PLAYBACK_REGEX = /\/webPlayback(\?|#|$)/;
+    function isSyntheticUrl(value) {
+      return typeof value === "string" && (M3U8_REGEX.test(value) || BLOB_REGEX.test(value) || UPLOADED_AUDIO_REGEX.test(value));
+    }
     var CACHE_TTL_MS = 30000;
     // Fallback for manifests that carry no per-segment durations (e.g. a master
     // playlist, or a live stream): the synthetic element reports an open-ended
@@ -382,6 +390,31 @@
       window.fetch = function (input, init) {
         var url = inputUrl(input);
         var p = origFetch.call(this, input, init);
+        if (typeof url === "string" && WEB_PLAYBACK_REGEX.test(url)) {
+          // An uploaded song's duration is only known from its web-playback
+          // asset metadata; record it so the synthetic element ends where
+          // the real file would.
+          return p.then(function (response) {
+            return response.clone().json().then(
+              function (body) {
+                var songs = body && body.songList;
+                if (Array.isArray(songs)) {
+                  songs.forEach(function (song) {
+                    if (!song || String(song.songId) !== "-1" || !Array.isArray(song.assets)) return;
+                    song.assets.forEach(function (asset) {
+                      var ms = asset && asset.metadata && asset.metadata.duration;
+                      if (asset && typeof asset.URL === "string" && typeof ms === "number" && ms > 0) {
+                        durationByUrl[asset.URL] = ms / 1000;
+                      }
+                    });
+                  });
+                }
+                return response;
+              },
+              function () { return response; }
+            );
+          });
+        }
         if (typeof url !== "string" || !M3U8_REGEX.test(url)) return p;
         // Defer the resolution returned to the caller until the body has been
         // read and the cache populated, otherwise the player's downstream
@@ -438,6 +471,26 @@
       srcByEl.set(mediaEl, value);
       ns.__currentSyntheticMediaElement = mediaEl;
       ensureState(mediaEl);
+      if (UPLOADED_AUDIO_REGEX.test(value)) {
+        // No key chain for a raw file: fetch it the way the native load
+        // would, then report the load progression the engine produces on
+        // success or the error it produces when the fetch fails.
+        var s = ensureState(mediaEl);
+        var settle = function (ok) {
+          if (srcByEl.get(mediaEl) !== value) return;
+          if (ok) dispatchLoadProgression(mediaEl);
+          else failSyntheticLoad(mediaEl, s);
+        };
+        try {
+          origFetch.call(window, value, { method: "GET" }).then(
+            function (response) { settle(response.ok); },
+            function () { settle(false); }
+          );
+        } catch (_) {
+          settle(false);
+        }
+        return;
+      }
       if (!maybeDispatchEncrypted(mediaEl, value)) {
         pendingMediaByUrl[value] = pendingMediaByUrl[value] || [];
         pendingMediaByUrl[value].push(mediaEl);
@@ -450,7 +503,7 @@
     function ensureState(mediaEl) {
       var s = STATE.get(mediaEl);
       if (!s) {
-        s = { playing: false, seeking: false, ended: false, simCurrentTime: 0, lastTickMs: null, tickHandle: null };
+        s = { playing: false, seeking: false, ended: false, simCurrentTime: 0, lastTickMs: null, tickHandle: null, loadError: null };
         STATE.set(mediaEl, s);
       }
       return s;
@@ -462,6 +515,20 @@
       STATE.delete(mediaEl);
       if (ns.__currentSyntheticMediaElement === mediaEl) ns.__currentSyntheticMediaElement = null;
     }
+    // Deliver an event to the MusicKit handlers the suppression below has
+    // detached, for the failures the shim itself decides to surface.
+    var invokeSuppressedListeners = function () {};
+    function failSyntheticLoad(mediaEl, s) {
+      // What the engines report for an audio src that 404s or fails at the
+      // network layer: MEDIA_ERR_SRC_NOT_SUPPORTED, HAVE_NOTHING, NETWORK_NO_SOURCE.
+      s.loadError = { code: 4, message: "", MEDIA_ERR_ABORTED: 1, MEDIA_ERR_NETWORK: 2, MEDIA_ERR_DECODE: 3, MEDIA_ERR_SRC_NOT_SUPPORTED: 4 };
+      s.playing = false;
+      s.lastTickMs = null;
+      stopTick(s);
+      var event = new Event("error");
+      try { mediaEl.dispatchEvent(event); } catch (_) {}
+      invokeSuppressedListeners(mediaEl, "error", event);
+    }
     (function () {
       // MusicKit may register native media error/stall handlers before src is
       // assigned. Keep unrelated page media untouched by only suppressing
@@ -471,6 +538,15 @@
       var origRemove = proto.removeEventListener;
       if (typeof origAdd !== "function" || typeof origRemove !== "function") return;
       var wrappedByEl = new WeakMap();
+      invokeSuppressedListeners = function (el, type, event) {
+        (wrappedByEl.get(el) || []).slice().forEach(function (record) {
+          if (record.type !== type) return;
+          try {
+            if (typeof record.fn === "function") record.fn.call(el, event);
+            else if (record.fn && typeof record.fn.handleEvent === "function") record.fn.handleEvent(event);
+          } catch (_) {}
+        });
+      };
       function captureOf(opts) {
         return !!(opts === true || (opts && typeof opts === "object" && opts.capture));
       }
@@ -596,7 +672,7 @@
         // start a load that will fail (missing CDM / decoder / segment
         // format) and surface stall or error states the EME chain
         // synthesis can't recover from.
-        if (typeof value === "string" && (M3U8_REGEX.test(value) || BLOB_REGEX.test(value))) {
+        if (isSyntheticUrl(value)) {
           activateSyntheticSrc(this, value);
           return;
         }
@@ -610,7 +686,7 @@
       var origRemoveAttribute = proto.removeAttribute;
       try {
         proto.setAttribute = function (name, value) {
-          if (String(name).toLowerCase() === "src" && typeof value === "string" && (M3U8_REGEX.test(value) || BLOB_REGEX.test(value))) {
+          if (String(name).toLowerCase() === "src" && isSyntheticUrl(value)) {
             // Some engines/player paths assign media URLs through the content
             // attribute rather than the WebIDL property. Route those through
             // the same synthetic path; otherwise Firefox starts a native HLS
@@ -636,9 +712,9 @@
       } catch (_) {}
     })();
     overrideAccessor("paused", function (el, s) { return !s.playing; });
-    overrideAccessor("error", function () { return null; });
-    overrideAccessor("readyState", function () { return 4; });
-    overrideAccessor("networkState", function () { return 1; });
+    overrideAccessor("error", function (el, s) { return s.loadError; });
+    overrideAccessor("readyState", function (el, s) { return s.loadError ? 0 : 4; });
+    overrideAccessor("networkState", function (el, s) { return s.loadError ? 3 : 1; });
     overrideAccessor("seeking", function (el, s) { return !!s.seeking; });
     overrideAccessor("ended", function (el, s) { return !!s.ended; });
     overrideAccessor("duration", function (el) { return durationFor(el); });
@@ -689,6 +765,9 @@
       });
     });
     overrideMethod("play", function (el, s) {
+      if (s.loadError) {
+        return Promise.reject(new DOMException("The element has no supported sources.", "NotSupportedError"));
+      }
       // Native HTMLMediaElement semantics: play() at the end rewinds to 0.
       if (s.ended) {
         s.simCurrentTime = 0;
@@ -770,9 +849,9 @@
       if (!mk || mk.__musickitApiMockPlaybackTimePatched) return mk;
       mk.__musickitApiMockPlaybackTimePatched = true;
       var origSeekToTime = mk.seekToTime;
-      var desc = Object.getOwnPropertyDescriptor(mk, "currentPlaybackTime");
-      if (!desc && Object.getPrototypeOf(mk)) {
-        desc = Object.getOwnPropertyDescriptor(Object.getPrototypeOf(mk), "currentPlaybackTime");
+      var desc = null;
+      for (var owner = mk; owner && !desc; owner = Object.getPrototypeOf(owner)) {
+        desc = Object.getOwnPropertyDescriptor(owner, "currentPlaybackTime");
       }
       var origCurrentPlaybackTimeGet = desc && desc.get;
       try {

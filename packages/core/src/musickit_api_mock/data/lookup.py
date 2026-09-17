@@ -40,6 +40,15 @@ class LookupContext:
     locale: str | None
 
 
+def _dangling_catalog_id(
+    library_source: str, library_id: str, catalog_source: str, catalog_id: str
+) -> ValueError:
+    return ValueError(
+        f"{library_source}[{library_id!r}].catalog_id {catalog_id!r}"
+        f" has no entry in {catalog_source}"
+    )
+
+
 def _lookup_source(
     source: Mapping[str, _T] | Callable[[LookupContext], _T | None] | None,
     name: str,

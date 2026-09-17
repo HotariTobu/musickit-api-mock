@@ -5,11 +5,24 @@ from musickit_api_mock.data.artist import CatalogArtist
 from musickit_api_mock.data.curator import Curator
 from musickit_api_mock.data.genre import Genre
 from musickit_api_mock.data.grouping import Grouping
-from musickit_api_mock.data.library_album import LibraryAlbum
-from musickit_api_mock.data.library_artist import LibraryArtist
+from musickit_api_mock.data.library_album import (
+    CatalogLibraryAlbum,
+    LibraryAlbum,
+    UploadedLibraryAlbum,
+)
+from musickit_api_mock.data.library_artist import (
+    CatalogLibraryArtist,
+    LibraryArtist,
+    UploadedLibraryArtist,
+)
 from musickit_api_mock.data.library_music_video import LibraryMusicVideo
 from musickit_api_mock.data.library_playlist import LibraryPlaylist
-from musickit_api_mock.data.library_song import LibrarySong
+from musickit_api_mock.data.library_song import (
+    CatalogLibrarySong,
+    LibrarySong,
+    UploadedLibrarySong,
+    UploadedLibrarySongMetadataFallback,
+)
 from musickit_api_mock.data.lookup import LookupContext
 from musickit_api_mock.data.music_video import MusicVideo
 from musickit_api_mock.data.personal_recommendation import (
@@ -39,6 +52,9 @@ __all__ = [
     "Artwork",
     "CatalogAlbum",
     "CatalogArtist",
+    "CatalogLibraryAlbum",
+    "CatalogLibraryArtist",
+    "CatalogLibrarySong",
     "CatalogSong",
     "Curator",
     "Description",
@@ -64,4 +80,8 @@ __all__ = [
     "SongMetadataFallback",
     "Station",
     "StationContextPlayAsset",
+    "UploadedLibraryAlbum",
+    "UploadedLibraryArtist",
+    "UploadedLibrarySong",
+    "UploadedLibrarySongMetadataFallback",
 ]

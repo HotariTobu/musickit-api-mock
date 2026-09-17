@@ -77,7 +77,77 @@ class WebPlaybackCatalogLibrarySong:
     hls_playlist_url: str | None = None
 
 
-WebPlaybackSong = WebPlaybackCatalogSong | WebPlaybackCatalogLibrarySong
+@dataclass
+class WebPlaybackUploadedLibraryAssetMetadata:
+    """Tag metadata Apple attaches to an uploaded library song's asset.
+
+    MusicKit copies these onto the playing media item.
+
+    Attributes:
+        item_name: Song title.
+        artist_name: Primary artist name.
+        playlist_name: Album name.
+        duration: Duration in milliseconds.
+        kind: Media kind (``song``).
+        track_number: Track number within the album.
+        disc_number: Disc number within the album.
+        genre: Genre name.
+        composer_name: Composer name.
+        explicit: ``1`` for explicit content, ``0`` otherwise.
+        release_date: ISO-8601 release date.
+        cloud_id: Cloud library id of the upload.
+        xid: Vendor-qualified ISRC (``<vendor>:isrc:<code>``).
+    """
+
+    item_name: str
+    artist_name: str
+    playlist_name: str
+    duration: int
+    kind: str
+    track_number: int | None = None
+    disc_number: int | None = None
+    genre: str | None = None
+    composer_name: str | None = None
+    explicit: int | None = None
+    release_date: str | None = None
+    cloud_id: int | None = None
+    xid: str | None = None
+
+
+@dataclass
+class WebPlaybackUploadedLibraryAsset:
+    """The single raw-file asset of an uploaded library song.
+
+    Attributes:
+        url: URL of the audio file.
+        metadata: Tag metadata for the file.
+    """
+
+    url: str
+    metadata: WebPlaybackUploadedLibraryAssetMetadata
+
+
+@dataclass
+class WebPlaybackUploadedLibrarySong:
+    """Web-playback payload for an uploaded library song (raw file, no DRM).
+
+    The mock emits ``songId: -1`` and marks the payload as not needing
+    playback reporting, as Apple does for uploads.
+
+    Attributes:
+        asset: The song's raw-file asset.
+        artwork_url: Artwork URL for the song, when it has artwork.
+    """
+
+    asset: WebPlaybackUploadedLibraryAsset
+    artwork_url: str | None = None
+
+
+WebPlaybackSong = (
+    WebPlaybackCatalogSong
+    | WebPlaybackCatalogLibrarySong
+    | WebPlaybackUploadedLibrarySong
+)
 
 
 @dataclass

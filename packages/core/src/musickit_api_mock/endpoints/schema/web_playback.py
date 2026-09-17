@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING
 
 from musickit_api_mock.endpoints.responses.web_playback import (
     WebPlaybackCatalogLibrarySong,
+    WebPlaybackUploadedLibrarySong,
 )
 from musickit_api_mock.endpoints.schema.builders import _strip_none
 
@@ -14,6 +15,8 @@ if TYPE_CHECKING:
         WebPlaybackAsset,
         WebPlaybackResponseSuccess,
         WebPlaybackSong,
+        WebPlaybackUploadedLibraryAsset,
+        WebPlaybackUploadedLibraryAssetMetadata,
     )
     from musickit_api_mock.json_value import _JSONValue
 
@@ -29,7 +32,44 @@ def _web_playback_asset(a: WebPlaybackAsset) -> dict[str, _JSONValue]:
     )
 
 
+def _web_playback_uploaded_metadata(
+    m: WebPlaybackUploadedLibraryAssetMetadata,
+) -> dict[str, _JSONValue]:
+    return _strip_none(
+        {
+            "itemName": m.item_name,
+            "artistName": m.artist_name,
+            "playlistName": m.playlist_name,
+            "duration": m.duration,
+            "kind": m.kind,
+            "trackNumber": m.track_number,
+            "discNumber": m.disc_number,
+            "genre": m.genre,
+            "composerName": m.composer_name,
+            "explicit": m.explicit,
+            "releaseDate": m.release_date,
+            "cloud-id": m.cloud_id,
+            "xid": m.xid,
+        }
+    )
+
+
+def _web_playback_uploaded_asset(
+    a: WebPlaybackUploadedLibraryAsset,
+) -> dict[str, _JSONValue]:
+    return {"URL": a.url, "metadata": _web_playback_uploaded_metadata(a.metadata)}
+
+
 def _web_playback_song(s: WebPlaybackSong) -> dict[str, _JSONValue]:
+    if isinstance(s, WebPlaybackUploadedLibrarySong):
+        return _strip_none(
+            {
+                "songId": -1,
+                "needsPlaybackReporting": False,
+                "artworkURL": s.artwork_url,
+                "assets": [_web_playback_uploaded_asset(s.asset)],
+            }
+        )
     out: dict[str, _JSONValue] = {
         "songId": s.song_id,
         "hls-key-cert-url": s.hls_key_cert_url,

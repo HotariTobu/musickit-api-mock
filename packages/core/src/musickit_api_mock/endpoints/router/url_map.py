@@ -9,6 +9,7 @@ _HOST_FAIRPLAY_CERT = "s.mzstatic.com"
 _HOST_LIVE_RADIO_LICENSE = "linear.tv.apple.com"
 _HOST_HLS_AOD = "aod-ssl.itunes.apple.com"
 _HOST_PREVIEW = "audio-ssl.itunes.apple.com"
+_HOST_UPLOADED_AUDIO = "<store>.blobstore.apple.com"
 # Sentinel host with no real Apple counterpart; reserved for the in-page
 # shim's OAuth-popup authorize_response round-trip, which must route through
 # the mock instead of escaping to the network.
@@ -691,6 +692,15 @@ def _build_url_map() -> Map:
             "/preview/<song_id>.m4a",
             host=_HOST_PREVIEW,
             endpoint="preview.preview",
+            methods=["GET"],
+        )
+    )
+
+    m.add(
+        Rule(
+            "/<bucket>/<library_song_id>/audio",
+            host=_HOST_UPLOADED_AUDIO,
+            endpoint="uploaded_audio.audio",
             methods=["GET"],
         )
     )

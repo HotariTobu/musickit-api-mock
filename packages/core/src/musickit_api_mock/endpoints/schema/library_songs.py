@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from musickit_api_mock.data.library_song import CatalogLibrarySong
 from musickit_api_mock.endpoints.schema.builders import (
     _artwork,
     _strip_none,
@@ -32,7 +33,9 @@ def _library_song_resource(
             "genreNames": library_song.genre_names,
             "hasLyrics": library_song.has_lyrics,
             "playParams": _play_params_library_song(library_song_id, library_song),
-            "releaseDate": library_song.release_date,
+            "releaseDate": library_song.release_date
+            if isinstance(library_song, CatalogLibrarySong)
+            else None,
             "trackNumber": library_song.track_number,
         }
     )

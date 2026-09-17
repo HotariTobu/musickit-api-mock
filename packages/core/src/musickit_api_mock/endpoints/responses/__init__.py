@@ -129,6 +129,9 @@ from musickit_api_mock.endpoints.responses.web_playback import (
     WebPlaybackResponseUnsupportedError,
     WebPlaybackResponseWidevineCdmExpired,
     WebPlaybackSong,
+    WebPlaybackUploadedLibraryAsset,
+    WebPlaybackUploadedLibraryAssetMetadata,
+    WebPlaybackUploadedLibrarySong,
 )
 from musickit_api_mock.endpoints.responses.widevine_cert import (
     WidevineCertResponse,
@@ -239,6 +242,9 @@ __all__ = [
     "WebPlaybackResponseUnsupportedError",
     "WebPlaybackResponseWidevineCdmExpired",
     "WebPlaybackSong",
+    "WebPlaybackUploadedLibraryAsset",
+    "WebPlaybackUploadedLibraryAssetMetadata",
+    "WebPlaybackUploadedLibrarySong",
     "WidevineCertResponse",
     "WidevineCertResponseFailure",
     "WidevineCertResponseSuccess",

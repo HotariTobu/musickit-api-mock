@@ -7,6 +7,9 @@ from musickit_api_mock import (
     Artwork,
     CatalogAlbum,
     CatalogArtist,
+    CatalogLibraryAlbum,
+    CatalogLibraryArtist,
+    CatalogLibrarySong,
     CatalogSong,
     Curator,
     Genre,
@@ -238,7 +241,7 @@ def station(artwork_catalog: Artwork) -> Station:
 
 @pytest.fixture
 def library_song(artwork_library: Artwork) -> LibrarySong:
-    return LibrarySong(
+    return CatalogLibrarySong(
         name="Lib Song",
         artist_name="Lib Artist",
         album_name="Lib Album",
@@ -256,7 +259,7 @@ def library_song(artwork_library: Artwork) -> LibrarySong:
 
 @pytest.fixture
 def library_album(artwork_library: Artwork) -> LibraryAlbum:
-    return LibraryAlbum(
+    return CatalogLibraryAlbum(
         name="Lib Album",
         artist_name="Lib Artist",
         artwork=artwork_library,
@@ -287,7 +290,7 @@ def library_playlist() -> LibraryPlaylist:
 
 @pytest.fixture
 def library_artist() -> LibraryArtist:
-    return LibraryArtist(
+    return CatalogLibraryArtist(
         name="Lib Artist",
         album_ids=["l.a1"],
         catalog_id="ar1",
