@@ -19,4 +19,4 @@ def _handle_preview(mock: MusicKitApiMock, song_id: str) -> Response:
     song = mock._data_resolver.song.get(LookupContext(song_id, None))
     if song is None:
         return _empty_response(status=404)
-    return _bytes_response(song.preview_audio, content_type="audio/mp4")
+    return _bytes_response(song.preview_audio, content_type="audio/x-m4p")

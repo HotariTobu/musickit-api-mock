@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from dataclasses import replace
 from pathlib import Path
 from typing import Protocol
 
@@ -333,7 +334,8 @@ def test_uploaded_library_song_from_file_extracts_metadata_and_audio(
     assert song.genre_names == ["Soundtrack"]
     assert song.has_lyrics is False
     assert song.duration_ms > 0
-    assert song.audio == Path(path).read_bytes()
+    assert song.audio[4:12] == b"ftypM4A "
+    assert song.audio != Path(path).read_bytes()
 
 
 def test_uploaded_library_song_from_file_falls_back_when_tags_missing(
@@ -368,3 +370,67 @@ def test_uploaded_library_song_from_file_missing_required_field_raises(
                 artwork=artwork_library, genre_names=[], has_lyrics=False
             ),
         )
+
+
+def _generate_wav(path: str) -> None:
+    container = av.open(path, "w", format="wav")
+    audio = container.add_stream("pcm_s16le", rate=44100)
+    audio.layout = "mono"
+    samples_per_frame = 1024
+    for i in range(20):
+        frame = AudioFrame(format="s16", layout="mono", samples=samples_per_frame)
+        frame.sample_rate = 44100
+        frame.planes[0].update(bytes(samples_per_frame * 2))
+        frame.pts = i * samples_per_frame
+        for pkt in audio.encode(frame):
+            container.mux(pkt)
+    for pkt in audio.encode(None):
+        container.mux(pkt)
+    container.close()
+
+
+def _audio_codec(data: bytes, suffix: str, tmp_path: Path) -> str:
+    probe_path = tmp_path / f"probe{suffix}"
+    probe_path.write_bytes(data)
+    with av.open(str(probe_path)) as container:
+        return container.streams.audio[0].codec_context.name
+
+
+def test_catalog_song_from_wav_serves_aac(
+    tmp_path: Path, artwork_library: Artwork
+) -> None:
+    path = tmp_path / "input.wav"
+    _generate_wav(str(path))
+    song = CatalogSong.from_file(
+        str(path),
+        replace(
+            _full_fallback(artwork_library),
+            title="T",
+            artist="A",
+            album="Al",
+            genres=["G"],
+            release_date="2020-01-01",
+            track_number=1,
+            disc_number=1,
+        ),
+    )
+    assert _audio_codec(song.hls_segment, ".m4s", tmp_path) == "aac"
+    assert _audio_codec(song.preview_audio, ".m4a", tmp_path) == "aac"
+
+
+def test_uploaded_library_song_from_wav_serves_aac(
+    tmp_path: Path, artwork_library: Artwork
+) -> None:
+    path = tmp_path / "input.wav"
+    _generate_wav(str(path))
+    song = UploadedLibrarySong.from_file(
+        str(path),
+        UploadedLibrarySongMetadataFallback(
+            name="T",
+            artist_name="A",
+            artwork=artwork_library,
+            genre_names=[],
+            has_lyrics=False,
+        ),
+    )
+    assert _audio_codec(song.audio, ".m4a", tmp_path) == "aac"

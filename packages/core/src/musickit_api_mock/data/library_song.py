@@ -56,7 +56,7 @@ class CatalogLibrarySong:
 class UploadedLibrarySong:
     """User-library song uploaded by the user, with no catalog counterpart.
 
-    Playback serves the song's own audio bytes. The ``from_file`` constructor
+    Playback serves the song's own audio. The ``from_file`` constructor
     sources the audio and metadata from an audio file on disk.
 
     Attributes:
@@ -66,7 +66,7 @@ class UploadedLibrarySong:
         duration_ms: Duration in milliseconds.
         genre_names: Display names of the song's genres.
         has_lyrics: Whether lyrics are available.
-        audio: Raw bytes of the audio file the mock serves for playback.
+        audio: AAC audio in an M4A container the mock serves for playback.
         album_name: Display name of the album the song belongs to.
         disc_number: Disc number when part of a multi-disc album.
         track_number: Track number within the album.
@@ -95,9 +95,9 @@ class UploadedLibrarySong:
     ) -> "UploadedLibrarySong":
         """Build an uploaded library song from an audio file.
 
-        Reads tags, duration, and embedded artwork from the file and stores
-        the file bytes as the served audio. Fields the file does not supply
-        come from ``fallback``.
+        Reads tags, duration, and embedded artwork from the file and
+        transcodes the audio to AAC in an M4A container, as Apple does for
+        uploads. Fields the file does not supply come from ``fallback``.
 
         Args:
             audio_path: Path to the audio file.

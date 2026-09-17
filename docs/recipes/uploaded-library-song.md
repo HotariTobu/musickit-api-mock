@@ -21,7 +21,7 @@ mock.data.library_songs = {
 }
 ```
 
-`from_file` reads the title, artist, album, genre, track / disc numbers, duration, and embedded artwork from the file and keeps the file bytes as the served audio. Anything the file lacks comes from the fallback; a required field missing from both raises `ValueError`.
+`from_file` reads the title, artist, album, genre, track / disc numbers, duration, and embedded artwork from the file and transcodes the audio to AAC in an M4A container, as Apple does for uploads. Anything the file lacks comes from the fallback; a required field missing from both raises `ValueError`.
 
 ## Answer the web-playback request
 
@@ -55,4 +55,4 @@ mock.endpoints.web_playback = {
 }
 ```
 
-The mock serves `https://<store>.blobstore.apple.com/<bucket>/<library song id>/audio` from the registered song's audio bytes with `Content-Type: audio/mp4`; the store label and bucket segment are free-form, and a signing query string is ignored.
+The mock serves `https://<store>.blobstore.apple.com/<bucket>/<library song id>/audio` from the registered song's audio with `Content-Type: audio/x-m4a`; the store label and bucket segment are free-form, and a signing query string is ignored.

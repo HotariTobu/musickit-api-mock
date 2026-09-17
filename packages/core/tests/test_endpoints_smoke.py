@@ -32,7 +32,7 @@ def test_hls_manifest_returns_apple_mpegurl(mock: MusicKitApiMock) -> None:
     )
     assert resp is not None
     assert resp.status == 200
-    assert resp.headers.get("Content-Type") == "application/vnd.apple.mpegurl"
+    assert resp.headers.get("Content-Type") == "application/x-mpegURL"
     assert resp.body.startswith(b"#EXTM3U")
 
 
@@ -87,6 +87,7 @@ def test_preview_returns_configured_bytes(mock: MusicKitApiMock) -> None:
     )
     assert resp is not None
     assert resp.status == 200
+    assert resp.headers.get("Content-Type") == "audio/x-m4p"
     assert resp.body == b"\x00\x00\x00\x00"
 
 
