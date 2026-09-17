@@ -1083,6 +1083,39 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#musickit_api_mock.WebPlaybackUploadedLibrarySong" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-class"></code>&nbsp;WebPlaybackUploadedLibrarySong
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#musickit_api_mock.WebPlaybackUploadedLibraryAsset" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-class"></code>&nbsp;WebPlaybackUploadedLibraryAsset
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#musickit_api_mock.WebPlaybackUploadedLibraryAssetMetadata" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-class"></code>&nbsp;WebPlaybackUploadedLibraryAssetMetadata
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#musickit_api_mock.WebPlaybackCatalogSong" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -2193,6 +2226,8 @@
       
         
       
+        
+      
     
     
     
@@ -2374,6 +2409,34 @@
     
   
     Callable resolvers
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../recipes/uploaded-library-song/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Uploaded library song
   
 
     
@@ -2800,6 +2863,39 @@
     <span class="md-ellipsis">
       
         <code class="doc-symbol doc-symbol-toc doc-symbol-class"></code>&nbsp;WebPlaybackCatalogLibrarySong
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#musickit_api_mock.WebPlaybackUploadedLibrarySong" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-class"></code>&nbsp;WebPlaybackUploadedLibrarySong
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#musickit_api_mock.WebPlaybackUploadedLibraryAsset" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-class"></code>&nbsp;WebPlaybackUploadedLibraryAsset
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#musickit_api_mock.WebPlaybackUploadedLibraryAssetMetadata" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-class"></code>&nbsp;WebPlaybackUploadedLibraryAssetMetadata
       
     </span>
   </a>
@@ -5247,7 +5343,7 @@ through.</p>
   </span>
 
 <a href="#musickit_api_mock.WebPlaybackSong" class="headerlink" title="Permanent link">&para;</a></h2>
-<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="n">WebPlaybackSong</span> <span class="o">=</span> <span class="n">WebPlaybackCatalogSong</span> <span class="o">|</span> <span class="n">WebPlaybackCatalogLibrarySong</span>
+<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="n">WebPlaybackSong</span> <span class="o">=</span> <span class="n">WebPlaybackCatalogSong</span> <span class="o">|</span> <span class="n">WebPlaybackCatalogLibrarySong</span> <span class="o">|</span> <span class="n">WebPlaybackUploadedLibrarySong</span>
 </span></code></pre></div>
 
     <div class="doc doc-contents first">
@@ -5360,6 +5456,401 @@ payload as needing playback reporting, as Apple does for library items.</p>
               <div class="doc-md-description">
                 <p>Optional HLS master-playlist URL when an HLS
 rendition is available alongside the asset variants.</p>
+              </div>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+
+
+
+
+
+
+
+
+
+<div class="doc doc-children">
+
+
+
+
+
+
+
+
+
+
+
+
+  </div>
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-class">
+
+
+
+<h2 id="musickit_api_mock.WebPlaybackUploadedLibrarySong" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-class"></code>            <span class="doc doc-object-name doc-class-name">WebPlaybackUploadedLibrarySong</span>
+
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-dataclass"><code>dataclass</code></small>
+  </span>
+
+<a href="#musickit_api_mock.WebPlaybackUploadedLibrarySong" class="headerlink" title="Permanent link">&para;</a></h2>
+<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">WebPlaybackUploadedLibrarySong</span><span class="p">(</span><span class="n">asset</span><span class="p">:</span> <span class="n">WebPlaybackUploadedLibraryAsset</span><span class="p">,</span> <span class="n">artwork_url</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span>
+</span></code></pre></div>
+
+    <div class="doc doc-contents first">
+
+
+
+        <p>Web-playback payload for an uploaded library song (raw file, no DRM).</p>
+<p>The mock emits <code>songId: -1</code> and marks the payload as not needing
+playback reporting, as Apple does for uploads.</p>
+
+
+<p><span class="doc-section-title">Attributes:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td><code><span title="musickit_api_mock.WebPlaybackUploadedLibrarySong.asset">asset</span></code></td>
+            <td>
+                  <code><a class="autorefs autorefs-internal" title="            WebPlaybackUploadedLibraryAsset
+
+
+  
+      dataclass
+   (musickit_api_mock.endpoints.responses.web_playback.WebPlaybackUploadedLibraryAsset)" href="#musickit_api_mock.WebPlaybackUploadedLibraryAsset">WebPlaybackUploadedLibraryAsset</a></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>The song's raw-file asset.</p>
+              </div>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code><span title="musickit_api_mock.WebPlaybackUploadedLibrarySong.artwork_url">artwork_url</span></code></td>
+            <td>
+                  <code><span title="str">str</span> | None</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Artwork URL for the song, when it has artwork.</p>
+              </div>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+
+
+
+
+
+
+
+
+
+<div class="doc doc-children">
+
+
+
+
+
+
+
+
+
+
+
+
+  </div>
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-class">
+
+
+
+<h2 id="musickit_api_mock.WebPlaybackUploadedLibraryAsset" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-class"></code>            <span class="doc doc-object-name doc-class-name">WebPlaybackUploadedLibraryAsset</span>
+
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-dataclass"><code>dataclass</code></small>
+  </span>
+
+<a href="#musickit_api_mock.WebPlaybackUploadedLibraryAsset" class="headerlink" title="Permanent link">&para;</a></h2>
+<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">WebPlaybackUploadedLibraryAsset</span><span class="p">(</span><span class="n">url</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">metadata</span><span class="p">:</span> <span class="n">WebPlaybackUploadedLibraryAssetMetadata</span><span class="p">)</span>
+</span></code></pre></div>
+
+    <div class="doc doc-contents first">
+
+
+
+        <p>The single raw-file asset of an uploaded library song.</p>
+
+
+<p><span class="doc-section-title">Attributes:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td><code><span title="musickit_api_mock.WebPlaybackUploadedLibraryAsset.url">url</span></code></td>
+            <td>
+                  <code><span title="str">str</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>URL of the audio file.</p>
+              </div>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code><span title="musickit_api_mock.WebPlaybackUploadedLibraryAsset.metadata">metadata</span></code></td>
+            <td>
+                  <code><a class="autorefs autorefs-internal" title="            WebPlaybackUploadedLibraryAssetMetadata
+
+
+  
+      dataclass
+   (musickit_api_mock.endpoints.responses.web_playback.WebPlaybackUploadedLibraryAssetMetadata)" href="#musickit_api_mock.WebPlaybackUploadedLibraryAssetMetadata">WebPlaybackUploadedLibraryAssetMetadata</a></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Tag metadata for the file.</p>
+              </div>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+
+
+
+
+
+
+
+
+
+<div class="doc doc-children">
+
+
+
+
+
+
+
+
+
+
+
+
+  </div>
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-class">
+
+
+
+<h2 id="musickit_api_mock.WebPlaybackUploadedLibraryAssetMetadata" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-class"></code>            <span class="doc doc-object-name doc-class-name">WebPlaybackUploadedLibraryAssetMetadata</span>
+
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-dataclass"><code>dataclass</code></small>
+  </span>
+
+<a href="#musickit_api_mock.WebPlaybackUploadedLibraryAssetMetadata" class="headerlink" title="Permanent link">&para;</a></h2>
+<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">WebPlaybackUploadedLibraryAssetMetadata</span><span class="p">(</span><span class="n">item_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">artist_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">playlist_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">duration</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">kind</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">track_number</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">disc_number</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">genre</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">composer_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">explicit</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">release_date</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">cloud_id</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">xid</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span>
+</span></code></pre></div>
+
+    <div class="doc doc-contents first">
+
+
+
+        <p>Tag metadata Apple attaches to an uploaded library song's asset.</p>
+<p>MusicKit copies these onto the playing media item.</p>
+
+
+<p><span class="doc-section-title">Attributes:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td><code><span title="musickit_api_mock.WebPlaybackUploadedLibraryAssetMetadata.item_name">item_name</span></code></td>
+            <td>
+                  <code><span title="str">str</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Song title.</p>
+              </div>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code><span title="musickit_api_mock.WebPlaybackUploadedLibraryAssetMetadata.artist_name">artist_name</span></code></td>
+            <td>
+                  <code><span title="str">str</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Primary artist name.</p>
+              </div>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code><span title="musickit_api_mock.WebPlaybackUploadedLibraryAssetMetadata.playlist_name">playlist_name</span></code></td>
+            <td>
+                  <code><span title="str">str</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Album name.</p>
+              </div>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code><span title="musickit_api_mock.WebPlaybackUploadedLibraryAssetMetadata.duration">duration</span></code></td>
+            <td>
+                  <code><span title="int">int</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Duration in milliseconds.</p>
+              </div>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code><span title="musickit_api_mock.WebPlaybackUploadedLibraryAssetMetadata.kind">kind</span></code></td>
+            <td>
+                  <code><span title="str">str</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Media kind (<code>song</code>).</p>
+              </div>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code><span title="musickit_api_mock.WebPlaybackUploadedLibraryAssetMetadata.track_number">track_number</span></code></td>
+            <td>
+                  <code><span title="int">int</span> | None</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Track number within the album.</p>
+              </div>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code><span title="musickit_api_mock.WebPlaybackUploadedLibraryAssetMetadata.disc_number">disc_number</span></code></td>
+            <td>
+                  <code><span title="int">int</span> | None</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Disc number within the album.</p>
+              </div>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code><span title="musickit_api_mock.WebPlaybackUploadedLibraryAssetMetadata.genre">genre</span></code></td>
+            <td>
+                  <code><span title="str">str</span> | None</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Genre name.</p>
+              </div>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code><span title="musickit_api_mock.WebPlaybackUploadedLibraryAssetMetadata.composer_name">composer_name</span></code></td>
+            <td>
+                  <code><span title="str">str</span> | None</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Composer name.</p>
+              </div>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code><span title="musickit_api_mock.WebPlaybackUploadedLibraryAssetMetadata.explicit">explicit</span></code></td>
+            <td>
+                  <code><span title="int">int</span> | None</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p><code>1</code> for explicit content, <code>0</code> otherwise.</p>
+              </div>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code><span title="musickit_api_mock.WebPlaybackUploadedLibraryAssetMetadata.release_date">release_date</span></code></td>
+            <td>
+                  <code><span title="str">str</span> | None</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>ISO-8601 release date.</p>
+              </div>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code><span title="musickit_api_mock.WebPlaybackUploadedLibraryAssetMetadata.cloud_id">cloud_id</span></code></td>
+            <td>
+                  <code><span title="int">int</span> | None</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Cloud library id of the upload.</p>
+              </div>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code><span title="musickit_api_mock.WebPlaybackUploadedLibraryAssetMetadata.xid">xid</span></code></td>
+            <td>
+                  <code><span title="str">str</span> | None</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Vendor-qualified ISRC (<code>&lt;vendor&gt;:isrc:&lt;code&gt;</code>).</p>
               </div>
             </td>
           </tr>
