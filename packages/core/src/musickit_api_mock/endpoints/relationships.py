@@ -14,11 +14,7 @@ from typing import TYPE_CHECKING
 from musickit_api_mock.data.library_album import UploadedLibraryAlbum
 from musickit_api_mock.data.library_artist import UploadedLibraryArtist
 from musickit_api_mock.data.library_song import UploadedLibrarySong
-from musickit_api_mock.data.lookup import (
-    LookupContext,
-    _dangling_catalog_id,
-    _list_source_ids,
-)
+from musickit_api_mock.data.lookup import LookupContext, _list_source_ids
 from musickit_api_mock.endpoints.pagination import (
     _ARTIST_ALBUMS,
     _CATALOG_ALBUM_ARTISTS,
@@ -965,13 +961,9 @@ def _handle_library_song_catalog(
         return _json_response({"data": []})
     if isinstance(library_song, UploadedLibrarySong):
         return _json_response(_generic_error_envelope(404), status=404)
-    catalog_song = mock._data_resolver.song.get(
-        LookupContext(library_song.catalog_id, locale)
+    catalog_song = mock._data_resolver.library_song.catalog_for(
+        LookupContext(library_song_id, locale), library_song
     )
-    if catalog_song is None:
-        raise _dangling_catalog_id(
-            "data.library_songs", library_song_id, "data.songs", library_song.catalog_id
-        )
     sf = _user_storefront_slug(mock)
     return _json_response(
         {"data": [_song_resource(sf, library_song.catalog_id, catalog_song)]}
@@ -993,16 +985,9 @@ def _handle_library_album_catalog(
         return _json_response({"data": []})
     if isinstance(library_album, UploadedLibraryAlbum):
         return _json_response(_generic_error_envelope(404), status=404)
-    catalog_album = mock._data_resolver.album.get(
-        LookupContext(library_album.catalog_id, locale)
+    catalog_album = mock._data_resolver.library_album.catalog_for(
+        LookupContext(library_album_id, locale), library_album
     )
-    if catalog_album is None:
-        raise _dangling_catalog_id(
-            "data.library_albums",
-            library_album_id,
-            "data.albums",
-            library_album.catalog_id,
-        )
     sf = _user_storefront_slug(mock)
     return _json_response(
         {"data": [_album_resource(sf, library_album.catalog_id, catalog_album)]}
@@ -1082,16 +1067,9 @@ def _handle_library_artist_catalog(
         return _json_response({"data": []})
     if isinstance(library_artist, UploadedLibraryArtist):
         return _json_response(_generic_error_envelope(404), status=404)
-    catalog_artist = mock._data_resolver.artist.get(
-        LookupContext(library_artist.catalog_id, locale)
+    catalog_artist = mock._data_resolver.library_artist.catalog_for(
+        LookupContext(library_artist_id, locale), library_artist
     )
-    if catalog_artist is None:
-        raise _dangling_catalog_id(
-            "data.library_artists",
-            library_artist_id,
-            "data.artists",
-            library_artist.catalog_id,
-        )
     sf = _user_storefront_slug(mock)
     return _json_response(
         {"data": [_artist_resource(sf, library_artist.catalog_id, catalog_artist)]}
