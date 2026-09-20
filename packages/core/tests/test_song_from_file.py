@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import math
+from array import array
 from dataclasses import replace
 from pathlib import Path
 from typing import Protocol
@@ -7,11 +9,13 @@ from typing import Protocol
 import av
 import pytest
 from av.audio.frame import AudioFrame
+from av.audio.resampler import AudioResampler
 from av.packet import Packet
 from av.stream import Disposition
 from musickit_api_mock import (
     Artwork,
     CatalogSong,
+    PreviewRange,
     SongMetadataFallback,
     UploadedLibrarySong,
     UploadedLibrarySongMetadataFallback,
@@ -372,15 +376,33 @@ def test_uploaded_library_song_from_file_missing_required_field_raises(
         )
 
 
-def _generate_wav(path: str) -> None:
+def _pcm_samples(
+    first_sample: int, count: int, tone: tuple[float, float] | None
+) -> bytes:
+    if tone is None:
+        return bytes(count * 2)
+    start, end = (int(t * 44100) for t in tone)
+    samples = array("h", bytes(count * 2))
+    for i in range(count):
+        n = first_sample + i
+        if start <= n < end:
+            samples[i] = int(16000 * math.sin(2 * math.pi * 440 * n / 44100))
+    return samples.tobytes()
+
+
+def _generate_wav(
+    path: str, *, frames: int = 20, tone: tuple[float, float] | None = None
+) -> None:
     container = av.open(path, "w", format="wav")
     audio = container.add_stream("pcm_s16le", rate=44100)
     audio.layout = "mono"
     samples_per_frame = 1024
-    for i in range(20):
+    for i in range(frames):
         frame = AudioFrame(format="s16", layout="mono", samples=samples_per_frame)
         frame.sample_rate = 44100
-        frame.planes[0].update(bytes(samples_per_frame * 2))
+        frame.planes[0].update(
+            _pcm_samples(i * samples_per_frame, samples_per_frame, tone)
+        )
         frame.pts = i * samples_per_frame
         for pkt in audio.encode(frame):
             container.mux(pkt)
@@ -394,6 +416,52 @@ def _audio_codec(data: bytes, suffix: str, tmp_path: Path) -> str:
     probe_path.write_bytes(data)
     with av.open(str(probe_path)) as container:
         return container.streams.audio[0].codec_context.name
+
+
+def _decode_pcm(data: bytes, tmp_path: Path) -> array[int]:
+    probe_path = tmp_path / "probe.m4a"
+    probe_path.write_bytes(data)
+    samples = array("h")
+    resampler = AudioResampler(format="s16", layout="mono", rate=44100)
+
+    def collect(frame: AudioFrame | None) -> None:
+        for out in resampler.resample(frame):
+            samples.frombytes(bytes(out.planes[0])[: out.samples * 2])
+
+    with av.open(str(probe_path)) as container:
+        for frame in container.decode(container.streams.audio[0]):
+            collect(frame)
+    collect(None)
+    return samples
+
+
+def _rms(samples: array[int]) -> float:
+    return math.sqrt(sum(s * s for s in samples) / len(samples))
+
+
+def test_preview_range_starts_at_start_sec(
+    tmp_path: Path, artwork_library: Artwork
+) -> None:
+    path = tmp_path / "input.wav"
+    _generate_wav(str(path), frames=431, tone=(3.0, 4.0))
+    song = CatalogSong.from_file(
+        str(path),
+        replace(
+            _full_fallback(artwork_library),
+            title="T",
+            artist="A",
+            album="Al",
+            genres=["G"],
+            release_date="2020-01-01",
+            track_number=1,
+            disc_number=1,
+        ),
+        preview=PreviewRange(start_sec=3.0, duration_sec=2.0),
+    )
+    pcm = _decode_pcm(song.preview_audio, tmp_path)
+    assert abs(len(pcm) / 44100 - 2.0) < 0.1
+    assert _rms(pcm[: 44100 // 2]) > 1000
+    assert _rms(pcm[-44100 // 2 :]) < 100
 
 
 def test_catalog_song_from_wav_serves_aac(

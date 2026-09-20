@@ -374,10 +374,7 @@ def _build_preview(
             in_stream = in_container.streams.audio[0]
             if start_sec > 0:
                 in_container.seek(
-                    int(start_sec * 1_000_000),
-                    backward=True,
-                    any_frame=False,
-                    stream=in_stream,
+                    int(start_sec * av.time_base), backward=True, any_frame=False
                 )
             out_container = av.open(out_path, "w", format="ipod")
             try:
