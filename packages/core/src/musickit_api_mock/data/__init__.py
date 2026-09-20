@@ -21,7 +21,6 @@ from musickit_api_mock.data.library_song import (
     CatalogLibrarySong,
     LibrarySong,
     UploadedLibrarySong,
-    UploadedLibrarySongMetadataFallback,
 )
 from musickit_api_mock.data.lookup import LookupContext
 from musickit_api_mock.data.music_video import MusicVideo
@@ -83,5 +82,4 @@ __all__ = [
     "UploadedLibraryAlbum",
     "UploadedLibraryArtist",
     "UploadedLibrarySong",
-    "UploadedLibrarySongMetadataFallback",
 ]

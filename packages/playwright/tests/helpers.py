@@ -184,8 +184,10 @@ def make_uploaded_playback_ready_mock(
         account=Account(subscription_active=True, subscription_storefront="us")
     )
     mock.data.library_songs = songs
-    web_playback_map: dict[str, WebPlaybackResponse] = {
-        library_id: WebPlaybackResponseSuccess(
+    web_playback_map: dict[str, WebPlaybackResponse] = {}
+    for library_id, song in songs.items():
+        assert song.artist_name is not None
+        web_playback_map[library_id] = WebPlaybackResponseSuccess(
             song_list=[
                 WebPlaybackUploadedLibrarySong(
                     asset=WebPlaybackUploadedLibraryAsset(
@@ -201,8 +203,6 @@ def make_uploaded_playback_ready_mock(
                 )
             ]
         )
-        for library_id, song in songs.items()
-    }
     mock.endpoints.web_playback = web_playback_map
     mock.endpoints.play_activity = PlayActivityResponseSuccess()
     mock.browser.eme_flavor = (

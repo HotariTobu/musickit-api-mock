@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import base64
 import math
 from array import array
 from dataclasses import replace
@@ -18,7 +19,6 @@ from musickit_api_mock import (
     PreviewRange,
     SongMetadataFallback,
     UploadedLibrarySong,
-    UploadedLibrarySongMetadataFallback,
 )
 
 _TINY_PNG = bytes.fromhex(
@@ -38,12 +38,16 @@ def _generate_audio(
     *,
     metadata: dict[str, str] | None,
     with_artwork: bool,
+    suffix: str = "m4a",
 ) -> None:
-    container = av.open(path, "w", format="mp4")
+    if suffix == "mp3":
+        container = av.open(path, "w", format="mp3")
+        audio = container.add_stream("mp3", rate=44100)
+    else:
+        container = av.open(path, "w", format="mp4")
+        audio = container.add_stream("aac", rate=44100)
     if metadata:
         container.metadata.update(metadata)
-
-    audio = container.add_stream("aac", rate=44100)
     audio.layout = "mono"
 
     video = None
@@ -84,7 +88,11 @@ def _generate_audio(
 
 class AudioFactory(Protocol):
     def __call__(
-        self, *, metadata: dict[str, str] | None = None, with_artwork: bool = False
+        self,
+        *,
+        metadata: dict[str, str] | None = None,
+        with_artwork: bool = False,
+        suffix: str = "m4a",
     ) -> str: ...
 
 
@@ -93,12 +101,17 @@ def make_audio(tmp_path: Path) -> AudioFactory:
     counter = 0
 
     def factory(
-        *, metadata: dict[str, str] | None = None, with_artwork: bool = False
+        *,
+        metadata: dict[str, str] | None = None,
+        with_artwork: bool = False,
+        suffix: str = "m4a",
     ) -> str:
         nonlocal counter
         counter += 1
-        out = tmp_path / f"song_{counter}.m4a"
-        _generate_audio(str(out), metadata=metadata, with_artwork=with_artwork)
+        out = tmp_path / f"song_{counter}.{suffix}"
+        _generate_audio(
+            str(out), metadata=metadata, with_artwork=with_artwork, suffix=suffix
+        )
         return str(out)
 
     return factory
@@ -322,58 +335,116 @@ def test_uploaded_library_song_from_file_extracts_metadata_and_audio(
             "artist": "Upload Artist",
             "album": "Upload Album",
             "track": "3/10",
-            "disc": "1",
-            "genre": "Soundtrack",
+            "disc": "2",
+            "genre": "Soundtrack, Pop ",
         },
         with_artwork=True,
     )
-    song = UploadedLibrarySong.from_file(
-        path, UploadedLibrarySongMetadataFallback(has_lyrics=False)
-    )
+    song = UploadedLibrarySong.from_file(path)
     assert song.name == "Upload Title"
     assert song.artist_name == "Upload Artist"
     assert song.album_name == "Upload Album"
     assert song.track_number == 3
-    assert song.disc_number == 1
-    assert song.genre_names == ["Soundtrack"]
+    assert song.disc_number == 2
+    assert song.genre_names == ["Soundtrack, Pop "]
     assert song.has_lyrics is False
     assert song.duration_ms > 0
     assert song.audio[4:12] == b"ftypM4A "
     assert song.audio != Path(path).read_bytes()
 
 
-def test_uploaded_library_song_from_file_falls_back_when_tags_missing(
-    make_audio: AudioFactory, artwork_library: Artwork
+def test_uploaded_library_song_from_file_artwork_is_original_bytes_at_fixed_size(
+    make_audio: AudioFactory,
 ) -> None:
-    path = make_audio(metadata=None, with_artwork=False)
-    song = UploadedLibrarySong.from_file(
-        path,
-        UploadedLibrarySongMetadataFallback(
-            name="FB Name",
-            artist_name="FB Artist",
-            artwork=artwork_library,
-            genre_names=["FB"],
-            has_lyrics=True,
-        ),
+    path = make_audio(metadata=None, with_artwork=True)
+    song = UploadedLibrarySong.from_file(path)
+    assert song.artwork == Artwork(
+        url=f"data:image/png;base64,{base64.b64encode(_TINY_PNG).decode('ascii')}",
+        width=1200,
+        height=1200,
     )
-    assert song.name == "FB Name"
-    assert song.artist_name == "FB Artist"
-    assert song.artwork == artwork_library
-    assert song.genre_names == ["FB"]
-    assert song.album_name is None
 
 
-def test_uploaded_library_song_from_file_missing_required_field_raises(
-    make_audio: AudioFactory, artwork_library: Artwork
+def test_uploaded_library_song_from_file_without_tags(
+    make_audio: AudioFactory,
 ) -> None:
     path = make_audio(metadata=None, with_artwork=False)
-    with pytest.raises(ValueError, match="missing 'name'"):
-        UploadedLibrarySong.from_file(
-            path,
-            UploadedLibrarySongMetadataFallback(
-                artwork=artwork_library, genre_names=[], has_lyrics=False
-            ),
-        )
+    song = UploadedLibrarySong.from_file(path)
+    assert song.name == Path(path).stem
+    assert song.artist_name is None
+    assert song.album_name is None
+    assert song.genre_names == [""]
+    assert song.track_number == 0
+    assert song.disc_number == 0
+    assert song.artwork is None
+
+
+def test_uploaded_library_song_from_file_empty_tags_count_as_absent(
+    make_audio: AudioFactory,
+) -> None:
+    path = make_audio(
+        metadata={"title": "", "artist": "", "album": "", "genre": ""},
+        suffix="mp3",
+    )
+    song = UploadedLibrarySong.from_file(path)
+    assert song.name == Path(path).stem
+    assert song.artist_name is None
+    assert song.album_name is None
+    assert song.genre_names == [""]
+
+
+def test_uploaded_library_song_from_file_keeps_whitespace_only_tags(
+    make_audio: AudioFactory,
+) -> None:
+    path = make_audio(
+        metadata={"title": "   ", "artist": "   ", "album": "   ", "genre": "   "}
+    )
+    song = UploadedLibrarySong.from_file(path)
+    assert song.name == "   "
+    assert song.artist_name == "   "
+    assert song.album_name == "   "
+    assert song.genre_names == ["   "]
+
+
+def test_uploaded_library_song_from_file_name_strips_last_extension_only(
+    make_audio: AudioFactory, tmp_path: Path
+) -> None:
+    generated = Path(make_audio(metadata=None))
+    path = tmp_path / "my.song.name.m4a"
+    generated.rename(path)
+    song = UploadedLibrarySong.from_file(str(path))
+    assert song.name == "my.song.name"
+
+
+@pytest.mark.parametrize(
+    ("raw", "expected"),
+    [
+        ("0", 0),
+        ("07", 7),
+        (" 7 ", 7),
+        ("\t\n 7", 7),
+        ("\u30007", 0),
+        ("\u00a07", 0),
+        ("3/12", 3),
+        ("3 of 12", 3),
+        ("12abc", 12),
+        ("+3", 3),
+        ("1_0", 1),
+        ("\u0661\u0662", 0),
+        ("abc", 0),
+        ("32767", 32767),
+        ("32768", 0),
+        ("-1", 0),
+        ("70000", 4464),
+    ],
+)
+def test_uploaded_library_song_from_file_track_and_disc_numbers(
+    make_audio: AudioFactory, raw: str, expected: int
+) -> None:
+    path = make_audio(metadata={"track": raw, "disc": raw}, suffix="mp3")
+    song = UploadedLibrarySong.from_file(path)
+    assert song.track_number == expected
+    assert song.disc_number == expected
 
 
 def _pcm_samples(
@@ -512,19 +583,8 @@ def test_catalog_song_from_wav_serves_aac(
     assert _audio_codec(song.preview_audio, ".m4a", tmp_path) == "aac"
 
 
-def test_uploaded_library_song_from_wav_serves_aac(
-    tmp_path: Path, artwork_library: Artwork
-) -> None:
+def test_uploaded_library_song_from_wav_serves_aac(tmp_path: Path) -> None:
     path = tmp_path / "input.wav"
     _generate_wav(str(path))
-    song = UploadedLibrarySong.from_file(
-        str(path),
-        UploadedLibrarySongMetadataFallback(
-            name="T",
-            artist_name="A",
-            artwork=artwork_library,
-            genre_names=[],
-            has_lyrics=False,
-        ),
-    )
+    song = UploadedLibrarySong.from_file(str(path))
     assert _audio_codec(song.audio, ".m4a", tmp_path) == "aac"

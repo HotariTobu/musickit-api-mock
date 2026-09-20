@@ -27,7 +27,11 @@ def _library_song_resource(
             "name": library_song.name,
             "artistName": library_song.artist_name,
             "albumName": library_song.album_name,
-            "artwork": _artwork(library_song.artwork),
+            "artwork": (
+                _artwork(library_song.artwork)
+                if library_song.artwork is not None
+                else None
+            ),
             "discNumber": library_song.disc_number,
             "durationInMillis": library_song.duration_ms,
             "genreNames": library_song.genre_names,

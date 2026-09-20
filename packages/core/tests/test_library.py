@@ -3,7 +3,7 @@ from __future__ import annotations
 import json
 from typing import TYPE_CHECKING
 
-from musickit_api_mock import MusicKitApiMock, Request
+from musickit_api_mock import MusicKitApiMock, Request, UploadedLibrarySong
 
 if TYPE_CHECKING:
     from tests._apple_response import _AppleResponse
@@ -170,6 +170,31 @@ def test_library_song_include_catalog(mock: MusicKitApiMock) -> None:
     assert catalog_data["id"] == "1"
     assert catalog_data["type"] == "songs"
     assert catalog_data["attributes"]["name"] == "Test Song"
+
+
+def test_uploaded_library_song_omits_unset_attributes(mock: MusicKitApiMock) -> None:
+    mock.data.library_songs = {
+        "i.up1": UploadedLibrarySong(
+            name="Upload",
+            artist_name=None,
+            artwork=None,
+            duration_ms=1000,
+            genre_names=[""],
+            has_lyrics=False,
+            audio=b"",
+            disc_number=0,
+            track_number=0,
+        )
+    }
+    status, body = _get(mock, "https://api.music.apple.com/v1/me/library/songs/i.up1")
+    assert status == 200
+    attrs = body["data"][0]["attributes"]
+    assert "artistName" not in attrs
+    assert "albumName" not in attrs
+    assert "artwork" not in attrs
+    assert attrs["genreNames"] == [""]
+    assert attrs["trackNumber"] == 0
+    assert attrs["discNumber"] == 0
 
 
 def test_library_song_no_include_no_catalog(mock: MusicKitApiMock) -> None:

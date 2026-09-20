@@ -380,6 +380,8 @@ def test_uploaded_audio_route_serves_library_song_audio(
             genre_names=[],
             has_lyrics=False,
             audio=b"m4a-bytes",
+            disc_number=0,
+            track_number=0,
         )
     }
     resp = mock.handle_request(

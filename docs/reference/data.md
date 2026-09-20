@@ -49,7 +49,6 @@ Shared resource sources and dataclasses used by the data configuration surface.
 ::: musickit_api_mock.HlsChunk
 ::: musickit_api_mock.HlsLayout
 ::: musickit_api_mock.SongMetadataFallback
-::: musickit_api_mock.UploadedLibrarySongMetadataFallback
 
 ## Lookup callback context
 
