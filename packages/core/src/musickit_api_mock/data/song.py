@@ -68,13 +68,7 @@ class CatalogSong:
         artwork: Cover artwork.
         genres: Display names of the song's genres.
         has_lyrics: Whether lyrics are available.
-        audio_locale: BCP-47 locale tag of the recorded audio.
-        audio_traits: Audio capability tags (lossless, dolby-atmos, etc.).
-        has_time_synced_lyrics: Whether time-synced lyrics are available.
         is_apple_digital_master: Apple's "Apple Digital Master" badge.
-        is_mastered_for_itunes: Apple's "Mastered for iTunes" badge.
-        is_vocal_attenuation_allowed: Whether vocal attenuation (Sing) is
-            allowed.
         url: Song landing-page URL on Apple Music.
         isrc: International Standard Recording Code.
         track_number: Track number within the album.
@@ -111,12 +105,7 @@ class CatalogSong:
     artwork: Artwork
     genres: list[str]
     has_lyrics: bool
-    audio_locale: str
-    audio_traits: list[str]
-    has_time_synced_lyrics: bool
     is_apple_digital_master: bool
-    is_mastered_for_itunes: bool
-    is_vocal_attenuation_allowed: bool
     url: str
     isrc: str
     track_number: int
@@ -193,12 +182,7 @@ class SongMetadataFallback:
         has_lyrics: Lyrics-availability fallback.
         isrc: ISRC fallback.
         content_rating: Content-rating fallback.
-        audio_locale: BCP-47 audio-locale fallback.
-        audio_traits: Audio-traits fallback.
-        has_time_synced_lyrics: Time-synced lyrics-availability fallback.
         is_apple_digital_master: Apple Digital Master fallback.
-        is_mastered_for_itunes: Mastered for iTunes fallback.
-        is_vocal_attenuation_allowed: Vocal-attenuation-allowed fallback.
         url: Landing-page URL fallback.
     """
 
@@ -214,12 +198,7 @@ class SongMetadataFallback:
     has_lyrics: bool | None = None
     isrc: str | None = None
     content_rating: str | None = None
-    audio_locale: str | None = None
-    audio_traits: list[str] | None = None
-    has_time_synced_lyrics: bool | None = None
     is_apple_digital_master: bool | None = None
-    is_mastered_for_itunes: bool | None = None
-    is_vocal_attenuation_allowed: bool | None = None
     url: str | None = None
 
 

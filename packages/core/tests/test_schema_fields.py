@@ -69,12 +69,7 @@ def test_song_attributes_emit_configured_fields(
     assert attrs["discNumber"] == song.disc_number
     assert attrs["composerName"] == song.composer
     assert attrs["hasLyrics"] == song.has_lyrics
-    assert attrs["audioLocale"] == song.audio_locale
-    assert attrs["audioTraits"] == song.audio_traits
-    assert attrs["hasTimeSyncedLyrics"] == song.has_time_synced_lyrics
     assert attrs["isAppleDigitalMaster"] == song.is_apple_digital_master
-    assert attrs["isMasteredForItunes"] == song.is_mastered_for_itunes
-    assert attrs["isVocalAttenuationAllowed"] == song.is_vocal_attenuation_allowed
     assert attrs["url"] == song.url
     artwork = cast("_AppleArtwork", attrs["artwork"])
     assert artwork["width"] == song.artwork.width

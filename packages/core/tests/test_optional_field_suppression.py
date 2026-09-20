@@ -75,12 +75,7 @@ def _minimal_song() -> CatalogSong:
         artwork=Artwork(url="x", width=1, height=1),
         genres=[],
         has_lyrics=False,
-        audio_locale="en-US",
-        audio_traits=[],
-        has_time_synced_lyrics=False,
         is_apple_digital_master=False,
-        is_mastered_for_itunes=False,
-        is_vocal_attenuation_allowed=False,
         url="x",
         hls_layout=HlsLayout(
             target_duration_sec=1,

@@ -121,12 +121,7 @@ def _full_fallback(artwork: Artwork) -> SongMetadataFallback:
     return SongMetadataFallback(
         artwork=artwork,
         has_lyrics=True,
-        audio_locale="en-US",
-        audio_traits=["lossless"],
-        has_time_synced_lyrics=False,
         is_apple_digital_master=False,
-        is_mastered_for_itunes=True,
-        is_vocal_attenuation_allowed=False,
         url="https://music.apple.com/us/song/x",
     )
 
@@ -212,12 +207,7 @@ def test_falls_back_when_file_has_no_metadata(
         track_number=3,
         disc_number=1,
         has_lyrics=True,
-        audio_locale="en-US",
-        audio_traits=["lossless"],
-        has_time_synced_lyrics=False,
         is_apple_digital_master=False,
-        is_mastered_for_itunes=True,
-        is_vocal_attenuation_allowed=False,
         url="https://example.com/x",
     )
     song = CatalogSong.from_file(path, fallback=fb)
@@ -280,12 +270,7 @@ def test_missing_required_field_raises(
         track_number=1,
         disc_number=1,
         has_lyrics=False,
-        audio_locale="en-US",
-        audio_traits=[],
-        has_time_synced_lyrics=False,
         is_apple_digital_master=False,
-        is_mastered_for_itunes=False,
-        is_vocal_attenuation_allowed=False,
         url="x",
     )
     with pytest.raises(ValueError, match="missing 'title'"):
@@ -310,20 +295,12 @@ def test_bool_fields_from_fallback(
     fb = SongMetadataFallback(
         artwork=artwork_library,
         has_lyrics=True,
-        audio_locale="en-US",
-        audio_traits=["lossless"],
-        has_time_synced_lyrics=True,
         is_apple_digital_master=True,
-        is_mastered_for_itunes=False,
-        is_vocal_attenuation_allowed=True,
         url="https://example.com/x",
     )
     song = CatalogSong.from_file(path, fallback=fb)
     assert song.has_lyrics is True
-    assert song.has_time_synced_lyrics is True
     assert song.is_apple_digital_master is True
-    assert song.is_mastered_for_itunes is False
-    assert song.is_vocal_attenuation_allowed is True
 
 
 def test_uploaded_library_song_from_file_extracts_metadata_and_audio(

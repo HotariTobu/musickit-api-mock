@@ -77,12 +77,7 @@ def song(artwork_catalog: Artwork) -> CatalogSong:
         disc_number=1,
         composer="Test Composer",
         has_lyrics=False,
-        audio_locale="en-US",
-        audio_traits=["lossless"],
-        has_time_synced_lyrics=False,
         is_apple_digital_master=True,
-        is_mastered_for_itunes=True,
-        is_vocal_attenuation_allowed=True,
         url="https://music.apple.com/us/song/1",
         hls_layout=HlsLayout(
             target_duration_sec=2,

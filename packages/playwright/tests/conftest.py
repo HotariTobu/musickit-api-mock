@@ -104,12 +104,7 @@ def _silence_fallback(page_url: str) -> SongMetadataFallback:
     return SongMetadataFallback(
         artwork=Artwork(url=f"{page_url}a.jpg", width=64, height=64),
         has_lyrics=False,
-        audio_locale="en-US",
-        audio_traits=["lossless"],
-        has_time_synced_lyrics=False,
         is_apple_digital_master=False,
-        is_mastered_for_itunes=False,
-        is_vocal_attenuation_allowed=False,
         url="https://music.apple.com/us/song/s1",
         title="Silence",
         artist="Test Artist",

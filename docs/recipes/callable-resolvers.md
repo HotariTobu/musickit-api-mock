@@ -34,12 +34,7 @@ def make_song(song_id: str, *, title: str) -> CatalogSong:
         file_size=0,
         genres=[],
         has_lyrics=False,
-        audio_locale="en-US",
-        audio_traits=[],
-        has_time_synced_lyrics=False,
         is_apple_digital_master=False,
-        is_mastered_for_itunes=False,
-        is_vocal_attenuation_allowed=False,
         url=f"https://music.apple.com/us/song/{song_id}",
         hls_layout=HlsLayout(
             target_duration_sec=6,
