@@ -57,94 +57,74 @@ class UploadedLibrarySong:
     """User-library song uploaded by the user, with no catalog counterpart.
 
     Playback serves the song's own audio. The ``from_file`` constructor
-    sources the audio and metadata from an audio file on disk.
+    sources the audio and metadata from an audio file on disk the way a
+    Music.app import does; assign to the fields afterwards to model edits
+    made in Music.app.
 
     Attributes:
         name: Display title of the song.
-        artist_name: Display name of the primary artist.
-        artwork: Cover artwork.
+        artist_name: Display name of the primary artist. ``None`` when the
+            song has no artist; Apple then omits the attribute.
+        artwork: Cover artwork. ``None`` when the song has no artwork;
+            Apple then omits the attribute.
         duration_ms: Duration in milliseconds.
         genre_names: Display names of the song's genres.
         has_lyrics: Whether lyrics are available.
         audio: AAC audio in an M4A container the mock serves for playback.
-        album_name: Display name of the album the song belongs to.
-        disc_number: Disc number when part of a multi-disc album.
-        track_number: Track number within the album.
+        disc_number: Disc number, ``0`` when unset.
+        track_number: Track number, ``0`` when unset.
+        album_name: Display name of the album the song belongs to. ``None``
+            when the song has no album; Apple then omits the attribute.
         album_ids: Library album ids the song belongs to.
         artist_ids: Library artist ids credited on the song.
     """
 
     name: str
-    artist_name: str
-    artwork: Artwork
+    artist_name: str | None
+    artwork: Artwork | None
     duration_ms: int
     genre_names: list[str]
     has_lyrics: bool
     audio: bytes
+    disc_number: int
+    track_number: int
     album_name: str | None = None
-    disc_number: int | None = None
-    track_number: int | None = None
     album_ids: list[str] | None = None
     artist_ids: list[str] | None = None
 
     @classmethod
-    def from_file(
-        cls,
-        audio_path: str,
-        fallback: "UploadedLibrarySongMetadataFallback | None" = None,
-    ) -> "UploadedLibrarySong":
+    def from_file(cls, audio_path: str) -> "UploadedLibrarySong":
         """Build an uploaded library song from an audio file.
 
-        Reads tags, duration, and embedded artwork from the file and
-        transcodes the audio to AAC in an M4A container, as Apple does for
-        uploads. Fields the file does not supply come from ``fallback``.
+        Reads the file the way a Music.app import does and transcodes the
+        audio to AAC in an M4A container, as Apple does for uploads. No tag
+        is required; an empty tag counts as absent.
+
+        - ``name``: the title tag, or the file name without its last
+          extension when the tag is absent.
+        - ``artist_name`` / ``album_name``: the artist / album tag, or
+          ``None`` when absent.
+        - ``genre_names``: the genre tag as a single element, verbatim, or
+          ``[""]`` when absent.
+        - ``track_number`` / ``disc_number``: the leading integer of the
+          tag (``"3/12"`` gives ``3``), reduced modulo 65536; ``0`` when the
+          tag is absent, not an integer, or exceeds 32767 after reduction.
+        - ``artwork``: the first embedded picture as a data URL, reported
+          as 1200 by 1200 regardless of the picture's size, or ``None`` when
+          the file has none.
+        - ``has_lyrics``: always ``False``.
 
         Args:
             audio_path: Path to the audio file.
-            fallback: Metadata defaults for fields the file's tags lack.
 
         Returns:
             The uploaded library song.
-
-        Raises:
-            ValueError: A required field is missing from both the file's
-                tags and ``fallback``.
         """
         from musickit_api_mock.data.song_from_file import (
             _uploaded_library_song_from_file,
         )
 
-        return _uploaded_library_song_from_file(cls, audio_path, fallback)
-
-
-@dataclass
-class UploadedLibrarySongMetadataFallback:
-    """Metadata defaults applied when an uploaded file's tags are missing fields.
-
-    Each field corresponds to the same-named attribute on the uploaded
-    library song dataclass and is used only when the source file's tags do
-    not supply the value. Fields left unset (``None``) provide no fallback
-    and the loader raises if the tag is also missing.
-
-    Attributes:
-        name: Display-title fallback.
-        artist_name: Primary-artist fallback.
-        artwork: Cover-artwork fallback.
-        genre_names: Genres fallback.
-        has_lyrics: Lyrics-availability fallback.
-        album_name: Album-name fallback.
-        disc_number: Disc-number fallback.
-        track_number: Track-number fallback.
-    """
-
-    name: str | None = None
-    artist_name: str | None = None
-    artwork: Artwork | None = None
-    genre_names: list[str] | None = None
-    has_lyrics: bool | None = None
-    album_name: str | None = None
-    disc_number: int | None = None
-    track_number: int | None = None
+        return _uploaded_library_song_from_file(cls, audio_path)
 
 
 LibrarySong = CatalogLibrarySong | UploadedLibrarySong

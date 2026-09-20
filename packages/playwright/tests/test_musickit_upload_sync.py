@@ -15,7 +15,6 @@ import pytest
 from musickit_api_mock import (
     Artwork,
     UploadedLibrarySong,
-    UploadedLibrarySongMetadataFallback,
     WebPlaybackResponseSuccess,
     WebPlaybackUploadedLibraryAsset,
     WebPlaybackUploadedLibraryAssetMetadata,
@@ -48,16 +47,11 @@ pytestmark = [
 
 
 def _uploaded_song(silence_audio_path: Path, page_url: str) -> UploadedLibrarySong:
-    return UploadedLibrarySong.from_file(
-        str(silence_audio_path),
-        UploadedLibrarySongMetadataFallback(
-            name="Upload",
-            artist_name="Uploader",
-            artwork=Artwork(url=f"{page_url}a.jpg", width=64, height=64),
-            genre_names=[],
-            has_lyrics=False,
-        ),
-    )
+    song = UploadedLibrarySong.from_file(str(silence_audio_path))
+    song.name = "Upload"
+    song.artist_name = "Uploader"
+    song.artwork = Artwork(url=f"{page_url}a.jpg", width=64, height=64)
+    return song
 
 
 def test_uploaded_library_song_plays_from_raw_audio(
@@ -92,6 +86,7 @@ def test_uploaded_library_song_with_unserved_audio_fails_playback(
     dev_token: str,
 ) -> None:
     song = _uploaded_song(silence_audio_path, page_url)
+    assert song.artist_name is not None
     mock = make_uploaded_playback_ready_mock({"i.upload1": song}, browser_name)
     mock.endpoints.web_playback = {
         "i.upload1": WebPlaybackResponseSuccess(

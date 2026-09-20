@@ -531,6 +531,8 @@ def test_library_song_catalog_404_for_uploaded_song(
             genre_names=[],
             has_lyrics=False,
             audio=b"",
+            disc_number=0,
+            track_number=0,
         )
     }
     status, body = _get(

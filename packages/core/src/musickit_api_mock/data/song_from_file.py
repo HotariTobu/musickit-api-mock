@@ -19,10 +19,7 @@ if TYPE_CHECKING:
     from av.container import InputContainer, OutputContainer
     from av.packet import Packet
 
-    from musickit_api_mock.data.library_song import (
-        UploadedLibrarySong,
-        UploadedLibrarySongMetadataFallback,
-    )
+    from musickit_api_mock.data.library_song import UploadedLibrarySong
     from musickit_api_mock.data.song import (
         CatalogSong,
         PreviewRange,
@@ -210,7 +207,9 @@ def _pick_bool(fallback: SongMetadataFallback, field: str) -> bool:
     raise _wrong_type(field, "bool", fb_val)
 
 
-def _extract_artwork(container: InputContainer) -> Artwork | None:
+def _attached_picture(
+    container: InputContainer,
+) -> tuple[str, VideoCodecContext] | None:
     for stream in container.streams:
         cc = stream.codec_context
         if not isinstance(cc, VideoCodecContext):
@@ -223,12 +222,17 @@ def _extract_artwork(container: InputContainer) -> Artwork | None:
                 continue
             codec_name = cc.codec.name if cc.codec else ""
             mime = "image/jpeg" if codec_name == "mjpeg" else "image/png"
-            return Artwork(
-                url=f"data:{mime};base64,{base64.b64encode(payload).decode('ascii')}",
-                width=cc.width or 0,
-                height=cc.height or 0,
-            )
+            url = f"data:{mime};base64,{base64.b64encode(payload).decode('ascii')}"
+            return url, cc
     return None
+
+
+def _extract_artwork(container: InputContainer) -> Artwork | None:
+    picture = _attached_picture(container)
+    if picture is None:
+        return None
+    url, cc = picture
+    return Artwork(url=url, width=cc.width or 0, height=cc.height or 0)
 
 
 _BYTERANGE_RE = re.compile(r"^(\d+)(?:@(\d+))?")
@@ -477,60 +481,58 @@ def _song_from_file(
     )
 
 
-def _uploaded_missing(field: str) -> ValueError:
-    return ValueError(
-        f"UploadedLibrarySong.from_file: missing {field!r}."
-        " Set via UploadedLibrarySongMetadataFallback."
-    )
+_UPLOADED_ARTWORK_SIZE = 1200
+_UPLOADED_NUMBER_MODULUS = 65536
+_UPLOADED_NUMBER_MAX = 32767
 
 
-def _uploaded_library_song_from_file(
-    cls: type,
-    audio_path: str,
-    fallback: UploadedLibrarySongMetadataFallback | None = None,
-) -> UploadedLibrarySong:
+def _uploaded_text(meta: dict[str, str], key: str) -> str | None:
+    value = meta.get(key)
+    return value if value else None
+
+
+def _uploaded_number(raw: str | None) -> int:
+    if raw is None:
+        return 0
+    try:
+        value = int(raw.split("/")[0].strip())
+    except ValueError:
+        return 0
+    value %= _UPLOADED_NUMBER_MODULUS
+    return value if value <= _UPLOADED_NUMBER_MAX else 0
+
+
+def _uploaded_artwork(container: InputContainer) -> Artwork | None:
+    picture = _attached_picture(container)
+    if picture is None:
+        return None
+    url, _ = picture
+    return Artwork(url=url, width=_UPLOADED_ARTWORK_SIZE, height=_UPLOADED_ARTWORK_SIZE)
+
+
+def _uploaded_library_song_from_file(cls: type, audio_path: str) -> UploadedLibrarySong:
     import av
 
-    from musickit_api_mock.data.library_song import (
-        UploadedLibrarySongMetadataFallback,
-    )
-
-    f = fallback or UploadedLibrarySongMetadataFallback()
     container = av.open(audio_path)
     try:
         duration_us = container.duration or 0
         duration_ms = int(duration_us / 1000) if duration_us else 0
         meta = container.metadata
-        file_artwork = _extract_artwork(container)
+        artwork = _uploaded_artwork(container)
     finally:
         container.close()
 
-    name = _meta_get(meta, "title") or f.name
-    if name is None:
-        raise _uploaded_missing("name")
-    artist_name = _meta_get(meta, "artist") or f.artist_name
-    if artist_name is None:
-        raise _uploaded_missing("artist_name")
-    artwork = file_artwork if file_artwork is not None else f.artwork
-    if artwork is None:
-        raise _uploaded_missing("artwork")
-    genre_names = _meta_genres(meta)
-    if genre_names is None:
-        genre_names = f.genre_names
-    if genre_names is None:
-        raise _uploaded_missing("genre_names")
-    if f.has_lyrics is None:
-        raise _uploaded_missing("has_lyrics")
-
+    # A libavformat limitation keeps multi-value genre tags from matching Apple.
+    genre = _uploaded_text(meta, "genre")
     return cls(
-        name=name,
-        artist_name=artist_name,
+        name=_uploaded_text(meta, "title") or Path(audio_path).stem,
+        artist_name=_uploaded_text(meta, "artist"),
         artwork=artwork,
         duration_ms=duration_ms,
-        genre_names=genre_names,
-        has_lyrics=f.has_lyrics,
+        genre_names=[genre if genre is not None else ""],
+        has_lyrics=False,
         audio=_build_preview(audio_path, 0.0, None),
-        album_name=_meta_get(meta, "album") or f.album_name,
-        disc_number=_parse_int_field(_meta_get(meta, "disc")) or f.disc_number,
-        track_number=_parse_int_field(_meta_get(meta, "track")) or f.track_number,
+        album_name=_uploaded_text(meta, "album"),
+        disc_number=_uploaded_number(meta.get("disc")),
+        track_number=_uploaded_number(meta.get("track")),
     )

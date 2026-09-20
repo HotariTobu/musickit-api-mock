@@ -43,7 +43,6 @@ from musickit_api_mock.data import (
     UploadedLibraryAlbum,
     UploadedLibraryArtist,
     UploadedLibrarySong,
-    UploadedLibrarySongMetadataFallback,
 )
 from musickit_api_mock.endpoints.responses import (
     Account,
@@ -283,7 +282,6 @@ __all__ = [
     "UploadedLibraryAlbum",
     "UploadedLibraryArtist",
     "UploadedLibrarySong",
-    "UploadedLibrarySongMetadataFallback",
     "WebPlaybackAsset",
     "WebPlaybackCatalogItemContext",
     "WebPlaybackCatalogLibrarySong",

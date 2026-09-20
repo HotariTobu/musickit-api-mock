@@ -208,6 +208,8 @@ def test_data_library_songs_callable() -> None:
             genre_names=[],
             has_lyrics=False,
             audio=b"",
+            disc_number=0,
+            track_number=0,
         )
 
     m.data.library_songs = resolver

@@ -5,23 +5,17 @@ A song the user uploaded to their library has no Apple Music catalog counterpart
 ## Register the song and its audio
 
 ```python
-from musickit_api_mock import (
-    MusicKitApiMock,
-    UploadedLibrarySong,
-    UploadedLibrarySongMetadataFallback,
-)
+from musickit_api_mock import MusicKitApiMock, UploadedLibrarySong
 
 mock = MusicKitApiMock()
 
-mock.data.library_songs = {
-    "i.abc123": UploadedLibrarySong.from_file(
-        "path/to/upload.m4a",
-        UploadedLibrarySongMetadataFallback(has_lyrics=False),
-    ),
-}
+song = UploadedLibrarySong.from_file("path/to/upload.m4a")
+song.artist_name = "Me"
+
+mock.data.library_songs = {"i.abc123": song}
 ```
 
-`from_file` reads the title, artist, album, genre, track / disc numbers, duration, and embedded artwork from the file and transcodes the audio to AAC in an M4A container, as Apple does for uploads. Anything the file lacks comes from the fallback; a required field missing from both raises `ValueError`.
+`from_file` reads the file the way a Music.app import does — title, artist, album, genre, track / disc numbers, duration, and embedded artwork — and transcodes the audio to AAC in an M4A container, as Apple does for uploads. A file with missing tags yields the same attributes Apple emits for such an upload. To model edits made in Music.app after the import, assign to the returned song's fields.
 
 ## Answer the web-playback request
 
