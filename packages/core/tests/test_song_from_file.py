@@ -418,6 +418,17 @@ def _audio_codec(data: bytes, suffix: str, tmp_path: Path) -> str:
         return container.streams.audio[0].codec_context.name
 
 
+def _transcode_to_aac(wav_path: str, m4a_path: str) -> None:
+    with av.open(wav_path) as src, av.open(m4a_path, "w", format="mp4") as dst:
+        out = dst.add_stream("aac", rate=44100)
+        out.layout = "mono"
+        for frame in src.decode(src.streams.audio[0]):
+            for pkt in out.encode(frame):
+                dst.mux(pkt)
+        for pkt in out.encode(None):
+            dst.mux(pkt)
+
+
 def _decode_pcm(data: bytes, tmp_path: Path) -> array[int]:
     probe_path = tmp_path / "probe.m4a"
     probe_path.write_bytes(data)
@@ -435,15 +446,27 @@ def _decode_pcm(data: bytes, tmp_path: Path) -> array[int]:
     return samples
 
 
+def _timeline(data: bytes, tmp_path: Path) -> tuple[int, float]:
+    probe_path = tmp_path / "probe.m4a"
+    probe_path.write_bytes(data)
+    with av.open(str(probe_path)) as container:
+        assert container.duration is not None
+        return container.start_time, container.duration / av.time_base
+
+
 def _rms(samples: array[int]) -> float:
     return math.sqrt(sum(s * s for s in samples) / len(samples))
 
 
+@pytest.mark.parametrize("input_codec", ["pcm", "aac"])
 def test_preview_range_starts_at_start_sec(
-    tmp_path: Path, artwork_library: Artwork
+    tmp_path: Path, artwork_library: Artwork, input_codec: str
 ) -> None:
     path = tmp_path / "input.wav"
     _generate_wav(str(path), frames=431, tone=(3.0, 4.0))
+    if input_codec == "aac":
+        path = tmp_path / "input.m4a"
+        _transcode_to_aac(str(tmp_path / "input.wav"), str(path))
     song = CatalogSong.from_file(
         str(path),
         replace(
@@ -458,6 +481,9 @@ def test_preview_range_starts_at_start_sec(
         ),
         preview=PreviewRange(start_sec=3.0, duration_sec=2.0),
     )
+    start_time, duration = _timeline(song.preview_audio, tmp_path)
+    assert start_time == 0
+    assert abs(duration - 2.0) < 0.1
     pcm = _decode_pcm(song.preview_audio, tmp_path)
     assert abs(len(pcm) / 44100 - 2.0) < 0.1
     assert _rms(pcm[: 44100 // 2]) > 1000

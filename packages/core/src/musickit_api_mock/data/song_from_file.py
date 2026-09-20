@@ -380,6 +380,7 @@ def _build_preview(
             try:
                 out_stream, copy = _add_served_stream(out_container, in_stream)
                 end_sec = start_sec + duration_sec if duration_sec is not None else None
+                first_pts: int | None = None
                 for packet in in_container.demux(in_stream):
                     if packet.pts is None:
                         continue
@@ -388,6 +389,12 @@ def _build_preview(
                         continue
                     if end_sec is not None and t >= end_sec:
                         break
+                    if start_sec > 0:
+                        if first_pts is None:
+                            first_pts = packet.pts
+                        packet.pts -= first_pts
+                        if packet.dts is not None:
+                            packet.dts -= first_pts
                     _transfer_packet(packet, out_container, out_stream, copy=copy)
                 _flush_served_stream(out_container, out_stream, copy=copy)
             finally:
