@@ -1177,17 +1177,6 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#musickit_api_mock.UploadedLibrarySongMetadataFallback" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        <code class="doc-symbol doc-symbol-toc doc-symbol-class"></code>&nbsp;UploadedLibrarySongMetadataFallback
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
   <a href="#lookup-callback-context" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -2095,17 +2084,6 @@
     <span class="md-ellipsis">
       
         <code class="doc-symbol doc-symbol-toc doc-symbol-class"></code>&nbsp;SongMetadataFallback
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#musickit_api_mock.UploadedLibrarySongMetadataFallback" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        <code class="doc-symbol doc-symbol-toc doc-symbol-class"></code>&nbsp;UploadedLibrarySongMetadataFallback
       
     </span>
   </a>
@@ -4726,7 +4704,7 @@ resolved for <code>?include=catalog</code>.</p>
   </span>
 
 <a href="#musickit_api_mock.UploadedLibrarySong" class="headerlink" title="Permanent link">&para;</a></h2>
-<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">UploadedLibrarySong</span><span class="p">(</span><span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">artist_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">artwork</span><span class="p">:</span> <span class="n">Artwork</span><span class="p">,</span> <span class="n">duration_ms</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">genre_names</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">has_lyrics</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span> <span class="n">audio</span><span class="p">:</span> <span class="nb">bytes</span><span class="p">,</span> <span class="n">album_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">disc_number</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">track_number</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">album_ids</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">artist_ids</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span>
+<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">UploadedLibrarySong</span><span class="p">(</span><span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">artist_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span> <span class="n">artwork</span><span class="p">:</span> <span class="n">Artwork</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span> <span class="n">duration_ms</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">genre_names</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">has_lyrics</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span> <span class="n">audio</span><span class="p">:</span> <span class="nb">bytes</span><span class="p">,</span> <span class="n">disc_number</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">track_number</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">album_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">album_ids</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">artist_ids</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span>
 </span></code></pre></div>
 
     <div class="doc doc-contents first">
@@ -4735,7 +4713,9 @@ resolved for <code>?include=catalog</code>.</p>
 
         <p>User-library song uploaded by the user, with no catalog counterpart.</p>
 <p>Playback serves the song's own audio. The <code>from_file</code> constructor
-sources the audio and metadata from an audio file on disk.</p>
+sources the audio and metadata from an audio file on disk the way a
+Music.app import does; assign to the fields afterwards to model edits
+made in Music.app.</p>
 
 
 <p><span class="doc-section-title">Attributes:</span></p>
@@ -4762,11 +4742,12 @@ sources the audio and metadata from an audio file on disk.</p>
           <tr class="doc-section-item">
             <td><code><span title="musickit_api_mock.UploadedLibrarySong.artist_name">artist_name</span></code></td>
             <td>
-                  <code><span title="str">str</span></code>
+                  <code><span title="str">str</span> | None</code>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>Display name of the primary artist.</p>
+                <p>Display name of the primary artist. <code>None</code> when the
+song has no artist; Apple then omits the attribute.</p>
               </div>
             </td>
           </tr>
@@ -4778,11 +4759,12 @@ sources the audio and metadata from an audio file on disk.</p>
 
   
       dataclass
-   (musickit_api_mock.data.primitives.artwork.Artwork)" href="#musickit_api_mock.Artwork">Artwork</a></code>
+   (musickit_api_mock.data.primitives.artwork.Artwork)" href="#musickit_api_mock.Artwork">Artwork</a> | None</code>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>Cover artwork.</p>
+                <p>Cover artwork. <code>None</code> when the song has no artwork;
+Apple then omits the attribute.</p>
               </div>
             </td>
           </tr>
@@ -4831,35 +4813,36 @@ sources the audio and metadata from an audio file on disk.</p>
             </td>
           </tr>
           <tr class="doc-section-item">
-            <td><code><span title="musickit_api_mock.UploadedLibrarySong.album_name">album_name</span></code></td>
-            <td>
-                  <code><span title="str">str</span> | None</code>
-            </td>
-            <td>
-              <div class="doc-md-description">
-                <p>Display name of the album the song belongs to.</p>
-              </div>
-            </td>
-          </tr>
-          <tr class="doc-section-item">
             <td><code><span title="musickit_api_mock.UploadedLibrarySong.disc_number">disc_number</span></code></td>
             <td>
-                  <code><span title="int">int</span> | None</code>
+                  <code><span title="int">int</span></code>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>Disc number when part of a multi-disc album.</p>
+                <p>Disc number, <code>0</code> when unset.</p>
               </div>
             </td>
           </tr>
           <tr class="doc-section-item">
             <td><code><span title="musickit_api_mock.UploadedLibrarySong.track_number">track_number</span></code></td>
             <td>
-                  <code><span title="int">int</span> | None</code>
+                  <code><span title="int">int</span></code>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>Track number within the album.</p>
+                <p>Track number, <code>0</code> when unset.</p>
+              </div>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code><span title="musickit_api_mock.UploadedLibrarySong.album_name">album_name</span></code></td>
+            <td>
+                  <code><span title="str">str</span> | None</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Display name of the album the song belongs to. <code>None</code>
+when the song has no album; Apple then omits the attribute.</p>
               </div>
             </td>
           </tr>
@@ -4921,15 +4904,32 @@ sources the audio and metadata from an audio file on disk.</p>
   </span>
 
 <a href="#musickit_api_mock.UploadedLibrarySong.from_file" class="headerlink" title="Permanent link">&para;</a></h3>
-<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">from_file</span><span class="p">(</span><span class="n">audio_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">fallback</span><span class="p">:</span> <span class="n">UploadedLibrarySongMetadataFallback</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">UploadedLibrarySong</span>
+<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">from_file</span><span class="p">(</span><span class="n">audio_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">UploadedLibrarySong</span>
 </span></code></pre></div>
 
     <div class="doc doc-contents ">
 
         <p>Build an uploaded library song from an audio file.</p>
-<p>Reads tags, duration, and embedded artwork from the file and
-transcodes the audio to AAC in an M4A container, as Apple does for
-uploads. Fields the file does not supply come from <code>fallback</code>.</p>
+<p>Reads the file the way a Music.app import does and transcodes the
+audio to AAC in an M4A container, as Apple does for uploads. No tag
+is required; an empty tag counts as absent.</p>
+<ul>
+<li><code>name</code>: the title tag, or the file name without its last
+  extension when the tag is absent.</li>
+<li><code>artist_name</code> / <code>album_name</code>: the artist / album tag, or
+  <code>None</code> when absent.</li>
+<li><code>genre_names</code>: the genre tag as a single element, verbatim, or
+  <code>[""]</code> when absent.</li>
+<li><code>track_number</code> / <code>disc_number</code>: the tag parsed like C's
+  <code>strtol</code> (leading ASCII whitespace, an optional sign, then ASCII
+  digits up to the first other character, so <code>"3/12"</code> gives
+  <code>3</code>), reduced modulo 65536; <code>0</code> when the tag is absent, has
+  no leading integer, or exceeds 32767 after reduction.</li>
+<li><code>artwork</code>: the first embedded picture as a data URL, reported
+  as 1200 by 1200 regardless of the picture's size, or <code>None</code> when
+  the file has none.</li>
+<li><code>has_lyrics</code>: always <code>False</code>.</li>
+</ul>
 
 
 <p><span class="doc-section-title">Parameters:</span></p>
@@ -4959,27 +4959,6 @@ uploads. Fields the file does not supply come from <code>fallback</code>.</p>
                 <em>required</em>
             </td>
           </tr>
-          <tr class="doc-section-item">
-            <td>
-                <code>fallback</code>
-            </td>
-            <td>
-                  <code><a class="autorefs autorefs-internal" title="            UploadedLibrarySongMetadataFallback
-
-
-  
-      dataclass
-   (musickit_api_mock.data.library_song.UploadedLibrarySongMetadataFallback)" href="#musickit_api_mock.UploadedLibrarySongMetadataFallback">UploadedLibrarySongMetadataFallback</a> | None</code>
-            </td>
-            <td>
-              <div class="doc-md-description">
-                <p>Metadata defaults for fields the file's tags lack.</p>
-              </div>
-            </td>
-            <td>
-                  <code>None</code>
-            </td>
-          </tr>
       </tbody>
     </table>
 
@@ -5005,30 +4984,6 @@ uploads. Fields the file does not supply come from <code>fallback</code>.</p>
             <td>
               <div class="doc-md-description">
                 <p>The uploaded library song.</p>
-              </div>
-            </td>
-          </tr>
-      </tbody>
-    </table>
-
-
-<p><span class="doc-section-title">Raises:</span></p>
-    <table>
-      <thead>
-        <tr>
-          <th>Type</th>
-          <th>Description</th>
-        </tr>
-      </thead>
-      <tbody>
-          <tr class="doc-section-item">
-            <td>
-                  <code><span title="ValueError">ValueError</span></code>
-            </td>
-            <td>
-              <div class="doc-md-description">
-                <p>A required field is missing from both the file's
-tags and <code>fallback</code>.</p>
               </div>
             </td>
           </tr>
@@ -7737,168 +7692,6 @@ loader raises if the tag is also missing.</p>
             <td>
               <div class="doc-md-description">
                 <p>Landing-page URL fallback.</p>
-              </div>
-            </td>
-          </tr>
-      </tbody>
-    </table>
-
-
-
-
-
-
-
-
-
-
-
-<div class="doc doc-children">
-
-
-
-
-
-
-
-
-
-
-
-
-  </div>
-
-    </div>
-
-</div>
-
-<div class="doc doc-object doc-class">
-
-
-
-<h2 id="musickit_api_mock.UploadedLibrarySongMetadataFallback" class="doc doc-heading">
-<code class="doc-symbol doc-symbol-heading doc-symbol-class"></code>            <span class="doc doc-object-name doc-class-name">UploadedLibrarySongMetadataFallback</span>
-
-
-  <span class="doc doc-labels">
-      <small class="doc doc-label doc-label-dataclass"><code>dataclass</code></small>
-  </span>
-
-<a href="#musickit_api_mock.UploadedLibrarySongMetadataFallback" class="headerlink" title="Permanent link">&para;</a></h2>
-<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">UploadedLibrarySongMetadataFallback</span><span class="p">(</span><span class="n">name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">artist_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">artwork</span><span class="p">:</span> <span class="n">Artwork</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">genre_names</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">has_lyrics</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">album_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">disc_number</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">track_number</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span>
-</span></code></pre></div>
-
-    <div class="doc doc-contents first">
-
-
-
-        <p>Metadata defaults applied when an uploaded file's tags are missing fields.</p>
-<p>Each field corresponds to the same-named attribute on the uploaded
-library song dataclass and is used only when the source file's tags do
-not supply the value. Fields left unset (<code>None</code>) provide no fallback
-and the loader raises if the tag is also missing.</p>
-
-
-<p><span class="doc-section-title">Attributes:</span></p>
-    <table>
-      <thead>
-        <tr>
-          <th>Name</th>
-          <th>Type</th>
-          <th>Description</th>
-        </tr>
-      </thead>
-      <tbody>
-          <tr class="doc-section-item">
-            <td><code><span title="musickit_api_mock.UploadedLibrarySongMetadataFallback.name">name</span></code></td>
-            <td>
-                  <code><span title="str">str</span> | None</code>
-            </td>
-            <td>
-              <div class="doc-md-description">
-                <p>Display-title fallback.</p>
-              </div>
-            </td>
-          </tr>
-          <tr class="doc-section-item">
-            <td><code><span title="musickit_api_mock.UploadedLibrarySongMetadataFallback.artist_name">artist_name</span></code></td>
-            <td>
-                  <code><span title="str">str</span> | None</code>
-            </td>
-            <td>
-              <div class="doc-md-description">
-                <p>Primary-artist fallback.</p>
-              </div>
-            </td>
-          </tr>
-          <tr class="doc-section-item">
-            <td><code><span title="musickit_api_mock.UploadedLibrarySongMetadataFallback.artwork">artwork</span></code></td>
-            <td>
-                  <code><a class="autorefs autorefs-internal" title="            Artwork
-
-
-  
-      dataclass
-   (musickit_api_mock.data.primitives.artwork.Artwork)" href="#musickit_api_mock.Artwork">Artwork</a> | None</code>
-            </td>
-            <td>
-              <div class="doc-md-description">
-                <p>Cover-artwork fallback.</p>
-              </div>
-            </td>
-          </tr>
-          <tr class="doc-section-item">
-            <td><code><span title="musickit_api_mock.UploadedLibrarySongMetadataFallback.genre_names">genre_names</span></code></td>
-            <td>
-                  <code><span title="list">list</span>[<span title="str">str</span>] | None</code>
-            </td>
-            <td>
-              <div class="doc-md-description">
-                <p>Genres fallback.</p>
-              </div>
-            </td>
-          </tr>
-          <tr class="doc-section-item">
-            <td><code><span title="musickit_api_mock.UploadedLibrarySongMetadataFallback.has_lyrics">has_lyrics</span></code></td>
-            <td>
-                  <code><span title="bool">bool</span> | None</code>
-            </td>
-            <td>
-              <div class="doc-md-description">
-                <p>Lyrics-availability fallback.</p>
-              </div>
-            </td>
-          </tr>
-          <tr class="doc-section-item">
-            <td><code><span title="musickit_api_mock.UploadedLibrarySongMetadataFallback.album_name">album_name</span></code></td>
-            <td>
-                  <code><span title="str">str</span> | None</code>
-            </td>
-            <td>
-              <div class="doc-md-description">
-                <p>Album-name fallback.</p>
-              </div>
-            </td>
-          </tr>
-          <tr class="doc-section-item">
-            <td><code><span title="musickit_api_mock.UploadedLibrarySongMetadataFallback.disc_number">disc_number</span></code></td>
-            <td>
-                  <code><span title="int">int</span> | None</code>
-            </td>
-            <td>
-              <div class="doc-md-description">
-                <p>Disc-number fallback.</p>
-              </div>
-            </td>
-          </tr>
-          <tr class="doc-section-item">
-            <td><code><span title="musickit_api_mock.UploadedLibrarySongMetadataFallback.track_number">track_number</span></code></td>
-            <td>
-                  <code><span title="int">int</span> | None</code>
-            </td>
-            <td>
-              <div class="doc-md-description">
-                <p>Track-number fallback.</p>
               </div>
             </td>
           </tr>
