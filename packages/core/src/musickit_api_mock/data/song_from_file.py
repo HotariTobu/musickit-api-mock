@@ -484,6 +484,12 @@ def _song_from_file(
 _UPLOADED_ARTWORK_SIZE = 1200
 _UPLOADED_NUMBER_MODULUS = 65536
 _UPLOADED_NUMBER_MAX = 32767
+_STRTOL_RE = re.compile(r"\s*([+-]?[0-9]+)")
+
+
+def _strtol(text: str) -> int:
+    m = _STRTOL_RE.match(text)
+    return int(m.group(1)) if m else 0
 
 
 def _uploaded_text(meta: dict[str, str], key: str) -> str | None:
@@ -494,11 +500,7 @@ def _uploaded_text(meta: dict[str, str], key: str) -> str | None:
 def _uploaded_number(raw: str | None) -> int:
     if raw is None:
         return 0
-    try:
-        value = int(raw.split("/")[0].strip())
-    except ValueError:
-        return 0
-    value %= _UPLOADED_NUMBER_MODULUS
+    value = _strtol(raw) % _UPLOADED_NUMBER_MODULUS
     return value if value <= _UPLOADED_NUMBER_MAX else 0
 
 

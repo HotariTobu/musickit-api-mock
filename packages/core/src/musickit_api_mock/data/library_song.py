@@ -106,9 +106,11 @@ class UploadedLibrarySong:
           ``None`` when absent.
         - ``genre_names``: the genre tag as a single element, verbatim, or
           ``[""]`` when absent.
-        - ``track_number`` / ``disc_number``: the leading integer of the
-          tag (``"3/12"`` gives ``3``), reduced modulo 65536; ``0`` when the
-          tag is absent, not an integer, or exceeds 32767 after reduction.
+        - ``track_number`` / ``disc_number``: the tag parsed like C's
+          ``strtol`` (leading whitespace, an optional sign, then ASCII
+          digits up to the first other character, so ``"3/12"`` gives
+          ``3``), reduced modulo 65536; ``0`` when the tag is absent, has
+          no leading integer, or exceeds 32767 after reduction.
         - ``artwork``: the first embedded picture as a data URL, reported
           as 1200 by 1200 regardless of the picture's size, or ``None`` when
           the file has none.
