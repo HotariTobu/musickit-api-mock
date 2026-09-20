@@ -484,7 +484,7 @@ def _song_from_file(
 _UPLOADED_ARTWORK_SIZE = 1200
 _UPLOADED_NUMBER_MODULUS = 65536
 _UPLOADED_NUMBER_MAX = 32767
-_STRTOL_RE = re.compile(r"\s*([+-]?[0-9]+)")
+_STRTOL_RE = re.compile(r"[ \t\n\v\f\r]*([+-]?[0-9]+)")
 
 
 def _strtol(text: str) -> int:

@@ -107,7 +107,7 @@ class UploadedLibrarySong:
         - ``genre_names``: the genre tag as a single element, verbatim, or
           ``[""]`` when absent.
         - ``track_number`` / ``disc_number``: the tag parsed like C's
-          ``strtol`` (leading whitespace, an optional sign, then ASCII
+          ``strtol`` (leading ASCII whitespace, an optional sign, then ASCII
           digits up to the first other character, so ``"3/12"`` gives
           ``3``), reduced modulo 65536; ``0`` when the tag is absent, has
           no leading integer, or exceeds 32767 after reduction.
