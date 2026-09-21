@@ -46,26 +46,7 @@ def _parse_int_field(raw: str | None) -> int | None:
         return None
 
 
-def _meta_genres(meta: dict[str, str]) -> list[str] | None:
-    raw = _meta_get(meta, "genre", "GENRE")
-    if raw is None:
-        return None
-    return [s.strip() for s in raw.split(",") if s.strip()]
-
-
-_RELEASE_DATE_KEYS = ("TDOR", "ORIGINALDATE", "date", "DATE")
-_RELEASE_DATE_RE = re.compile(r"\d{4}-\d{2}-\d{2}")
-
-
-def _meta_release_date(meta: dict[str, str]) -> str | None:
-    for key in _RELEASE_DATE_KEYS:
-        value = meta.get(key)
-        if value is not None and _RELEASE_DATE_RE.fullmatch(value):
-            return value
-    return None
-
-
-_STR_FILE_FIELDS: dict[str, tuple[str, ...]] = {
+_STR_TAG_KEYS: dict[str, tuple[str, ...]] = {
     "title": ("title",),
     "artist": ("artist",),
     "album": ("album",),
@@ -73,10 +54,36 @@ _STR_FILE_FIELDS: dict[str, tuple[str, ...]] = {
     "isrc": ("ISRC", "isrc"),
 }
 
-_INT_FILE_FIELDS: dict[str, tuple[str, ...]] = {
+_INT_TAG_KEYS: dict[str, tuple[str, ...]] = {
     "track_number": ("track",),
     "disc_number": ("disc",),
 }
+
+_RELEASE_DATE_KEYS = ("TDOR", "ORIGINALDATE", "date", "DATE")
+_RELEASE_DATE_RE = re.compile(r"\d{4}-\d{2}-\d{2}")
+
+
+def _tag_str(meta: dict[str, str], field: str) -> str | None:
+    return _meta_get(meta, *_STR_TAG_KEYS[field])
+
+
+def _tag_int(meta: dict[str, str], field: str) -> int | None:
+    return _parse_int_field(_meta_get(meta, *_INT_TAG_KEYS[field]))
+
+
+def _tag_genres(meta: dict[str, str]) -> list[str] | None:
+    raw = _meta_get(meta, "genre", "GENRE")
+    if raw is None:
+        return None
+    return [s.strip() for s in raw.split(",") if s.strip()]
+
+
+def _tag_release_date(meta: dict[str, str]) -> str | None:
+    for key in _RELEASE_DATE_KEYS:
+        value = meta.get(key)
+        if value is not None and _RELEASE_DATE_RE.fullmatch(value):
+            return value
+    return None
 
 
 def _missing(field: str) -> ValueError:
@@ -93,37 +100,16 @@ def _wrong_type(field: str, expected: str, actual: object) -> TypeError:
 
 
 @overload
-def _pick_str(
-    meta: dict[str, str],
-    fallback: SongMetadataFallback,
-    field: str,
-    *,
-    required: Literal[True],
+def _fallback_str(
+    fallback: SongMetadataFallback, field: str, *, required: Literal[True]
 ) -> str: ...
 @overload
-def _pick_str(
-    meta: dict[str, str],
-    fallback: SongMetadataFallback,
-    field: str,
-    *,
-    required: Literal[False],
+def _fallback_str(
+    fallback: SongMetadataFallback, field: str, *, required: Literal[False]
 ) -> str | None: ...
-def _pick_str(
-    meta: dict[str, str],
-    fallback: SongMetadataFallback,
-    field: str,
-    *,
-    required: bool,
+def _fallback_str(
+    fallback: SongMetadataFallback, field: str, *, required: bool
 ) -> str | None:
-    if field == "release_date":
-        v = _meta_release_date(meta)
-        if v is not None:
-            return v
-    keys = _STR_FILE_FIELDS.get(field)
-    if keys is not None:
-        v = _meta_get(meta, *keys)
-        if v is not None:
-            return v
     fb_val: object = getattr(fallback, field)
     if isinstance(fb_val, str):
         return fb_val
@@ -135,33 +121,16 @@ def _pick_str(
 
 
 @overload
-def _pick_int(
-    meta: dict[str, str],
-    fallback: SongMetadataFallback,
-    field: str,
-    *,
-    required: Literal[True],
+def _fallback_int(
+    fallback: SongMetadataFallback, field: str, *, required: Literal[True]
 ) -> int: ...
 @overload
-def _pick_int(
-    meta: dict[str, str],
-    fallback: SongMetadataFallback,
-    field: str,
-    *,
-    required: Literal[False],
+def _fallback_int(
+    fallback: SongMetadataFallback, field: str, *, required: Literal[False]
 ) -> int | None: ...
-def _pick_int(
-    meta: dict[str, str],
-    fallback: SongMetadataFallback,
-    field: str,
-    *,
-    required: bool,
+def _fallback_int(
+    fallback: SongMetadataFallback, field: str, *, required: bool
 ) -> int | None:
-    keys = _INT_FILE_FIELDS.get(field)
-    if keys is not None:
-        v = _parse_int_field(_meta_get(meta, *keys))
-        if v is not None:
-            return v
     fb_val: object = getattr(fallback, field)
     if isinstance(fb_val, bool):
         raise _wrong_type(field, "int", fb_val)
@@ -175,32 +144,16 @@ def _pick_int(
 
 
 @overload
-def _pick_list_str(
-    meta: dict[str, str],
-    fallback: SongMetadataFallback,
-    field: str,
-    *,
-    required: Literal[True],
+def _fallback_list_str(
+    fallback: SongMetadataFallback, field: str, *, required: Literal[True]
 ) -> list[str]: ...
 @overload
-def _pick_list_str(
-    meta: dict[str, str],
-    fallback: SongMetadataFallback,
-    field: str,
-    *,
-    required: Literal[False],
+def _fallback_list_str(
+    fallback: SongMetadataFallback, field: str, *, required: Literal[False]
 ) -> list[str] | None: ...
-def _pick_list_str(
-    meta: dict[str, str],
-    fallback: SongMetadataFallback,
-    field: str,
-    *,
-    required: bool,
+def _fallback_list_str(
+    fallback: SongMetadataFallback, field: str, *, required: bool
 ) -> list[str] | None:
-    if field == "genres":
-        v = _meta_genres(meta)
-        if v is not None:
-            return v
     fb_val: object = getattr(fallback, field)
     if isinstance(fb_val, list):
         if all(isinstance(x, str) for x in fb_val):
@@ -213,10 +166,24 @@ def _pick_list_str(
     raise _wrong_type(field, "list[str]", fb_val)
 
 
-def _pick_bool(fallback: SongMetadataFallback, field: str) -> bool | None:
+@overload
+def _fallback_bool(
+    fallback: SongMetadataFallback, field: str, *, required: Literal[True]
+) -> bool: ...
+@overload
+def _fallback_bool(
+    fallback: SongMetadataFallback, field: str, *, required: Literal[False]
+) -> bool | None: ...
+def _fallback_bool(
+    fallback: SongMetadataFallback, field: str, *, required: bool
+) -> bool | None:
     fb_val: object = getattr(fallback, field)
-    if isinstance(fb_val, bool) or fb_val is None:
+    if isinstance(fb_val, bool):
         return fb_val
+    if fb_val is None:
+        if required:
+            raise _missing(field)
+        return None
     raise _wrong_type(field, "bool", fb_val)
 
 
@@ -464,21 +431,51 @@ def _song_from_file(
             "CatalogSong.from_file: missing artwork. Provide via SongMetadataFallback.artwork."
         )
 
+    title = _tag_str(meta, "title")
+    if title is None:
+        title = _fallback_str(f, "title", required=True)
+    artist = _tag_str(meta, "artist")
+    if artist is None:
+        artist = _fallback_str(f, "artist", required=True)
+    album = _tag_str(meta, "album")
+    if album is None:
+        album = _fallback_str(f, "album", required=True)
+    genres = _tag_genres(meta)
+    if genres is None:
+        genres = _fallback_list_str(f, "genres", required=True)
+    release_date = _tag_release_date(meta)
+    if release_date is None:
+        release_date = _fallback_str(f, "release_date", required=True)
+    track_number = _tag_int(meta, "track_number")
+    if track_number is None:
+        track_number = _fallback_int(f, "track_number", required=True)
+    disc_number = _tag_int(meta, "disc_number")
+    if disc_number is None:
+        disc_number = _fallback_int(f, "disc_number", required=True)
+    isrc = _tag_str(meta, "isrc")
+    if isrc is None:
+        isrc = _fallback_str(f, "isrc", required=True)
+    composer = _tag_str(meta, "composer")
+    if composer is None:
+        composer = _fallback_str(f, "composer", required=False)
+
     return cls(
-        title=_pick_str(meta, f, "title", required=True),
-        artist=_pick_str(meta, f, "artist", required=True),
-        album=_pick_str(meta, f, "album", required=True),
+        title=title,
+        artist=artist,
+        album=album,
         artwork=artwork,
-        genres=_pick_list_str(meta, f, "genres", required=True),
-        release_date=_pick_str(meta, f, "release_date", required=True),
-        track_number=_pick_int(meta, f, "track_number", required=True),
-        disc_number=_pick_int(meta, f, "disc_number", required=True),
-        composer=_pick_str(meta, f, "composer", required=False),
-        has_lyrics=_pick_bool(f, "has_lyrics"),
-        isrc=_pick_str(meta, f, "isrc", required=False),
-        content_rating=_pick_str(meta, f, "content_rating", required=False),
-        is_apple_digital_master=_pick_bool(f, "is_apple_digital_master"),
-        url=_pick_str(meta, f, "url", required=False),
+        genres=genres,
+        release_date=release_date,
+        track_number=track_number,
+        disc_number=disc_number,
+        isrc=isrc,
+        composer=composer,
+        content_rating=_fallback_str(f, "content_rating", required=False),
+        has_lyrics=_fallback_bool(f, "has_lyrics", required=False),
+        is_apple_digital_master=_fallback_bool(
+            f, "is_apple_digital_master", required=False
+        ),
+        url=_fallback_str(f, "url", required=False),
         duration_ms=duration_ms,
         bitrate=bitrate_kbps,
         sample_rate=sample_rate,

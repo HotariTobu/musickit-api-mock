@@ -120,6 +120,7 @@ def make_audio(tmp_path: Path) -> AudioFactory:
 def _full_fallback(artwork: Artwork) -> SongMetadataFallback:
     return SongMetadataFallback(
         artwork=artwork,
+        isrc="USABC1234567",
         has_lyrics=True,
         is_apple_digital_master=False,
         url="https://music.apple.com/us/song/x",
@@ -201,6 +202,7 @@ def test_falls_back_when_file_has_no_metadata(
         title="FB Title",
         artist="FB Artist",
         album="FB Album",
+        isrc="USABC1234567",
         artwork=artwork_library,
         genres=["Pop"],
         release_date="2020-01-01",
@@ -349,6 +351,7 @@ def test_bool_fields_from_fallback(
     )
     fb = SongMetadataFallback(
         artwork=artwork_library,
+        isrc="USABC1234567",
         has_lyrics=True,
         is_apple_digital_master=True,
         url="https://example.com/x",
