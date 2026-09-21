@@ -133,8 +133,18 @@ def test_authorize_response_endpoint_evaluates_callable_per_call() -> None:
     m.browser.authorize_response = make_response
     first = _get_authorize_response(m)
     second = _get_authorize_response(m)
-    assert first["user_token"] == "ut-1"
-    assert second["user_token"] == "ut-2"
+    assert first == {
+        "kind": "AuthorizeSuccess",
+        "user_token": "ut-1",
+        "cid": "cid",
+        "restricted": 0,
+    }
+    assert second == {
+        "kind": "AuthorizeSuccess",
+        "user_token": "ut-2",
+        "cid": "cid",
+        "restricted": 0,
+    }
 
 
 @pytest.mark.parametrize(

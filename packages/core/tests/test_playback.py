@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import json
-from typing import TYPE_CHECKING, cast
 
 from musickit_api_mock import (
     Artwork,
@@ -31,8 +30,20 @@ from musickit_api_mock import (
     WebPlaybackUploadedLibrarySong,
 )
 
-if TYPE_CHECKING:
-    from tests._apple_response import WebPlaybackResponseBody
+from tests._expected import ERROR_ID
+
+_CATALOG_SONG_ENTRY = {
+    "songId": "1",
+    "hls-key-cert-url": "https://s.mzstatic.com/skdtool_2021_certbundle.bin",
+    "hls-key-server-url": "https://play.itunes.apple.com/WebObjects/MZPlay.woa/wa/acquireWebPlaybackLicense",
+    "widevine-cert-url": "https://play.itunes.apple.com/WebObjects/MZPlay.woa/wa/widevineCert",
+    "assets": [
+        {
+            "flavor": "28:cbcp32",
+            "URL": "https://aod-ssl.itunes.apple.com/itunes-assets/1/index.m3u8",
+        }
+    ],
+}
 
 
 def test_p02_web_playback(mock: MusicKitApiMock) -> None:
@@ -63,9 +74,7 @@ def test_p02_web_playback(mock: MusicKitApiMock) -> None:
     )
     assert resp is not None
     assert resp.status == 200
-    parsed = json.loads(resp.body)
-    assert parsed["status"] == 0
-    assert parsed["songList"][0]["songId"] == "1"
+    assert json.loads(resp.body) == {"songList": [_CATALOG_SONG_ENTRY], "status": 0}
 
 
 def test_p03_play_assets_catalog_song(mock: MusicKitApiMock) -> None:
@@ -89,9 +98,18 @@ def test_p03_play_assets_catalog_song(mock: MusicKitApiMock) -> None:
     )
     assert resp is not None
     assert resp.status == 200
-    parsed = json.loads(resp.body)
-    assert "assets" in parsed["results"]
-    assert parsed["results"]["assets"][0]["url"].startswith("https://aod-ssl")
+    assert json.loads(resp.body) == {
+        "results": {
+            "assets": [
+                {
+                    "url": "https://aod-ssl.itunes.apple.com/itunes-assets/1/index.m3u8",
+                    "fairPlayKeyCertificateUrl": "https://s.mzstatic.com/skdtool_2021_certbundle.bin",
+                    "keyServerUrl": "https://play.itunes.apple.com/WebObjects/MZPlay.woa/wa/acquireWebPlaybackLicense",
+                    "widevineKeyCertificateUrl": "https://play.itunes.apple.com/WebObjects/MZPlay.woa/wa/widevineCert",
+                }
+            ]
+        }
+    }
 
 
 def test_p03_play_assets_live_audio_dispatch(mock: MusicKitApiMock) -> None:
@@ -115,22 +133,38 @@ def test_p03_play_assets_live_audio_dispatch(mock: MusicKitApiMock) -> None:
     )
     assert resp is not None
     assert resp.status == 200
+    assert json.loads(resp.body) == {
+        "results": {
+            "assets": [
+                {
+                    "url": "https://itsliveradio.apple.com/gl/ra.978194965/index-cmaf.m3u8",
+                    "fairPlayKeyCertificateUrl": "https://s.mzstatic.com/skdtool_2021_certbundle.bin",
+                    "keyServerUrl": "https://linear.tv.apple.com/v1/radio/streaming-key-delivery",
+                    "widevineKeyCertificateUrl": "https://play.itunes.apple.com/WebObjects/MZPlay.woa/wa/widevineCert",
+                }
+            ]
+        }
+    }
 
 
-def test_p03_play_assets_live_video_dispatch(mock: MusicKitApiMock) -> None:
-    stations = cast("dict[str, Station]", mock.data.stations)
-    stations["ra.live_video"] = Station(
-        name="Live Video",
-        artwork=stations["ra.978194965"].artwork,
-        is_live=True,
-        media_kind="video",
-        url="https://example.com/x",
-        is_tracks_station=False,
-        has_drm=True,
-        kind="radio",
-        radio_url="https://example.com/x",
-        requires_subscription=True,
-    )
+def test_p03_play_assets_live_video_dispatch(
+    mock: MusicKitApiMock, station: Station
+) -> None:
+    mock.data.stations = {
+        "ra.978194965": station,
+        "ra.live_video": Station(
+            name="Live Video",
+            artwork=station.artwork,
+            is_live=True,
+            media_kind="video",
+            url="https://example.com/x",
+            is_tracks_station=False,
+            has_drm=True,
+            kind="radio",
+            radio_url="https://example.com/x",
+            requires_subscription=True,
+        ),
+    }
     mock.endpoints.play_assets_live_video = PlayAssetsLiveVideoResponseSuccess(
         assets=[
             PlayAssetsLiveVideoAsset(
@@ -151,22 +185,38 @@ def test_p03_play_assets_live_video_dispatch(mock: MusicKitApiMock) -> None:
     )
     assert resp is not None
     assert resp.status == 200
+    assert json.loads(resp.body) == {
+        "results": {
+            "assets": [
+                {
+                    "url": "https://events.applemusic.com/fps/x/platform.m3u8",
+                    "fairPlayKeyCertificateUrl": "https://s.mzstatic.com/skdtool_2021_certbundle.bin",
+                    "keyServerUrl": "https://linear.tv.apple.com/v1/radio/streaming-key-delivery",
+                    "widevineKeyCertificateUrl": "https://play.itunes.apple.com/WebObjects/MZPlay.woa/wa/widevineCert",
+                }
+            ]
+        }
+    }
 
 
-def test_p03_play_assets_broadcast_dispatch(mock: MusicKitApiMock) -> None:
-    stations = cast("dict[str, Station]", mock.data.stations)
-    stations["ra.bbc"] = Station(
-        name="BBC",
-        artwork=stations["ra.978194965"].artwork,
-        is_live=True,
-        media_kind="audio",
-        url="https://example.com/bbc",
-        is_tracks_station=False,
-        has_drm=False,
-        kind="radio",
-        radio_url="https://example.com/bbc",
-        requires_subscription=False,
-    )
+def test_p03_play_assets_broadcast_dispatch(
+    mock: MusicKitApiMock, station: Station
+) -> None:
+    mock.data.stations = {
+        "ra.978194965": station,
+        "ra.bbc": Station(
+            name="BBC",
+            artwork=station.artwork,
+            is_live=True,
+            media_kind="audio",
+            url="https://example.com/bbc",
+            is_tracks_station=False,
+            has_drm=False,
+            kind="radio",
+            radio_url="https://example.com/bbc",
+            requires_subscription=False,
+        ),
+    }
     mock.endpoints.play_assets_broadcast = PlayAssetsBroadcastResponseSuccess(
         assets=[
             PlayAssetsBroadcastAsset(
@@ -184,6 +234,9 @@ def test_p03_play_assets_broadcast_dispatch(mock: MusicKitApiMock) -> None:
     )
     assert resp is not None
     assert resp.status == 200
+    assert json.loads(resp.body) == {
+        "results": {"assets": [{"url": "https://a.files.bbci.co.uk/foo.m3u8"}]}
+    }
 
 
 def test_p03_play_assets_catalog_song_content_unavailable(
@@ -202,8 +255,7 @@ def test_p03_play_assets_catalog_song_content_unavailable(
     )
     assert resp is not None
     assert resp.status == 200
-    parsed = json.loads(resp.body)
-    assert parsed["results"]["assets"] == []
+    assert json.loads(resp.body) == {"results": {"assets": []}}
 
 
 def test_p03_play_assets_live_audio_subscription_error(mock: MusicKitApiMock) -> None:
@@ -220,8 +272,17 @@ def test_p03_play_assets_live_audio_subscription_error(mock: MusicKitApiMock) ->
     )
     assert resp is not None
     assert resp.status == 403
-    parsed = json.loads(resp.body)
-    assert parsed["errors"][0]["code"] == "40303"
+    assert json.loads(resp.body) == {
+        "errors": [
+            {
+                "id": ERROR_ID,
+                "code": "40303",
+                "title": "Forbidden",
+                "detail": "Subscription required",
+                "status": "403",
+            }
+        ]
+    }
 
 
 def test_p02_web_playback_geo_block(mock: MusicKitApiMock) -> None:
@@ -237,8 +298,7 @@ def test_p02_web_playback_geo_block(mock: MusicKitApiMock) -> None:
     )
     assert resp is not None
     assert resp.status == 200
-    parsed = json.loads(resp.body)
-    assert parsed["failureType"] == -1017
+    assert json.loads(resp.body) == {"failureType": -1017, "status": -1017}
 
 
 def test_p02_web_playback_unsupported_error(mock: MusicKitApiMock) -> None:
@@ -254,8 +314,7 @@ def test_p02_web_playback_unsupported_error(mock: MusicKitApiMock) -> None:
     )
     assert resp is not None
     assert resp.status == 200
-    parsed = json.loads(resp.body)
-    assert parsed["songList"] == []
+    assert json.loads(resp.body) == {"songList": [], "status": 0}
 
 
 def _drm_fields() -> dict[str, str]:
@@ -266,9 +325,7 @@ def _drm_fields() -> dict[str, str]:
     }
 
 
-def _web_playback(
-    mock: MusicKitApiMock, body: dict[str, str]
-) -> WebPlaybackResponseBody:
+def _web_playback(mock: MusicKitApiMock, body: dict[str, str]) -> object:
     resp = mock.handle_request(
         Request(
             method="POST",
@@ -279,7 +336,7 @@ def _web_playback(
     )
     assert resp is not None
     assert resp.status == 200
-    return cast("WebPlaybackResponseBody", json.loads(resp.body))
+    return json.loads(resp.body)
 
 
 def test_p02_web_playback_catalog_song_omits_playback_reporting(
@@ -299,9 +356,10 @@ def test_p02_web_playback_catalog_song_omits_playback_reporting(
             )
         ]
     )
-    song = _web_playback(mock, {"salableAdamId": "1"})["songList"][0]
-    assert song["songId"] == "1"
-    assert "needsPlaybackReporting" not in song
+    assert _web_playback(mock, {"salableAdamId": "1"}) == {
+        "songList": [_CATALOG_SONG_ENTRY],
+        "status": 0,
+    }
 
 
 def test_p02_web_playback_catalog_library_song_needs_playback_reporting(
@@ -321,12 +379,12 @@ def test_p02_web_playback_catalog_library_song_needs_playback_reporting(
             )
         ]
     )
-    song = _web_playback(
+    assert _web_playback(
         mock, {"subscriptionAdamId": "1", "universalLibraryId": "i.abc"}
-    )["songList"][0]
-    assert song["songId"] == "1"
-    assert song["needsPlaybackReporting"] is True
-    assert "hls-key-cert-url" in song
+    ) == {
+        "songList": [{**_CATALOG_SONG_ENTRY, "needsPlaybackReporting": True}],
+        "status": 0,
+    }
 
 
 def test_p02_web_playback_uploaded_library_song_shape(mock: MusicKitApiMock) -> None:
@@ -348,23 +406,28 @@ def test_p02_web_playback_uploaded_library_song_shape(mock: MusicKitApiMock) -> 
             )
         ]
     )
-    song = _web_playback(mock, {"universalLibraryId": "i.abc"})["songList"][0]
-    assert song["songId"] == -1
-    assert song["needsPlaybackReporting"] is False
-    assert "hls-key-cert-url" not in song
-    assert (
-        song["artworkURL"] == "https://store-001.blobstore.apple.com/bucket/i.abc/image"
-    )
-    asset = song["assets"][0]
-    assert asset["URL"] == "https://store-001.blobstore.apple.com/bucket/i.abc/audio"
-    assert "flavor" not in asset
-    assert asset["metadata"] == {
-        "itemName": "Uploaded",
-        "artistName": "Someone",
-        "playlistName": "Home Recordings",
-        "duration": 128373,
-        "kind": "song",
-        "cloud-id": 182939138,
+    assert _web_playback(mock, {"universalLibraryId": "i.abc"}) == {
+        "songList": [
+            {
+                "songId": -1,
+                "needsPlaybackReporting": False,
+                "artworkURL": "https://store-001.blobstore.apple.com/bucket/i.abc/image",
+                "assets": [
+                    {
+                        "URL": "https://store-001.blobstore.apple.com/bucket/i.abc/audio",
+                        "metadata": {
+                            "itemName": "Uploaded",
+                            "artistName": "Someone",
+                            "playlistName": "Home Recordings",
+                            "duration": 128373,
+                            "kind": "song",
+                            "cloud-id": 182939138,
+                        },
+                    }
+                ],
+            }
+        ],
+        "status": 0,
     }
 
 

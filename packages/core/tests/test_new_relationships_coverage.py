@@ -11,7 +11,6 @@ from __future__ import annotations
 
 import json
 from dataclasses import replace
-from typing import TYPE_CHECKING, cast
 
 import pytest
 from musickit_api_mock import (
@@ -35,44 +34,225 @@ from musickit_api_mock import (
     UploadedLibrarySong,
 )
 
-if TYPE_CHECKING:
-    from musickit_api_mock.json_value import _JSONValue
+from tests._expected import (
+    ALBUM,
+    ALBUM_ATTRIBUTES,
+    ALBUM_REF,
+    ARTIST_ATTRIBUTES,
+    ARTIST_REF,
+    CURATOR,
+    CURATOR_ATTRIBUTES,
+    CURATOR_REF,
+    ERROR_ID,
+    GENRE,
+    GENRE_REF,
+    GROUPING_REF,
+    LIBRARY_ALBUM,
+    LIBRARY_ARTIST,
+    LIBRARY_MUSIC_VIDEO,
+    LIBRARY_MUSIC_VIDEO_ATTRIBUTES,
+    LIBRARY_MUSIC_VIDEO_REF,
+    LIBRARY_PLAYLIST,
+    LIBRARY_PLAYLIST_ATTRIBUTES,
+    LIBRARY_PLAYLIST_REF,
+    LIBRARY_SONG,
+    LIBRARY_SONG_ATTRIBUTES,
+    LIBRARY_SONG_REF,
+    MUSIC_VIDEO,
+    MUSIC_VIDEO_ATTRIBUTES,
+    MUSIC_VIDEO_REF,
+    NON_APPLE_CURATOR_ATTRIBUTES,
+    NON_APPLE_CURATOR_REF,
+    PERSONAL_RECOMMENDATION_ATTRIBUTES,
+    PERSONAL_RECOMMENDATION_REF,
+    PLAYLIST,
+    PLAYLIST_ATTRIBUTES,
+    PLAYLIST_REF,
+    RECORD_LABEL_REF,
+    SONG,
+    SONG_ATTRIBUTES,
+    SONG_REF,
+    STATION,
+    STATION_ATTRIBUTES,
+    STATION_REF,
+)
 
-    from tests._apple_response import AppleResponse
+_SONG_DEFAULT_RELATIONSHIPS = {
+    "albums": {
+        "href": "/v1/catalog/us/songs/1/albums",
+        "data": [ALBUM_REF],
+    },
+    "artists": {
+        "href": "/v1/catalog/us/songs/1/artists",
+        "data": [ARTIST_REF],
+    },
+}
+
+_ARTIST_ALBUMS_RELATIONSHIP = {
+    "href": "/v1/catalog/us/artists/ar1/albums",
+    "data": [ALBUM_REF],
+}
+
+_MUSIC_VIDEO_DEFAULT_RELATIONSHIPS = {
+    "albums": {
+        "href": "/v1/catalog/us/music-videos/mv1/albums",
+        "data": [ALBUM_REF],
+    },
+    "artists": {
+        "href": "/v1/catalog/us/music-videos/mv1/artists",
+        "data": [ARTIST_REF],
+    },
+}
+
+_CURATOR_RELATIONSHIPS = {
+    "playlists": {
+        "href": "/v1/catalog/us/apple-curators/cu1/playlists",
+        "data": [PLAYLIST_REF],
+    },
+    "grouping": {
+        "href": "/v1/catalog/us/apple-curators/cu1/grouping",
+        "data": [GROUPING_REF],
+    },
+}
+
+_NON_APPLE_CURATOR_BODY = {
+    "data": [
+        {
+            **NON_APPLE_CURATOR_REF,
+            "attributes": NON_APPLE_CURATOR_ATTRIBUTES,
+            "relationships": {
+                "playlists": {
+                    "href": "/v1/catalog/us/curators/cu2/playlists",
+                    "data": [PLAYLIST_REF],
+                },
+            },
+        }
+    ]
+}
+
+_EMPTY_BODY = {"data": []}
+
+_NOT_FOUND_BODY = {
+    "errors": [
+        {
+            "id": ERROR_ID,
+            "title": "Not Found",
+            "status": "404",
+        }
+    ]
+}
+
+_RESOURCE_NOT_FOUND_BODY = {
+    "errors": [
+        {
+            "id": ERROR_ID,
+            "title": "Resource Not Found",
+            "detail": "Resource with requested id was not found",
+            "status": "404",
+            "code": "40400",
+        }
+    ]
+}
+
+_EMPTY_IDS_BODY = {
+    "errors": [
+        {
+            "id": ERROR_ID,
+            "title": "Invalid Parameter Value",
+            "detail": "No id(s) supplied in the 'ids' query parameter",
+            "status": "400",
+            "code": "40005",
+            "source": {"parameter": "ids"},
+        }
+    ]
+}
 
 
-def _get(mock: MusicKitApiMock, url: str) -> tuple[int, AppleResponse]:
+def _invalid_language_tag_body(tag: str) -> dict[str, object]:
+    return {
+        "errors": [
+            {
+                "id": ERROR_ID,
+                "title": "Invalid Parameter Value",
+                "detail": f"Invalid language tag '{tag}'",
+                "status": "400",
+                "code": "40005",
+                "source": {"parameter": "l"},
+            }
+        ]
+    }
+
+
+def _limit_overflow_body(cap: int, value: int) -> dict[str, object]:
+    return {
+        "errors": [
+            {
+                "id": ERROR_ID,
+                "title": "Invalid Parameter Value",
+                "detail": (
+                    f"Value must be an integer less than or equal to {cap}, "
+                    f"but was: {value}"
+                ),
+                "status": "400",
+                "code": "40005",
+                "source": {"parameter": "limit"},
+            }
+        ]
+    }
+
+
+def _stub_playlist(playlist_id: str) -> Playlist:
+    return Playlist(
+        name=playlist_id,
+        playlist_type="editorial",
+        curator_name="C",
+        has_collaboration=False,
+        is_chart=False,
+        audio_traits=[],
+        supports_sing=False,
+        url=f"https://music.apple.com/us/playlist/{playlist_id}",
+    )
+
+
+def _expected_stub_playlist(playlist_id: str) -> dict[str, object]:
+    return {
+        "id": playlist_id,
+        "type": "playlists",
+        "href": f"/v1/catalog/us/playlists/{playlist_id}",
+        "attributes": {
+            "name": playlist_id,
+            "audioTraits": [],
+            "curatorName": "C",
+            "hasCollaboration": False,
+            "isChart": False,
+            "playParams": {"id": playlist_id, "kind": "playlist"},
+            "playlistType": "editorial",
+            "supportsSing": False,
+            "url": f"https://music.apple.com/us/playlist/{playlist_id}",
+        },
+    }
+
+
+def _expected_song_clone(song_id: str) -> dict[str, object]:
+    """The fixture song stored under another id: play params and preview follow the id."""
+    return {
+        "id": song_id,
+        "type": "songs",
+        "href": f"/v1/catalog/us/songs/{song_id}",
+        "attributes": {
+            **SONG_ATTRIBUTES,
+            "playParams": {"id": song_id, "kind": "song"},
+            "previews": [
+                {"url": f"https://audio-ssl.itunes.apple.com/preview/{song_id}.m4a"}
+            ],
+        },
+    }
+
+
+def _get(mock: MusicKitApiMock, url: str) -> tuple[int, object]:
     resp = mock.handle_request(Request(method="GET", url=url, headers={}, body=None))
     assert resp is not None
     return resp.status, json.loads(resp.body)
-
-
-def _songs(mock: MusicKitApiMock) -> dict[str, CatalogSong]:
-    return cast("dict[str, CatalogSong]", mock.data.songs)
-
-
-def _albums(mock: MusicKitApiMock) -> dict[str, CatalogAlbum]:
-    return cast("dict[str, CatalogAlbum]", mock.data.albums)
-
-
-def _artists(mock: MusicKitApiMock) -> dict[str, CatalogArtist]:
-    return cast("dict[str, CatalogArtist]", mock.data.artists)
-
-
-def _music_videos(mock: MusicKitApiMock) -> dict[str, MusicVideo]:
-    return cast("dict[str, MusicVideo]", mock.data.music_videos)
-
-
-def _stations(mock: MusicKitApiMock) -> dict[str, Station]:
-    return cast("dict[str, Station]", mock.data.stations)
-
-
-def _curators(mock: MusicKitApiMock) -> dict[str, Curator]:
-    return cast("dict[str, Curator]", mock.data.curators)
-
-
-def _library_artists(mock: MusicKitApiMock) -> dict[str, LibraryArtist]:
-    return cast("dict[str, LibraryArtist]", mock.data.library_artists)
 
 
 def test_song_music_videos_standalone(mock: MusicKitApiMock) -> None:
@@ -81,8 +261,7 @@ def test_song_music_videos_standalone(mock: MusicKitApiMock) -> None:
         "https://api.music.apple.com/v1/catalog/us/songs/1/music-videos",
     )
     assert status == 200
-    assert [x["id"] for x in body["data"]] == ["mv1"]
-    assert body["data"][0]["type"] == "music-videos"
+    assert body == {"data": [MUSIC_VIDEO]}
 
 
 def test_album_genres_standalone(mock: MusicKitApiMock) -> None:
@@ -90,7 +269,7 @@ def test_album_genres_standalone(mock: MusicKitApiMock) -> None:
         mock, "https://api.music.apple.com/v1/catalog/us/albums/a1/genres"
     )
     assert status == 200
-    assert [x["id"] for x in body["data"]] == ["20"]
+    assert body == {"data": [GENRE]}
 
 
 def test_artist_genres_standalone(mock: MusicKitApiMock) -> None:
@@ -98,7 +277,7 @@ def test_artist_genres_standalone(mock: MusicKitApiMock) -> None:
         mock, "https://api.music.apple.com/v1/catalog/us/artists/ar1/genres"
     )
     assert status == 200
-    assert [x["id"] for x in body["data"]] == ["20"]
+    assert body == {"data": [GENRE]}
 
 
 def test_music_video_genres_standalone(mock: MusicKitApiMock) -> None:
@@ -107,17 +286,13 @@ def test_music_video_genres_standalone(mock: MusicKitApiMock) -> None:
         "https://api.music.apple.com/v1/catalog/us/music-videos/mv1/genres",
     )
     assert status == 200
-    assert [x["id"] for x in body["data"]] == ["20"]
+    assert body == {"data": [GENRE]}
 
 
 def test_non_apple_curator_singular(mock: MusicKitApiMock) -> None:
     status, body = _get(mock, "https://api.music.apple.com/v1/catalog/us/curators/cu2")
     assert status == 200
-    assert body["data"][0]["type"] == "curators"
-    assert body["data"][0]["id"] == "cu2"
-    rels = body["data"][0]["relationships"]
-    assert rels["playlists"]["data"][0]["id"] == "pl1"
-    assert "grouping" not in rels
+    assert body == _NON_APPLE_CURATOR_BODY
 
 
 def test_non_apple_curator_playlists_standalone(mock: MusicKitApiMock) -> None:
@@ -126,7 +301,7 @@ def test_non_apple_curator_playlists_standalone(mock: MusicKitApiMock) -> None:
         "https://api.music.apple.com/v1/catalog/us/curators/cu2/playlists",
     )
     assert status == 200
-    assert [x["id"] for x in body["data"]] == ["pl1"]
+    assert body == {"data": [PLAYLIST]}
 
 
 def test_song_inline_include_station(mock: MusicKitApiMock) -> None:
@@ -135,9 +310,21 @@ def test_song_inline_include_station(mock: MusicKitApiMock) -> None:
         "https://api.music.apple.com/v1/catalog/us/songs/1?include=station",
     )
     assert status == 200
-    rels = body["data"][0]["relationships"]
-    assert rels["station"]["data"][0]["type"] == "stations"
-    assert rels["station"]["data"][0]["id"] == "ra.978194965"
+    assert body == {
+        "data": [
+            {
+                **SONG_REF,
+                "attributes": SONG_ATTRIBUTES,
+                "relationships": {
+                    **_SONG_DEFAULT_RELATIONSHIPS,
+                    "station": {
+                        "href": "/v1/catalog/us/songs/1/station",
+                        "data": [STATION],
+                    },
+                },
+            }
+        ]
+    }
 
 
 def test_song_inline_include_music_videos(mock: MusicKitApiMock) -> None:
@@ -146,8 +333,21 @@ def test_song_inline_include_music_videos(mock: MusicKitApiMock) -> None:
         "https://api.music.apple.com/v1/catalog/us/songs/1?include=music-videos",
     )
     assert status == 200
-    rels = body["data"][0]["relationships"]
-    assert rels["music-videos"]["data"][0]["id"] == "mv1"
+    assert body == {
+        "data": [
+            {
+                **SONG_REF,
+                "attributes": SONG_ATTRIBUTES,
+                "relationships": {
+                    **_SONG_DEFAULT_RELATIONSHIPS,
+                    "music-videos": {
+                        "href": "/v1/catalog/us/songs/1/music-videos",
+                        "data": [MUSIC_VIDEO],
+                    },
+                },
+            }
+        ]
+    }
 
 
 def test_album_inline_include_genres(mock: MusicKitApiMock) -> None:
@@ -156,8 +356,28 @@ def test_album_inline_include_genres(mock: MusicKitApiMock) -> None:
         "https://api.music.apple.com/v1/catalog/us/albums?ids=a1&include=genres",
     )
     assert status == 200
-    rels = body["data"][0]["relationships"]
-    assert rels["genres"]["data"][0]["id"] == "20"
+    assert body == {
+        "data": [
+            {
+                **ALBUM_REF,
+                "attributes": ALBUM_ATTRIBUTES,
+                "relationships": {
+                    "tracks": {
+                        "href": "/v1/catalog/us/albums/a1/tracks",
+                        "data": [SONG],
+                    },
+                    "artists": {
+                        "href": "/v1/catalog/us/albums/a1/artists",
+                        "data": [ARTIST_REF],
+                    },
+                    "genres": {
+                        "href": "/v1/catalog/us/albums/a1/genres",
+                        "data": [GENRE],
+                    },
+                },
+            }
+        ]
+    }
 
 
 def test_artist_inline_include_genres(mock: MusicKitApiMock) -> None:
@@ -166,8 +386,21 @@ def test_artist_inline_include_genres(mock: MusicKitApiMock) -> None:
         "https://api.music.apple.com/v1/catalog/us/artists?ids=ar1&include=genres",
     )
     assert status == 200
-    rels = body["data"][0]["relationships"]
-    assert rels["genres"]["data"][0]["id"] == "20"
+    assert body == {
+        "data": [
+            {
+                **ARTIST_REF,
+                "attributes": ARTIST_ATTRIBUTES,
+                "relationships": {
+                    "albums": _ARTIST_ALBUMS_RELATIONSHIP,
+                    "genres": {
+                        "href": "/v1/catalog/us/artists/ar1/genres",
+                        "data": [GENRE],
+                    },
+                },
+            }
+        ]
+    }
 
 
 def test_artist_inline_include_music_videos(mock: MusicKitApiMock) -> None:
@@ -176,8 +409,21 @@ def test_artist_inline_include_music_videos(mock: MusicKitApiMock) -> None:
         "https://api.music.apple.com/v1/catalog/us/artists?ids=ar1&include=music-videos",
     )
     assert status == 200
-    rels = body["data"][0]["relationships"]
-    assert rels["music-videos"]["data"][0]["id"] == "mv1"
+    assert body == {
+        "data": [
+            {
+                **ARTIST_REF,
+                "attributes": ARTIST_ATTRIBUTES,
+                "relationships": {
+                    "albums": _ARTIST_ALBUMS_RELATIONSHIP,
+                    "music-videos": {
+                        "href": "/v1/catalog/us/artists/ar1/music-videos",
+                        "data": [MUSIC_VIDEO],
+                    },
+                },
+            }
+        ]
+    }
 
 
 def test_artist_inline_include_playlists(mock: MusicKitApiMock) -> None:
@@ -186,8 +432,21 @@ def test_artist_inline_include_playlists(mock: MusicKitApiMock) -> None:
         "https://api.music.apple.com/v1/catalog/us/artists?ids=ar1&include=playlists",
     )
     assert status == 200
-    rels = body["data"][0]["relationships"]
-    assert rels["playlists"]["data"][0]["id"] == "pl1"
+    assert body == {
+        "data": [
+            {
+                **ARTIST_REF,
+                "attributes": ARTIST_ATTRIBUTES,
+                "relationships": {
+                    "albums": _ARTIST_ALBUMS_RELATIONSHIP,
+                    "playlists": {
+                        "href": "/v1/catalog/us/artists/ar1/playlists",
+                        "data": [PLAYLIST],
+                    },
+                },
+            }
+        ]
+    }
 
 
 def test_artist_inline_include_station(mock: MusicKitApiMock) -> None:
@@ -196,8 +455,21 @@ def test_artist_inline_include_station(mock: MusicKitApiMock) -> None:
         "https://api.music.apple.com/v1/catalog/us/artists?ids=ar1&include=station",
     )
     assert status == 200
-    rels = body["data"][0]["relationships"]
-    assert rels["station"]["data"][0]["id"] == "ra.978194965"
+    assert body == {
+        "data": [
+            {
+                **ARTIST_REF,
+                "attributes": ARTIST_ATTRIBUTES,
+                "relationships": {
+                    "albums": _ARTIST_ALBUMS_RELATIONSHIP,
+                    "station": {
+                        "href": "/v1/catalog/us/artists/ar1/station",
+                        "data": [STATION],
+                    },
+                },
+            }
+        ]
+    }
 
 
 def test_music_video_inline_include_genres(mock: MusicKitApiMock) -> None:
@@ -206,8 +478,21 @@ def test_music_video_inline_include_genres(mock: MusicKitApiMock) -> None:
         "https://api.music.apple.com/v1/catalog/us/music-videos?ids=mv1&include=genres",
     )
     assert status == 200
-    rels = body["data"][0]["relationships"]
-    assert rels["genres"]["data"][0]["id"] == "20"
+    assert body == {
+        "data": [
+            {
+                **MUSIC_VIDEO_REF,
+                "attributes": MUSIC_VIDEO_ATTRIBUTES,
+                "relationships": {
+                    **_MUSIC_VIDEO_DEFAULT_RELATIONSHIPS,
+                    "genres": {
+                        "href": "/v1/catalog/us/music-videos/mv1/genres",
+                        "data": [GENRE],
+                    },
+                },
+            }
+        ]
+    }
 
 
 def test_music_video_inline_include_songs(mock: MusicKitApiMock) -> None:
@@ -216,8 +501,21 @@ def test_music_video_inline_include_songs(mock: MusicKitApiMock) -> None:
         "https://api.music.apple.com/v1/catalog/us/music-videos?ids=mv1&include=songs",
     )
     assert status == 200
-    rels = body["data"][0]["relationships"]
-    assert rels["songs"]["data"][0]["id"] == "1"
+    assert body == {
+        "data": [
+            {
+                **MUSIC_VIDEO_REF,
+                "attributes": MUSIC_VIDEO_ATTRIBUTES,
+                "relationships": {
+                    **_MUSIC_VIDEO_DEFAULT_RELATIONSHIPS,
+                    "songs": {
+                        "href": "/v1/catalog/us/music-videos/mv1/songs",
+                        "data": [SONG],
+                    },
+                },
+            }
+        ]
+    }
 
 
 def test_music_video_inline_include_library(mock: MusicKitApiMock) -> None:
@@ -226,9 +524,21 @@ def test_music_video_inline_include_library(mock: MusicKitApiMock) -> None:
         "https://api.music.apple.com/v1/catalog/us/music-videos?ids=mv1&include=library",
     )
     assert status == 200
-    rels = body["data"][0]["relationships"]
-    assert rels["library"]["data"][0]["type"] == "library-music-videos"
-    assert rels["library"]["data"][0]["id"] == "i.mv1"
+    assert body == {
+        "data": [
+            {
+                **MUSIC_VIDEO_REF,
+                "attributes": MUSIC_VIDEO_ATTRIBUTES,
+                "relationships": {
+                    **_MUSIC_VIDEO_DEFAULT_RELATIONSHIPS,
+                    "library": {
+                        "href": "/v1/catalog/us/music-videos/mv1/library",
+                        "data": [LIBRARY_MUSIC_VIDEO],
+                    },
+                },
+            }
+        ]
+    }
 
 
 def test_playlist_inline_include_library(mock: MusicKitApiMock) -> None:
@@ -237,9 +547,28 @@ def test_playlist_inline_include_library(mock: MusicKitApiMock) -> None:
         "https://api.music.apple.com/v1/catalog/us/playlists?ids=pl1&include=library",
     )
     assert status == 200
-    rels = body["data"][0]["relationships"]
-    assert rels["library"]["data"][0]["type"] == "library-playlists"
-    assert rels["library"]["data"][0]["id"] == "p.pl1"
+    assert body == {
+        "data": [
+            {
+                **PLAYLIST_REF,
+                "attributes": PLAYLIST_ATTRIBUTES,
+                "relationships": {
+                    "tracks": {
+                        "href": "/v1/catalog/us/playlists/pl1/tracks",
+                        "data": [SONG],
+                    },
+                    "curator": {
+                        "href": "/v1/catalog/us/playlists/pl1/curator",
+                        "data": [CURATOR_REF],
+                    },
+                    "library": {
+                        "href": "/v1/catalog/us/playlists/pl1/library",
+                        "data": [LIBRARY_PLAYLIST],
+                    },
+                },
+            }
+        ]
+    }
 
 
 def test_library_song_inline_include_artists(mock: MusicKitApiMock) -> None:
@@ -248,8 +577,20 @@ def test_library_song_inline_include_artists(mock: MusicKitApiMock) -> None:
         "https://api.music.apple.com/v1/me/library/songs/i.s1?include=artists",
     )
     assert status == 200
-    rels = body["data"][0]["relationships"]
-    assert rels["artists"]["data"][0]["id"] == "r.ar1"
+    assert body == {
+        "data": [
+            {
+                **LIBRARY_SONG_REF,
+                "attributes": LIBRARY_SONG_ATTRIBUTES,
+                "relationships": {
+                    "artists": {
+                        "href": "/v1/me/library/songs/i.s1/artists",
+                        "data": [LIBRARY_ARTIST],
+                    },
+                },
+            }
+        ]
+    }
 
 
 def test_library_song_inline_include_catalog(mock: MusicKitApiMock) -> None:
@@ -258,9 +599,20 @@ def test_library_song_inline_include_catalog(mock: MusicKitApiMock) -> None:
         "https://api.music.apple.com/v1/me/library/songs/i.s1?include=catalog",
     )
     assert status == 200
-    rels = body["data"][0]["relationships"]
-    assert rels["catalog"]["data"][0]["type"] == "songs"
-    assert rels["catalog"]["data"][0]["id"] == "1"
+    assert body == {
+        "data": [
+            {
+                **LIBRARY_SONG_REF,
+                "attributes": LIBRARY_SONG_ATTRIBUTES,
+                "relationships": {
+                    "catalog": {
+                        "href": "/v1/me/library/songs/i.s1/catalog",
+                        "data": [SONG],
+                    },
+                },
+            }
+        ]
+    }
 
 
 def test_library_music_video_inline_include_catalog(mock: MusicKitApiMock) -> None:
@@ -269,9 +621,20 @@ def test_library_music_video_inline_include_catalog(mock: MusicKitApiMock) -> No
         "https://api.music.apple.com/v1/me/library/music-videos/i.mv1?include=catalog",
     )
     assert status == 200
-    rels = body["data"][0]["relationships"]
-    assert rels["catalog"]["data"][0]["type"] == "music-videos"
-    assert rels["catalog"]["data"][0]["id"] == "mv1"
+    assert body == {
+        "data": [
+            {
+                **LIBRARY_MUSIC_VIDEO_REF,
+                "attributes": LIBRARY_MUSIC_VIDEO_ATTRIBUTES,
+                "relationships": {
+                    "catalog": {
+                        "href": "/v1/me/library/music-videos/i.mv1/catalog",
+                        "data": [MUSIC_VIDEO],
+                    },
+                },
+            }
+        ]
+    }
 
 
 def test_library_playlist_inline_include_catalog(mock: MusicKitApiMock) -> None:
@@ -280,9 +643,25 @@ def test_library_playlist_inline_include_catalog(mock: MusicKitApiMock) -> None:
         "https://api.music.apple.com/v1/me/library/playlists/p.pl1?include=catalog",
     )
     assert status == 200
-    rels = body["data"][0]["relationships"]
-    assert rels["catalog"]["data"][0]["type"] == "playlists"
-    assert rels["catalog"]["data"][0]["id"] == "pl1"
+    assert body == {
+        "data": [
+            {
+                **LIBRARY_PLAYLIST_REF,
+                "attributes": LIBRARY_PLAYLIST_ATTRIBUTES,
+                "relationships": {
+                    "tracks": {
+                        "href": "/v1/me/library/playlists/p.pl1/tracks",
+                        "data": [LIBRARY_SONG],
+                        "meta": {"total": 1},
+                    },
+                    "catalog": {
+                        "href": "/v1/me/library/playlists/p.pl1/catalog",
+                        "data": [PLAYLIST],
+                    },
+                },
+            }
+        ]
+    }
 
 
 def test_apple_curator_inline_include_playlists(mock: MusicKitApiMock) -> None:
@@ -291,11 +670,21 @@ def test_apple_curator_inline_include_playlists(mock: MusicKitApiMock) -> None:
         "https://api.music.apple.com/v1/catalog/us/apple-curators/cu1?include=playlists",
     )
     assert status == 200
-    rels = body["data"][0]["relationships"]
-    playlist_item = rels["playlists"]["data"][0]
-    assert playlist_item["type"] == "playlists"
-    assert playlist_item["id"] == "pl1"
-    assert "attributes" in playlist_item
+    assert body == {
+        "data": [
+            {
+                **CURATOR_REF,
+                "attributes": CURATOR_ATTRIBUTES,
+                "relationships": {
+                    **_CURATOR_RELATIONSHIPS,
+                    "playlists": {
+                        "href": "/v1/catalog/us/apple-curators/cu1/playlists",
+                        "data": [PLAYLIST],
+                    },
+                },
+            }
+        ]
+    }
 
 
 def test_artist_playlists_limit_overflow_returns_400(
@@ -306,70 +695,50 @@ def test_artist_playlists_limit_overflow_returns_400(
         "https://api.music.apple.com/v1/catalog/us/artists/ar1/playlists?limit=99",
     )
     assert status == 400
-    assert body["errors"][0]["status"] == "400"
+    assert body == _limit_overflow_body(10, 99)
 
 
 def test_artist_albums_limit_overflow_paginated(mock: MusicKitApiMock) -> None:
-    status, _ = _get(
+    status, body = _get(
         mock,
         "https://api.music.apple.com/v1/me/library/artists/r.ar1/albums?limit=999",
     )
     assert status == 400
+    assert body == _limit_overflow_body(100, 999)
 
 
-def test_artist_playlists_paginated_with_offset(mock: MusicKitApiMock) -> None:
+def test_artist_playlists_paginated_with_offset(
+    mock: MusicKitApiMock, artist: CatalogArtist
+) -> None:
     # 12 playlists, page_size=10 default, offset=10 returns last 2
     pl_ids = [f"pl{i}" for i in range(1, 13)]
-    pls = {
-        pid: Playlist(
-            name=pid,
-            playlist_type="editorial",
-            curator_name="C",
-            has_collaboration=False,
-            is_chart=False,
-            audio_traits=[],
-            supports_sing=False,
-            url=f"https://music.apple.com/us/playlist/{pid}",
-        )
-        for pid in pl_ids
-    }
-    mock.data.playlists = pls
-    artist = next(iter(_artists(mock).values()))
-    new_artist = replace(artist, playlist_ids=pl_ids)
-    mock.data.artists = {"ar1": new_artist}
+    mock.data.playlists = {pid: _stub_playlist(pid) for pid in pl_ids}
+    mock.data.artists = {"ar1": replace(artist, playlist_ids=pl_ids)}
     status, body = _get(
         mock,
         "https://api.music.apple.com/v1/catalog/us/artists/ar1/playlists?offset=10",
     )
     assert status == 200
-    # default page_size=10, but the slice starts at offset 10 → returns ids 11..12
-    assert [x["id"] for x in body["data"]] == ["pl11", "pl12"]
-
-
-def test_artist_playlists_emits_next_link_when_more(mock: MusicKitApiMock) -> None:
-    pl_ids = [f"pl{i}" for i in range(1, 13)]
-    pls = {
-        pid: Playlist(
-            name=pid,
-            playlist_type="editorial",
-            curator_name="C",
-            has_collaboration=False,
-            is_chart=False,
-            audio_traits=[],
-            supports_sing=False,
-            url=f"https://music.apple.com/us/playlist/{pid}",
-        )
-        for pid in pl_ids
+    assert body == {
+        "data": [_expected_stub_playlist("pl11"), _expected_stub_playlist("pl12")]
     }
-    mock.data.playlists = pls
-    artist = next(iter(_artists(mock).values()))
+
+
+def test_artist_playlists_emits_next_link_when_more(
+    mock: MusicKitApiMock, artist: CatalogArtist
+) -> None:
+    pl_ids = [f"pl{i}" for i in range(1, 13)]
+    mock.data.playlists = {pid: _stub_playlist(pid) for pid in pl_ids}
     mock.data.artists = {"ar1": replace(artist, playlist_ids=pl_ids)}
     status, body = _get(
         mock,
         "https://api.music.apple.com/v1/catalog/us/artists/ar1/playlists",
     )
     assert status == 200
-    assert body["next"] == "/v1/catalog/us/artists/ar1/playlists?offset=10"
+    assert body == {
+        "data": [_expected_stub_playlist(pid) for pid in pl_ids[:10]],
+        "next": "/v1/catalog/us/artists/ar1/playlists?offset=10",
+    }
 
 
 def test_library_artist_albums_accepts_inline_limit(
@@ -380,113 +749,98 @@ def test_library_artist_albums_accepts_inline_limit(
         "https://api.music.apple.com/v1/me/library/artists/r.ar1/albums?limit=50",
     )
     assert status == 200
-    assert [x["id"] for x in body["data"]] == ["l.a1"]
+    assert body == {"data": [LIBRARY_ALBUM]}
 
 
 def test_song_library_returns_empty_when_library_song_id_is_none(
-    mock: MusicKitApiMock,
+    mock: MusicKitApiMock, song: CatalogSong
 ) -> None:
-    song = _songs(mock)["1"]
-    assert isinstance(song, CatalogSong)
     mock.data.songs = {"1": replace(song, library_song_id=None)}
     status, body = _get(
         mock, "https://api.music.apple.com/v1/catalog/us/songs/1/library"
     )
     assert status == 200
-    assert body["data"] == []
+    assert body == _EMPTY_BODY
 
 
 def test_song_station_returns_empty_when_station_id_is_none(
-    mock: MusicKitApiMock,
+    mock: MusicKitApiMock, song: CatalogSong
 ) -> None:
-    song = _songs(mock)["1"]
-    assert isinstance(song, CatalogSong)
     mock.data.songs = {"1": replace(song, station_id=None)}
     status, body = _get(
         mock, "https://api.music.apple.com/v1/catalog/us/songs/1/station"
     )
     assert status == 200
-    assert body["data"] == []
+    assert body == _EMPTY_BODY
 
 
 def test_album_library_returns_empty_when_library_album_id_is_none(
-    mock: MusicKitApiMock,
+    mock: MusicKitApiMock, album: CatalogAlbum
 ) -> None:
-    album = _albums(mock)["a1"]
-    assert isinstance(album, CatalogAlbum)
     mock.data.albums = {"a1": replace(album, library_album_id=None)}
     status, body = _get(
         mock, "https://api.music.apple.com/v1/catalog/us/albums/a1/library"
     )
     assert status == 200
-    assert body["data"] == []
+    assert body == _EMPTY_BODY
 
 
 def test_artist_station_returns_empty_when_station_id_is_none(
-    mock: MusicKitApiMock,
+    mock: MusicKitApiMock, artist: CatalogArtist
 ) -> None:
-    artist = _artists(mock)["ar1"]
-    assert isinstance(artist, CatalogArtist)
     mock.data.artists = {"ar1": replace(artist, station_id=None)}
     status, body = _get(
         mock, "https://api.music.apple.com/v1/catalog/us/artists/ar1/station"
     )
     assert status == 200
-    assert body["data"] == []
+    assert body == _EMPTY_BODY
 
 
 def test_music_video_library_returns_empty_when_id_is_none(
-    mock: MusicKitApiMock,
+    mock: MusicKitApiMock, music_video: MusicVideo
 ) -> None:
-    mv = _music_videos(mock)["mv1"]
-    assert isinstance(mv, MusicVideo)
-    mock.data.music_videos = {"mv1": replace(mv, library_music_video_id=None)}
+    mock.data.music_videos = {"mv1": replace(music_video, library_music_video_id=None)}
     status, body = _get(
         mock,
         "https://api.music.apple.com/v1/catalog/us/music-videos/mv1/library",
     )
     assert status == 200
-    assert body["data"] == []
+    assert body == _EMPTY_BODY
 
 
 def test_station_radio_show_returns_empty_when_id_is_none(
-    mock: MusicKitApiMock,
+    mock: MusicKitApiMock, station: Station
 ) -> None:
-    st = _stations(mock)["ra.978194965"]
-    assert isinstance(st, Station)
-    mock.data.stations = {"ra.978194965": replace(st, radio_show_id=None)}
+    mock.data.stations = {"ra.978194965": replace(station, radio_show_id=None)}
     status, body = _get(
         mock,
         "https://api.music.apple.com/v1/catalog/us/stations/ra.978194965/radio-show",
     )
     assert status == 200
-    assert body["data"] == []
+    assert body == _EMPTY_BODY
 
 
 def test_apple_curator_grouping_empty_when_grouping_id_is_none(
-    mock: MusicKitApiMock,
+    mock: MusicKitApiMock, curator: Curator
 ) -> None:
-    cu = _curators(mock)["cu1"]
-    assert isinstance(cu, Curator)
-    mock.data.curators = {"cu1": replace(cu, grouping_id=None), "cu2": cu}
+    mock.data.curators = {"cu1": replace(curator, grouping_id=None), "cu2": curator}
     status, body = _get(
         mock,
         "https://api.music.apple.com/v1/catalog/us/apple-curators/cu1/grouping",
     )
     assert status == 200
-    assert body["data"] == []
+    assert body == _EMPTY_BODY
 
 
 def test_library_artist_albums_empty_when_album_ids_none(
-    mock: MusicKitApiMock,
+    mock: MusicKitApiMock, library_artist: LibraryArtist
 ) -> None:
-    la = _library_artists(mock)["r.ar1"]
-    mock.data.library_artists = {"r.ar1": replace(la, album_ids=None)}
+    mock.data.library_artists = {"r.ar1": replace(library_artist, album_ids=None)}
     status, body = _get(
         mock, "https://api.music.apple.com/v1/me/library/artists/r.ar1/albums"
     )
     assert status == 200
-    assert body["data"] == []
+    assert body == _EMPTY_BODY
 
 
 def test_library_artist_catalog_404_for_uploaded_artist(
@@ -497,7 +851,7 @@ def test_library_artist_catalog_404_for_uploaded_artist(
         mock, "https://api.music.apple.com/v1/me/library/artists/r.ar1/catalog"
     )
     assert status == 404
-    assert body["errors"][0]["status"] == "404"
+    assert body == _NOT_FOUND_BODY
 
 
 def test_library_album_catalog_404_for_uploaded_album(
@@ -516,7 +870,7 @@ def test_library_album_catalog_404_for_uploaded_album(
         mock, "https://api.music.apple.com/v1/me/library/albums/l.a1/catalog"
     )
     assert status == 404
-    assert body["errors"][0]["status"] == "404"
+    assert body == _NOT_FOUND_BODY
 
 
 def test_library_song_catalog_404_for_uploaded_song(
@@ -539,7 +893,7 @@ def test_library_song_catalog_404_for_uploaded_song(
         mock, "https://api.music.apple.com/v1/me/library/songs/i.s1/catalog"
     )
     assert status == 404
-    assert body["errors"][0]["status"] == "404"
+    assert body == _NOT_FOUND_BODY
 
 
 @pytest.mark.parametrize(
@@ -566,15 +920,15 @@ def test_library_catalog_id_without_catalog_entry_raises(
         _get(mock, url + suffix)
 
 
-def test_song_genres_empty_when_genre_ids_none(mock: MusicKitApiMock) -> None:
-    song = _songs(mock)["1"]
-    assert isinstance(song, CatalogSong)
+def test_song_genres_empty_when_genre_ids_none(
+    mock: MusicKitApiMock, song: CatalogSong
+) -> None:
     mock.data.songs = {"1": replace(song, genre_ids=None)}
     status, body = _get(
         mock, "https://api.music.apple.com/v1/catalog/us/songs/1/genres"
     )
     assert status == 200
-    assert body["data"] == []
+    assert body == _EMPTY_BODY
 
 
 def test_song_library_missing_parent_song_returns_empty(
@@ -584,7 +938,7 @@ def test_song_library_missing_parent_song_returns_empty(
         mock, "https://api.music.apple.com/v1/catalog/us/songs/nonexistent/library"
     )
     assert status == 200
-    assert body["data"] == []
+    assert body == _EMPTY_BODY
 
 
 def test_recommendation_singular_missing_returns_empty(
@@ -594,7 +948,7 @@ def test_recommendation_singular_missing_returns_empty(
         mock, "https://api.music.apple.com/v1/me/recommendations/nonexistent"
     )
     assert status == 200
-    assert body["data"] == []
+    assert body == _EMPTY_BODY
 
 
 def test_genres_batch_missing_id_filtered_out(mock: MusicKitApiMock) -> None:
@@ -603,24 +957,32 @@ def test_genres_batch_missing_id_filtered_out(mock: MusicKitApiMock) -> None:
         "https://api.music.apple.com/v1/catalog/us/genres?ids=20,nonexistent",
     )
     assert status == 200
-    assert [x["id"] for x in body["data"]] == ["20"]
+    assert body == {"data": [GENRE]}
 
 
 def test_genre_attributes_full_shape(mock: MusicKitApiMock) -> None:
-    _, body = _get(mock, "https://api.music.apple.com/v1/catalog/us/genres/20")
-    attrs = body["data"][0]["attributes"]
-    assert attrs["name"] == "Pop"
-    assert attrs["url"] == "https://music.apple.com/us/genre/20"
-    assert attrs["parentId"] == "34"
-    assert attrs["parentName"] == "Music"
+    status, body = _get(mock, "https://api.music.apple.com/v1/catalog/us/genres/20")
+    assert status == 200
+    assert body == {"data": [GENRE]}
 
 
 def test_genre_attributes_omit_optional_when_none(mock: MusicKitApiMock) -> None:
     mock.data.genres = {"5": Genre(name="X", url="https://music.apple.com/us/genre/5")}
-    _, body = _get(mock, "https://api.music.apple.com/v1/catalog/us/genres/5")
-    attrs = body["data"][0]["attributes"]
-    assert "parentId" not in attrs
-    assert "parentName" not in attrs
+    status, body = _get(mock, "https://api.music.apple.com/v1/catalog/us/genres/5")
+    assert status == 200
+    assert body == {
+        "data": [
+            {
+                "id": "5",
+                "type": "genres",
+                "href": "/v1/catalog/us/genres/5",
+                "attributes": {
+                    "name": "X",
+                    "url": "https://music.apple.com/us/genre/5",
+                },
+            }
+        ]
+    }
 
 
 def test_record_label_full_attributes(mock: MusicKitApiMock) -> None:
@@ -634,15 +996,30 @@ def test_record_label_full_attributes(mock: MusicKitApiMock) -> None:
             description=desc,
         )
     }
-    _, body = _get(mock, "https://api.music.apple.com/v1/catalog/us/record-labels/rl1")
-    attrs = body["data"][0]["attributes"]
-    assert attrs["name"] == "Indie"
-    assert attrs["url"] == "https://music.apple.com/us/record-label/rl1"
-    artwork = cast("dict[str, _JSONValue]", attrs["artwork"])
-    assert artwork["url"] == "https://example.com/rl.jpg"
-    description = cast("dict[str, _JSONValue]", attrs["description"])
-    assert description["standard"] == "A great label."
-    assert description["short"] == "A label"
+    status, body = _get(
+        mock, "https://api.music.apple.com/v1/catalog/us/record-labels/rl1"
+    )
+    assert status == 200
+    assert body == {
+        "data": [
+            {
+                **RECORD_LABEL_REF,
+                "attributes": {
+                    "name": "Indie",
+                    "artwork": {
+                        "url": "https://example.com/rl.jpg",
+                        "width": 400,
+                        "height": 400,
+                    },
+                    "description": {
+                        "standard": "A great label.",
+                        "short": "A label",
+                    },
+                    "url": "https://music.apple.com/us/record-label/rl1",
+                },
+            }
+        ]
+    }
 
 
 def test_grouping_with_artwork_emits_artwork(mock: MusicKitApiMock) -> None:
@@ -654,49 +1031,71 @@ def test_grouping_with_artwork_emits_artwork(mock: MusicKitApiMock) -> None:
             artwork=art,
         )
     }
-    _, body = _get(
+    status, body = _get(
         mock,
         "https://api.music.apple.com/v1/catalog/us/apple-curators/cu1/grouping",
     )
-    attrs = body["data"][0]["attributes"]
-    artwork = cast("dict[str, _JSONValue]", attrs["artwork"])
-    assert artwork["url"] == "https://example.com/gp.jpg"
-    assert attrs["name"] == "Curators"
+    assert status == 200
+    assert body == {
+        "data": [
+            {
+                **GROUPING_REF,
+                "attributes": {
+                    "name": "Curators",
+                    "artwork": {
+                        "url": "https://example.com/gp.jpg",
+                        "width": 300,
+                        "height": 300,
+                    },
+                    "url": "https://music.apple.com/us/grouping/gp1",
+                },
+            }
+        ]
+    }
 
 
 def test_curator_attributes_emit_kind_and_short_name(mock: MusicKitApiMock) -> None:
-    _, body = _get(mock, "https://api.music.apple.com/v1/catalog/us/apple-curators/cu1")
-    attrs = body["data"][0]["attributes"]
-    assert attrs["name"] == "Apple Music Pop"
-    assert attrs["kind"] == "Genre"
-    assert attrs["shortName"] == "Pop"
+    status, body = _get(
+        mock, "https://api.music.apple.com/v1/catalog/us/apple-curators/cu1"
+    )
+    assert status == 200
+    assert body == {
+        "data": [
+            {
+                **CURATOR_REF,
+                "attributes": CURATOR_ATTRIBUTES,
+                "relationships": _CURATOR_RELATIONSHIPS,
+            }
+        ]
+    }
 
 
 def test_non_apple_curator_omits_short_name_and_kind(
     mock: MusicKitApiMock,
 ) -> None:
-    _, body = _get(mock, "https://api.music.apple.com/v1/catalog/us/curators/cu2")
-    attrs = body["data"][0]["attributes"]
-    assert attrs["name"] == "Third Party Curator"
-    assert "shortName" not in attrs
-    assert "kind" not in attrs
+    status, body = _get(mock, "https://api.music.apple.com/v1/catalog/us/curators/cu2")
+    assert status == 200
+    assert body == _NON_APPLE_CURATOR_BODY
 
 
 def test_song_library_response_uses_singular_data_shape(
     mock: MusicKitApiMock,
 ) -> None:
     """Singular cross-rel returns ``{data: [single_item]}`` — 1-entry list, no next/meta."""
-    _, body = _get(mock, "https://api.music.apple.com/v1/catalog/us/songs/1/library")
-    assert isinstance(body["data"], list)
-    assert len(body["data"]) == 1
-    assert "next" not in body
-    assert "meta" not in body
+    status, body = _get(
+        mock, "https://api.music.apple.com/v1/catalog/us/songs/1/library"
+    )
+    assert status == 200
+    assert body == {"data": [LIBRARY_SONG]}
 
 
 def test_paginated_endpoint_has_data_array(mock: MusicKitApiMock) -> None:
     """Paginated rel endpoint returns ``{data: [items], next?: str}`` shape."""
-    _, body = _get(mock, "https://api.music.apple.com/v1/catalog/us/songs/1/genres")
-    assert isinstance(body["data"], list)
+    status, body = _get(
+        mock, "https://api.music.apple.com/v1/catalog/us/songs/1/genres"
+    )
+    assert status == 200
+    assert body == {"data": [GENRE]}
 
 
 # F. Locale (?l=) handling for new endpoints
@@ -708,17 +1107,16 @@ def test_song_library_invalid_language_tag_400(mock: MusicKitApiMock) -> None:
         "https://api.music.apple.com/v1/catalog/us/songs/1/library?l=invalid-XX",
     )
     assert status == 400
-    err = body["errors"][0]
-    assert err["code"] == "40005"
-    assert err["source"] == {"parameter": "l"}
+    assert body == _invalid_language_tag_body("invalid-XX")
 
 
 def test_song_genres_valid_language_tag_passes(mock: MusicKitApiMock) -> None:
-    status, _ = _get(
+    status, body = _get(
         mock,
         "https://api.music.apple.com/v1/catalog/us/songs/1/genres?l=ja-JP",
     )
     assert status == 200
+    assert body == {"data": [GENRE]}
 
 
 def test_apple_curator_singular_invalid_language_tag_400(
@@ -729,7 +1127,7 @@ def test_apple_curator_singular_invalid_language_tag_400(
         "https://api.music.apple.com/v1/catalog/us/apple-curators/cu1?l=bogus",
     )
     assert status == 400
-    assert body["errors"][0]["code"] == "40005"
+    assert body == _invalid_language_tag_body("bogus")
 
 
 def test_recommendation_singular_invalid_language_tag_400(
@@ -740,25 +1138,27 @@ def test_recommendation_singular_invalid_language_tag_400(
         "https://api.music.apple.com/v1/me/recommendations/rec1?l=zz-ZZ-bogus",
     )
     assert status == 400
-    assert body["errors"][0]["code"] == "40005"
+    assert body == _invalid_language_tag_body("zz-ZZ-bogus")
 
 
 def test_genres_batch_invalid_language_tag_400(mock: MusicKitApiMock) -> None:
-    status, _ = _get(
+    status, body = _get(
         mock,
         "https://api.music.apple.com/v1/catalog/us/genres?l=invalid-XX",
     )
     assert status == 400
+    assert body == _invalid_language_tag_body("invalid-XX")
 
 
 def test_library_song_albums_invalid_language_tag_400(
     mock: MusicKitApiMock,
 ) -> None:
-    status, _ = _get(
+    status, body = _get(
         mock,
         "https://api.music.apple.com/v1/me/library/songs/i.s1/albums?l=invalid-XX",
     )
     assert status == 400
+    assert body == _invalid_language_tag_body("invalid-XX")
 
 
 def test_song_genres_callable_resolver_threads_locale(
@@ -775,10 +1175,22 @@ def test_song_genres_callable_resolver_threads_locale(
         return Genre(name="Pop", url="https://music.apple.com/us/genre/20")
 
     mock.data.genres = genre_callable
-    _, _ = _get(
+    status, body = _get(
         mock,
         "https://api.music.apple.com/v1/catalog/us/songs/1/genres?l=ja-JP",
     )
+    assert status == 200
+    assert body == {
+        "data": [
+            {
+                **GENRE_REF,
+                "attributes": {
+                    "name": "Pop",
+                    "url": "https://music.apple.com/us/genre/20",
+                },
+            }
+        ]
+    }
     assert "ja-JP" in seen
 
 
@@ -798,7 +1210,19 @@ def test_genre_singular_works_with_callable_source(
     mock.data.genres = callable_source
     status, body = _get(mock, "https://api.music.apple.com/v1/catalog/us/genres/99")
     assert status == 200
-    assert body["data"][0]["attributes"]["name"] == "Jazz"
+    assert body == {
+        "data": [
+            {
+                "id": "99",
+                "type": "genres",
+                "href": "/v1/catalog/us/genres/99",
+                "attributes": {
+                    "name": "Jazz",
+                    "url": "https://music.apple.com/us/genre/99",
+                },
+            }
+        ]
+    }
 
 
 def test_record_label_singular_works_with_callable_source(
@@ -819,7 +1243,19 @@ def test_record_label_singular_works_with_callable_source(
         mock, "https://api.music.apple.com/v1/catalog/us/record-labels/rl99"
     )
     assert status == 200
-    assert body["data"][0]["attributes"]["name"] == "Big"
+    assert body == {
+        "data": [
+            {
+                "id": "rl99",
+                "type": "record-labels",
+                "href": "/v1/catalog/us/record-labels/rl99",
+                "attributes": {
+                    "name": "Big",
+                    "url": "https://music.apple.com/us/record-label/rl99",
+                },
+            }
+        ]
+    }
 
 
 def test_recommendation_singular_works_with_callable_source(
@@ -841,14 +1277,25 @@ def test_recommendation_singular_works_with_callable_source(
     mock.data.personal_recommendations = callable_source
     status, body = _get(mock, "https://api.music.apple.com/v1/me/recommendations/rec99")
     assert status == 200
-    title = cast("dict[str, _JSONValue]", body["data"][0]["attributes"]["title"])
-    assert title["stringForDisplay"] == "From Callable"
+    assert body == {
+        "data": [
+            {
+                "id": "rec99",
+                "type": "personal-recommendation",
+                "href": "/v1/me/recommendations/rec99",
+                "attributes": {
+                    "title": {"stringForDisplay": "From Callable"},
+                    "isGroupRecommendation": False,
+                    "kind": "music-recommendations",
+                },
+            }
+        ]
+    }
 
 
 def test_recommendations_batch_with_callable_source_raises_on_list_all(
     mock: MusicKitApiMock,
 ) -> None:
-    import pytest
     from musickit_api_mock import LookupContext, PersonalRecommendation
 
     def callable_source(
@@ -864,7 +1311,6 @@ def test_recommendations_batch_with_callable_source_raises_on_list_all(
 def test_genres_batch_with_callable_source_raises_on_list_all(
     mock: MusicKitApiMock,
 ) -> None:
-    import pytest
     from musickit_api_mock import LookupContext
 
     def callable_source(_ctx: LookupContext) -> Genre | None:
@@ -894,7 +1340,30 @@ def test_apple_curator_works_with_callable_source(mock: MusicKitApiMock) -> None
         mock, "https://api.music.apple.com/v1/catalog/us/apple-curators/cu99"
     )
     assert status == 200
-    assert body["data"][0]["attributes"]["name"] == "From Callable"
+    assert body == {
+        "data": [
+            {
+                "id": "cu99",
+                "type": "apple-curators",
+                "href": "/v1/catalog/us/apple-curators/cu99",
+                "attributes": {
+                    "name": "From Callable",
+                    "artwork": {
+                        "url": "https://example.com/c.jpg",
+                        "width": 300,
+                        "height": 300,
+                    },
+                    "url": "https://music.apple.com/us/curator/from-callable/cu99",
+                },
+                "relationships": {
+                    "playlists": {
+                        "href": "/v1/catalog/us/apple-curators/cu99/playlists",
+                        "data": [PLAYLIST_REF],
+                    },
+                },
+            }
+        ]
+    }
 
 
 def test_grouping_works_with_callable_source(mock: MusicKitApiMock) -> None:
@@ -914,7 +1383,17 @@ def test_grouping_works_with_callable_source(mock: MusicKitApiMock) -> None:
         "https://api.music.apple.com/v1/catalog/us/apple-curators/cu1/grouping",
     )
     assert status == 200
-    assert body["data"][0]["attributes"]["name"] == "GroupedCallable"
+    assert body == {
+        "data": [
+            {
+                **GROUPING_REF,
+                "attributes": {
+                    "name": "GroupedCallable",
+                    "url": "https://music.apple.com/us/grouping/gp1",
+                },
+            }
+        ]
+    }
 
 
 def test_recommendations_batch_empty_ids_returns_400(
@@ -922,19 +1401,13 @@ def test_recommendations_batch_empty_ids_returns_400(
 ) -> None:
     status, body = _get(mock, "https://api.music.apple.com/v1/me/recommendations?ids=")
     assert status == 400
-    err = cast("dict[str, _JSONValue]", body["errors"][0])
-    assert err["code"] == "40005"
-    source = cast("dict[str, _JSONValue]", err["source"])
-    assert source["parameter"] == "ids"
+    assert body == _EMPTY_IDS_BODY
 
 
 def test_genres_batch_empty_ids_returns_400(mock: MusicKitApiMock) -> None:
     status, body = _get(mock, "https://api.music.apple.com/v1/catalog/us/genres?ids=")
     assert status == 400
-    err = cast("dict[str, _JSONValue]", body["errors"][0])
-    assert err["code"] == "40005"
-    source = cast("dict[str, _JSONValue]", err["source"])
-    assert source["parameter"] == "ids"
+    assert body == _EMPTY_IDS_BODY
 
 
 def test_record_labels_batch_empty_ids_returns_400(mock: MusicKitApiMock) -> None:
@@ -942,10 +1415,7 @@ def test_record_labels_batch_empty_ids_returns_400(mock: MusicKitApiMock) -> Non
         mock, "https://api.music.apple.com/v1/catalog/us/record-labels?ids="
     )
     assert status == 400
-    err = cast("dict[str, _JSONValue]", body["errors"][0])
-    assert err["code"] == "40005"
-    source = cast("dict[str, _JSONValue]", err["source"])
-    assert source["parameter"] == "ids"
+    assert body == _EMPTY_IDS_BODY
 
 
 def test_apple_curator_singular_type_mismatch_returns_404(
@@ -955,8 +1425,7 @@ def test_apple_curator_singular_type_mismatch_returns_404(
         mock, "https://api.music.apple.com/v1/catalog/us/apple-curators/cu2"
     )
     assert status == 404
-    err = cast("dict[str, _JSONValue]", body["errors"][0])
-    assert err["code"] == "40400"
+    assert body == _RESOURCE_NOT_FOUND_BODY
 
 
 def test_curator_singular_type_mismatch_returns_404(
@@ -964,8 +1433,7 @@ def test_curator_singular_type_mismatch_returns_404(
 ) -> None:
     status, body = _get(mock, "https://api.music.apple.com/v1/catalog/us/curators/cu1")
     assert status == 404
-    err = cast("dict[str, _JSONValue]", body["errors"][0])
-    assert err["code"] == "40400"
+    assert body == _RESOURCE_NOT_FOUND_BODY
 
 
 def test_apple_curator_singular_missing_id_returns_404(
@@ -976,8 +1444,7 @@ def test_apple_curator_singular_missing_id_returns_404(
         "https://api.music.apple.com/v1/catalog/us/apple-curators/nonexistent",
     )
     assert status == 404
-    err = cast("dict[str, _JSONValue]", body["errors"][0])
-    assert err["code"] == "40400"
+    assert body == _RESOURCE_NOT_FOUND_BODY
 
 
 def test_station_singular_bare_emits_no_relationships(
@@ -987,10 +1454,7 @@ def test_station_singular_bare_emits_no_relationships(
         mock, "https://api.music.apple.com/v1/catalog/us/stations/ra.978194965"
     )
     assert status == 200
-    resource = cast("dict[str, _JSONValue]", body["data"][0])
-    assert resource["type"] == "stations"
-    assert resource["id"] == "ra.978194965"
-    assert "relationships" not in resource
+    assert body == {"data": [STATION]}
 
 
 def test_station_singular_include_radio_show_emits_relationships_block(
@@ -1001,36 +1465,45 @@ def test_station_singular_include_radio_show_emits_relationships_block(
         "https://api.music.apple.com/v1/catalog/us/stations/ra.978194965?include=radio-show",
     )
     assert status == 200
-    rels = cast(
-        "dict[str, _JSONValue]",
-        cast("dict[str, _JSONValue]", body["data"][0])["relationships"],
-    )
-    radio_show = cast("dict[str, _JSONValue]", rels["radio-show"])
-    assert radio_show["href"] == "/v1/catalog/us/stations/ra.978194965/radio-show"
-    data = cast("list[_JSONValue]", radio_show["data"])
-    item = cast("dict[str, _JSONValue]", data[0])
-    assert item["type"] == "apple-curators"
-    assert item["id"] == "cu1"
+    assert body == {
+        "data": [
+            {
+                **STATION_REF,
+                "attributes": STATION_ATTRIBUTES,
+                "relationships": {
+                    "radio-show": {
+                        "href": "/v1/catalog/us/stations/ra.978194965/radio-show",
+                        "data": [CURATOR],
+                    },
+                },
+            }
+        ]
+    }
 
 
 def test_station_singular_include_radio_show_empty_when_show_missing(
-    mock: MusicKitApiMock,
+    mock: MusicKitApiMock, station: Station
 ) -> None:
-    target = _stations(mock)["ra.978194965"]
-    mock.data.stations = {
-        "ra.978194965": replace(target, radio_show_id=None),
-    }
+    mock.data.stations = {"ra.978194965": replace(station, radio_show_id=None)}
     status, body = _get(
         mock,
         "https://api.music.apple.com/v1/catalog/us/stations/ra.978194965?include=radio-show",
     )
     assert status == 200
-    rels = cast(
-        "dict[str, _JSONValue]",
-        cast("dict[str, _JSONValue]", body["data"][0])["relationships"],
-    )
-    radio_show = cast("dict[str, _JSONValue]", rels["radio-show"])
-    assert radio_show["data"] == []
+    assert body == {
+        "data": [
+            {
+                **STATION_REF,
+                "attributes": STATION_ATTRIBUTES,
+                "relationships": {
+                    "radio-show": {
+                        "href": "/v1/catalog/us/stations/ra.978194965/radio-show",
+                        "data": [],
+                    },
+                },
+            }
+        ]
+    }
 
 
 def test_recommendation_contents_mix_types(mock: MusicKitApiMock) -> None:
@@ -1054,31 +1527,46 @@ def test_recommendation_contents_mix_types(mock: MusicKitApiMock) -> None:
     }
     status, body = _get(mock, "https://api.music.apple.com/v1/me/recommendations/mixed")
     assert status == 200
-    rels = cast(
-        "dict[str, _JSONValue]",
-        cast("dict[str, _JSONValue]", body["data"][0])["relationships"],
-    )
-    contents = cast("dict[str, _JSONValue]", rels["contents"])
-    items = cast("list[_JSONValue]", contents["data"])
-    types = [cast("dict[str, _JSONValue]", x)["type"] for x in items]
-    ids = [cast("dict[str, _JSONValue]", x)["id"] for x in items]
-    assert types == ["playlists", "albums", "stations"]
-    assert ids == ["pl1", "a1", "ra.978194965"]
+    assert body == {
+        "data": [
+            {
+                "id": "mixed",
+                "type": "personal-recommendation",
+                "href": "/v1/me/recommendations/mixed",
+                "attributes": {
+                    "title": {"stringForDisplay": "Recently Played"},
+                    "isGroupRecommendation": False,
+                    "kind": "recently-played",
+                },
+                "relationships": {
+                    "contents": {
+                        "href": "/v1/me/recommendations/mixed/contents",
+                        "data": [PLAYLIST, ALBUM, STATION],
+                    },
+                },
+            }
+        ]
+    }
 
 
 def test_recommendation_emits_display_attrs(mock: MusicKitApiMock) -> None:
     """display / hasSeeAll / version surface in attributes when set."""
     status, body = _get(mock, "https://api.music.apple.com/v1/me/recommendations/rec1")
     assert status == 200
-    attrs = cast(
-        "dict[str, _JSONValue]",
-        cast("dict[str, _JSONValue]", body["data"][0])["attributes"],
-    )
-    display = cast("dict[str, _JSONValue]", attrs["display"])
-    assert display["kind"] == "MusicCoverShelf"
-    assert display["decorations"] == []
-    assert attrs["hasSeeAll"] is False
-    assert attrs["version"] == 2
+    assert body == {
+        "data": [
+            {
+                **PERSONAL_RECOMMENDATION_REF,
+                "attributes": PERSONAL_RECOMMENDATION_ATTRIBUTES,
+                "relationships": {
+                    "contents": {
+                        "href": "/v1/me/recommendations/rec1/contents",
+                        "data": [PLAYLIST],
+                    },
+                },
+            }
+        ]
+    }
 
 
 def test_recommendation_kind_recently_played_accepted(
@@ -1096,26 +1584,36 @@ def test_recommendation_kind_recently_played_accepted(
     }
     status, body = _get(mock, "https://api.music.apple.com/v1/me/recommendations/rec1")
     assert status == 200
-    attrs = cast(
-        "dict[str, _JSONValue]",
-        cast("dict[str, _JSONValue]", body["data"][0])["attributes"],
-    )
-    assert attrs["kind"] == "recently-played"
-
-
-def test_repeated_limit_param_uses_last_value(mock: MusicKitApiMock) -> None:
-    """Apple applies the last-occurrence value when ``?limit=`` is repeated."""
-    target = _music_videos(mock)["mv1"]
-    mock.data.music_videos = {
-        "mv1": replace(target, song_ids=["1", "2", "3", "4", "5"]),
+    assert body == {
+        "data": [
+            {
+                **PERSONAL_RECOMMENDATION_REF,
+                "attributes": {
+                    "title": {"stringForDisplay": "Recently"},
+                    "isGroupRecommendation": False,
+                    "kind": "recently-played",
+                },
+            }
+        ]
     }
-    song1 = _songs(mock)["1"]
+
+
+def test_repeated_limit_param_uses_last_value(
+    mock: MusicKitApiMock, music_video: MusicVideo, song: CatalogSong
+) -> None:
+    """Apple applies the last-occurrence value when ``?limit=`` is repeated."""
+    mock.data.music_videos = {
+        "mv1": replace(music_video, song_ids=["1", "2", "3", "4", "5"]),
+    }
     mock.data.songs = {
-        sid: replace(song1, library_song_id=None) for sid in ["1", "2", "3", "4", "5"]
+        sid: replace(song, library_song_id=None) for sid in ["1", "2", "3", "4", "5"]
     }
     status, body = _get(
         mock,
         "https://api.music.apple.com/v1/catalog/us/music-videos/mv1/songs?limit=1&limit=3",
     )
     assert status == 200
-    assert len(cast("list[_JSONValue]", body["data"])) == 3
+    assert body == {
+        "data": [SONG, _expected_song_clone("2"), _expected_song_clone("3")],
+        "next": "/v1/catalog/us/music-videos/mv1/songs?offset=3",
+    }

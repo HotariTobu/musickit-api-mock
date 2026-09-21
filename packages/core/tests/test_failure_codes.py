@@ -101,9 +101,11 @@ def test_license_failure_emits_apple_error_code(
     )
     assert resp is not None
     assert resp.status == 200
-    parsed = json.loads(resp.body)
-    assert parsed["errorCode"] == expected_code
-    assert parsed["status"] == expected_code
+    assert json.loads(resp.body) == {
+        "license": "",
+        "errorCode": expected_code,
+        "status": expected_code,
+    }
 
 
 @pytest.mark.parametrize(("variant_cls", "expected_code"), _WEB_PLAYBACK_TABLE)
@@ -124,6 +126,7 @@ def test_web_playback_failure_emits_apple_failure_type(
     )
     assert resp is not None
     assert resp.status == 200
-    parsed = json.loads(resp.body)
-    assert parsed["failureType"] == expected_code
-    assert parsed["status"] == expected_code
+    assert json.loads(resp.body) == {
+        "failureType": expected_code,
+        "status": expected_code,
+    }

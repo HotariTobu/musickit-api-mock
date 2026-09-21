@@ -3,8 +3,8 @@
 The schema layer runs every attribute dict through ``_strip_none`` so a
 ``None`` on an optional dataclass field does not surface as a JSON
 ``null``. Each test pairs a minimal resource (only required fields) with
-``assert <key> not in attrs`` for the optional fields, exercising the
-strip path uniformly across resource types.
+the full body it emits, so any optional field that stopped being stripped
+shows up as an extra key.
 
 The relationship-block suppression case (``CatalogSong.album_ids = None`` →
 ``relationships.albums`` is absent) is covered alongside in the same
@@ -15,7 +15,6 @@ strip and relationship omission.
 from __future__ import annotations
 
 import json
-from typing import TYPE_CHECKING
 
 import pytest
 from musickit_api_mock import (
@@ -37,11 +36,89 @@ from musickit_api_mock import (
     StorefrontResponseSuccess,
 )
 
-if TYPE_CHECKING:
-    from tests._apple_response import AppleResponse
+from tests._expected import (
+    ALBUM_REF,
+    ARTIST_REF,
+    LIBRARY_ALBUM_REF,
+    LIBRARY_ARTIST_REF,
+    LIBRARY_PLAYLIST_REF,
+    LIBRARY_SONG_REF,
+    SONG_REF,
+)
+
+_MINIMAL_ARTWORK = {"url": "x", "width": 1, "height": 1}
+
+_MINIMAL_SONG_BODY = {
+    "data": [
+        {
+            **SONG_REF,
+            "attributes": {
+                "name": "T",
+                "artistName": "A",
+                "albumName": "Al",
+                "artwork": _MINIMAL_ARTWORK,
+                "durationInMillis": 1,
+                "genreNames": [],
+                "releaseDate": "2020-01-01",
+                "trackNumber": 1,
+                "discNumber": 1,
+                "isrc": "USABC1234567",
+                "playParams": {"id": "1", "kind": "song"},
+                "previews": [
+                    {"url": "https://audio-ssl.itunes.apple.com/preview/1.m4a"}
+                ],
+            },
+        }
+    ]
+}
+
+_MINIMAL_ALBUM_BODY = {
+    "data": [
+        {
+            **ALBUM_REF,
+            "attributes": {
+                "name": "Al",
+                "artistName": "A",
+                "artwork": _MINIMAL_ARTWORK,
+                "audioTraits": [],
+                "genreNames": [],
+                "isCompilation": False,
+                "isComplete": True,
+                "isMasteredForItunes": False,
+                "isPrerelease": False,
+                "isSingle": True,
+                "playParams": {"id": "a1", "kind": "album"},
+                "trackCount": 0,
+                "url": "x",
+            },
+        }
+    ]
+}
+
+_MINIMAL_LIBRARY_ALBUM_BODY = {
+    "data": [
+        {
+            **LIBRARY_ALBUM_REF,
+            "attributes": {
+                "name": "N",
+                "artistName": "A",
+                "artwork": _MINIMAL_ARTWORK,
+                "genreNames": [],
+                "playParams": {
+                    "id": "l.a1",
+                    "kind": "album",
+                    "isLibrary": True,
+                    "reporting": False,
+                    "reportingId": "587fae15d89d3ff1",
+                },
+                "trackCount": 0,
+            },
+        }
+    ]
+}
 
 
-def _get(mock: MusicKitApiMock, url: str) -> AppleResponse:
+def _get(mock: MusicKitApiMock, url: str) -> object:
     resp = mock.handle_request(Request(method="GET", url=url, headers={}, body=None))
     assert resp is not None
     assert resp.status == 200
@@ -93,24 +170,17 @@ def _minimal_song() -> CatalogSong:
 
 
 def test_song_optional_fields_absent_when_none(bare_mock: MusicKitApiMock) -> None:
+    """hasLyrics / isAppleDigitalMaster / url / composerName / contentRating stay out."""
     bare_mock.data.songs = {"1": _minimal_song()}
     body = _get(bare_mock, "https://api.music.apple.com/v1/catalog/us/songs?ids=1")
-    attrs = body["data"][0]["attributes"]
-    assert "hasLyrics" not in attrs
-    assert "isAppleDigitalMaster" not in attrs
-    assert "url" not in attrs
-    assert "composerName" not in attrs
-    assert "contentRating" not in attrs
+    assert body == _MINIMAL_SONG_BODY
 
 
 def test_song_relationships_absent_when_ids_none(bare_mock: MusicKitApiMock) -> None:
     """``CatalogSong.album_ids = None`` ⇒ ``relationships.albums`` is not emitted."""
     bare_mock.data.songs = {"1": _minimal_song()}
     body = _get(bare_mock, "https://api.music.apple.com/v1/catalog/us/songs/1")
-    item = body["data"][0]
-    rels = item.get("relationships", {})
-    assert "albums" not in rels
-    assert "artists" not in rels
+    assert body == _MINIMAL_SONG_BODY
 
 
 def _minimal_album() -> CatalogAlbum:
@@ -131,24 +201,16 @@ def _minimal_album() -> CatalogAlbum:
 
 
 def test_album_optional_fields_absent_when_none(bare_mock: MusicKitApiMock) -> None:
+    """releaseDate / copyright / recordLabel / upc / contentRating / editorialNotes stay out."""
     bare_mock.data.albums = {"a1": _minimal_album()}
     body = _get(bare_mock, "https://api.music.apple.com/v1/catalog/us/albums?ids=a1")
-    attrs = body["data"][0]["attributes"]
-    assert "releaseDate" not in attrs
-    assert "copyright" not in attrs
-    assert "recordLabel" not in attrs
-    assert "upc" not in attrs
-    assert "contentRating" not in attrs
-    assert "editorialNotes" not in attrs
+    assert body == _MINIMAL_ALBUM_BODY
 
 
 def test_album_relationships_absent_when_ids_none(bare_mock: MusicKitApiMock) -> None:
     bare_mock.data.albums = {"a1": _minimal_album()}
     body = _get(bare_mock, "https://api.music.apple.com/v1/catalog/us/albums?ids=a1")
-    item = body["data"][0]
-    rels = item.get("relationships", {})
-    assert "tracks" not in rels
-    assert "artists" not in rels
+    assert body == _MINIMAL_ALBUM_BODY
 
 
 def test_artist_optional_artwork_absent_when_none(bare_mock: MusicKitApiMock) -> None:
@@ -156,8 +218,14 @@ def test_artist_optional_artwork_absent_when_none(bare_mock: MusicKitApiMock) ->
         "ar1": CatalogArtist(name="A", genre_names=[], url="x", artwork=None)
     }
     body = _get(bare_mock, "https://api.music.apple.com/v1/catalog/us/artists?ids=ar1")
-    attrs = body["data"][0]["attributes"]
-    assert "artwork" not in attrs
+    assert body == {
+        "data": [
+            {
+                **ARTIST_REF,
+                "attributes": {"name": "A", "genreNames": [], "url": "x"},
+            }
+        ]
+    }
 
 
 def test_artist_relationships_absent_when_album_ids_none(
@@ -172,8 +240,19 @@ def test_artist_relationships_absent_when_album_ids_none(
         )
     }
     body = _get(bare_mock, "https://api.music.apple.com/v1/catalog/us/artists?ids=ar1")
-    item = body["data"][0]
-    assert "relationships" not in item or "albums" not in item.get("relationships", {})
+    assert body == {
+        "data": [
+            {
+                **ARTIST_REF,
+                "attributes": {
+                    "name": "A",
+                    "artwork": _MINIMAL_ARTWORK,
+                    "genreNames": [],
+                    "url": "x",
+                },
+            }
+        ]
+    }
 
 
 def test_library_song_optional_fields_absent_when_none(
@@ -192,58 +271,64 @@ def test_library_song_optional_fields_absent_when_none(
         )
     }
     body = _get(mock, "https://api.music.apple.com/v1/me/library/songs/i.s1")
-    attrs = body["data"][0]["attributes"]
     # albumName / discNumber / trackNumber / releaseDate are optional on
     # LibrarySong (default None).
-    assert "albumName" not in attrs
-    assert "discNumber" not in attrs
-    assert "trackNumber" not in attrs
-    assert "releaseDate" not in attrs
+    assert body == {
+        "data": [
+            {
+                **LIBRARY_SONG_REF,
+                "attributes": {
+                    "name": "N",
+                    "artistName": "A",
+                    "artwork": _MINIMAL_ARTWORK,
+                    "durationInMillis": 1,
+                    "genreNames": [],
+                    "hasLyrics": False,
+                    "playParams": {
+                        "id": "i.s1",
+                        "kind": "song",
+                        "isLibrary": True,
+                        "reporting": True,
+                        "reportingId": "1",
+                        "catalogId": "1",
+                    },
+                },
+            }
+        ]
+    }
+
+
+def _minimal_library_album() -> CatalogLibraryAlbum:
+    return CatalogLibraryAlbum(
+        name="N",
+        artist_name="A",
+        artwork=Artwork(url="x", width=1, height=1),
+        genre_names=[],
+        track_count=0,
+        catalog_id="a1",
+    )
 
 
 def test_library_album_optional_fields_absent_when_none(
     mock: MusicKitApiMock,
 ) -> None:
-    mock.data.library_albums = {
-        "l.a1": CatalogLibraryAlbum(
-            name="N",
-            artist_name="A",
-            artwork=Artwork(url="x", width=1, height=1),
-            genre_names=[],
-            track_count=0,
-            catalog_id="a1",
-        )
-    }
+    """dateAdded / releaseDate are optional on LibraryAlbum (default None)."""
+    mock.data.library_albums = {"l.a1": _minimal_library_album()}
     body = _get(mock, "https://api.music.apple.com/v1/me/library/albums/l.a1")
-    attrs = body["data"][0]["attributes"]
-    # dateAdded / releaseDate are optional on LibraryAlbum (default None).
-    assert "dateAdded" not in attrs
-    assert "releaseDate" not in attrs
+    assert body == _MINIMAL_LIBRARY_ALBUM_BODY
 
 
 def test_library_album_relationships_absent_when_ids_none(
     mock: MusicKitApiMock,
 ) -> None:
-    mock.data.library_albums = {
-        "l.a1": CatalogLibraryAlbum(
-            name="N",
-            artist_name="A",
-            artwork=Artwork(url="x", width=1, height=1),
-            genre_names=[],
-            track_count=0,
-            catalog_id="a1",
-        )
-    }
+    mock.data.library_albums = {"l.a1": _minimal_library_album()}
     # ``include=tracks,artists`` is requested but library_album.{track,artist}_ids
     # are None → no inline relationships.
     body = _get(
         mock,
         "https://api.music.apple.com/v1/me/library/albums/l.a1?include=tracks,artists",
     )
-    item = body["data"][0]
-    rels = item.get("relationships", {})
-    assert "tracks" not in rels
-    assert "artists" not in rels
+    assert body == _MINIMAL_LIBRARY_ALBUM_BODY
 
 
 def test_library_playlist_optional_fields_absent_when_none(
@@ -262,8 +347,30 @@ def test_library_playlist_optional_fields_absent_when_none(
         )
     }
     body = _get(bare_mock, "https://api.music.apple.com/v1/me/library/playlists/p.pl1")
-    attrs = body["data"][0]["attributes"]
-    assert "artwork" not in attrs
+    assert body == {
+        "data": [
+            {
+                **LIBRARY_PLAYLIST_REF,
+                "attributes": {
+                    "name": "N",
+                    "canDelete": True,
+                    "canEdit": True,
+                    "isPublic": False,
+                    "dateAdded": "2024-01-01",
+                    "lastModifiedDate": "2024-01-02",
+                    "hasCatalog": False,
+                    "hasCollaboration": False,
+                    "playParams": {
+                        "id": "p.pl1",
+                        "kind": "playlist",
+                        "isLibrary": True,
+                        "reporting": False,
+                        "reportingId": "9e55d62727073344",
+                    },
+                },
+            }
+        ]
+    }
 
 
 def test_library_artist_minimal_emits_only_name(mock: MusicKitApiMock) -> None:
@@ -271,5 +378,4 @@ def test_library_artist_minimal_emits_only_name(mock: MusicKitApiMock) -> None:
         "r.ar1": CatalogLibraryArtist(name="A", catalog_id="ar1")
     }
     body = _get(mock, "https://api.music.apple.com/v1/me/library/artists/r.ar1")
-    attrs = body["data"][0]["attributes"]
-    assert attrs == {"name": "A"}
+    assert body == {"data": [{**LIBRARY_ARTIST_REF, "attributes": {"name": "A"}}]}

@@ -19,7 +19,7 @@ A station id with no matching ``data.stations`` entry raises
 from __future__ import annotations
 
 import json
-from typing import TYPE_CHECKING, Literal, cast
+from typing import Literal
 
 import pytest
 from musickit_api_mock import (
@@ -41,11 +41,8 @@ from musickit_api_mock import (
     Station,
 )
 
-if TYPE_CHECKING:
-    from tests._apple_response import AppleResponse
 
-
-def _get(mock: MusicKitApiMock, url: str) -> tuple[int, AppleResponse]:
+def _get(mock: MusicKitApiMock, url: str) -> tuple[int, object]:
     resp = mock.handle_request(Request(method="GET", url=url, headers={}, body=None))
     assert resp is not None
     return resp.status, json.loads(resp.body)
@@ -58,25 +55,39 @@ def _add_station(
     media_kind: Literal["audio", "video"],
     has_drm: bool,
 ) -> None:
-    stations = cast("dict[str, Station]", mock.data.stations)
-    stations[station_id] = Station(
-        name="X",
-        artwork=Artwork(url="x", width=1, height=1),
-        is_live=True,
-        media_kind=media_kind,
-        url="x",
-        is_tracks_station=False,
-        has_drm=has_drm,
-        kind="radio",
-        radio_url="x",
-        requires_subscription=True,
-    )
+    mock.data.stations = {
+        station_id: Station(
+            name="X",
+            artwork=Artwork(url="x", width=1, height=1),
+            is_live=True,
+            media_kind=media_kind,
+            url="x",
+            is_tracks_station=False,
+            has_drm=has_drm,
+            kind="radio",
+            radio_url="x",
+            requires_subscription=True,
+        )
+    }
 
 
 _DRM_ASSET_URLS = {
     "fair_play_key_certificate_url": "https://s.mzstatic.com/skdtool_2021_certbundle.bin",
     "key_server_url": "https://play.itunes.apple.com/WebObjects/MZPlay.woa/wa/acquireWebPlaybackLicense",
     "widevine_key_certificate_url": "https://play.itunes.apple.com/WebObjects/MZPlay.woa/wa/widevineCert",
+}
+
+_DRM_ASSETS_BODY = {
+    "results": {
+        "assets": [
+            {
+                "url": "x",
+                "fairPlayKeyCertificateUrl": "https://s.mzstatic.com/skdtool_2021_certbundle.bin",
+                "keyServerUrl": "https://play.itunes.apple.com/WebObjects/MZPlay.woa/wa/acquireWebPlaybackLicense",
+                "widevineKeyCertificateUrl": "https://play.itunes.apple.com/WebObjects/MZPlay.woa/wa/widevineCert",
+            }
+        ]
+    }
 }
 
 
@@ -90,8 +101,11 @@ def test_kind_song_dispatches_to_catalog_song_setter(mock: MusicKitApiMock) -> N
         )
 
     mock.endpoints.play_assets_catalog_song = fn
-    status, _ = _get(mock, "https://api.music.apple.com/v1/play/assets?id=1&kind=song")
+    status, body = _get(
+        mock, "https://api.music.apple.com/v1/play/assets?id=1&kind=song"
+    )
     assert status == 200
+    assert body == _DRM_ASSETS_BODY
     assert captured == ["1"]
 
 
@@ -108,11 +122,12 @@ def test_radio_station_audio_with_drm_dispatches_to_live_audio(
         )
 
     mock.endpoints.play_assets_live_audio = fn
-    status, _ = _get(
+    status, body = _get(
         mock,
         "https://api.music.apple.com/v1/play/assets?id=ra.audio_drm&kind=radioStation",
     )
     assert status == 200
+    assert body == _DRM_ASSETS_BODY
     assert captured == ["ra.audio_drm"]
 
 
@@ -129,11 +144,12 @@ def test_radio_station_audio_no_drm_dispatches_to_broadcast(
         )
 
     mock.endpoints.play_assets_broadcast = fn
-    status, _ = _get(
+    status, body = _get(
         mock,
         "https://api.music.apple.com/v1/play/assets?id=ra.bcast&kind=radioStation",
     )
     assert status == 200
+    assert body == {"results": {"assets": [{"url": "x"}]}}
     assert captured == ["ra.bcast"]
 
 
@@ -150,11 +166,12 @@ def test_radio_station_video_with_drm_dispatches_to_live_video(
         )
 
     mock.endpoints.play_assets_live_video = fn
-    status, _ = _get(
+    status, body = _get(
         mock,
         "https://api.music.apple.com/v1/play/assets?id=ra.video_drm&kind=radioStation",
     )
     assert status == 200
+    assert body == _DRM_ASSETS_BODY
     assert captured == ["ra.video_drm"]
 
 
@@ -172,11 +189,12 @@ def test_radio_station_video_no_drm_still_dispatches_to_live_video(
         )
 
     mock.endpoints.play_assets_live_video = fn
-    status, _ = _get(
+    status, body = _get(
         mock,
         "https://api.music.apple.com/v1/play/assets?id=ra.video_no_drm&kind=radioStation",
     )
     assert status == 200
+    assert body == _DRM_ASSETS_BODY
     assert captured == ["ra.video_no_drm"]
 
 

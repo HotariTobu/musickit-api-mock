@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import json
-from typing import TYPE_CHECKING, cast
 
 from musickit_api_mock import (
     ContinuousStation,
@@ -15,8 +14,7 @@ from musickit_api_mock import (
     StationNextTracksContext,
 )
 
-if TYPE_CHECKING:
-    from tests._apple_response import AppleResponse
+from tests._expected import ARTWORK_CATALOG, ERROR_ID, SONG
 
 
 def test_s01_next_tracks_default_limit_2(mock: MusicKitApiMock) -> None:
@@ -31,9 +29,7 @@ def test_s01_next_tracks_default_limit_2(mock: MusicKitApiMock) -> None:
     )
     assert resp is not None
     assert resp.status == 200
-    body = json.loads(resp.body)
-    assert len(body["data"]) == 1
-    assert body["data"][0]["id"] == "1"
+    assert json.loads(resp.body) == {"data": [SONG]}
 
 
 def test_s01_next_tracks_callable_with_context(mock: MusicKitApiMock) -> None:
@@ -44,7 +40,7 @@ def test_s01_next_tracks_callable_with_context(mock: MusicKitApiMock) -> None:
         return ["1"]
 
     mock.endpoints.station_next_tracks = fn
-    mock.handle_request(
+    resp = mock.handle_request(
         Request(
             method="POST",
             url="https://api.music.apple.com/v1/me/stations/next-tracks/ra.978194965?limit=5",
@@ -52,6 +48,8 @@ def test_s01_next_tracks_callable_with_context(mock: MusicKitApiMock) -> None:
             body=b"",
         )
     )
+    assert resp is not None
+    assert json.loads(resp.body) == {"data": [SONG]}
     assert captured == [5]
 
 
@@ -67,31 +65,45 @@ def test_s01_invalid_limit_400(mock: MusicKitApiMock) -> None:
     )
     assert resp is not None
     assert resp.status == 400
+    assert json.loads(resp.body) == {
+        "errors": [
+            {
+                "id": ERROR_ID,
+                "title": "Invalid Parameter Value",
+                "detail": "Value must be an integer less than or equal to 10, but was: 20",
+                "status": "400",
+                "code": "40005",
+                "source": {"parameter": "limit"},
+            }
+        ]
+    }
 
 
-def test_s02_continuous(mock: MusicKitApiMock) -> None:
-    stations = cast("dict[str, Station]", mock.data.stations)
-    station = stations["ra.978194965"]
-    mock.endpoints.continuous_stations = lambda _: ContinuousStationsResponseSuccess(
-        continuous_station=ContinuousStation(station=station, tracks=["1"])
-    )
-    body = json.dumps({"data": [{"id": "1", "type": "songs"}]}).encode()
-    resp = mock.handle_request(
-        Request(
-            method="POST",
-            url="https://api.music.apple.com/v1/me/stations/continuous?with=tracks",
-            headers={},
-            body=body,
-        )
-    )
-    assert resp is not None
-    assert resp.status == 200
-    parsed = json.loads(resp.body)
-    assert "station" in parsed["results"]
-    assert "tracks" in parsed["results"]
+_CONTINUOUS_STATION = {
+    "id": "105900f77595dab2",
+    "type": "stations",
+    "href": "/v1/catalog/us/stations/105900f77595dab2",
+    "attributes": {
+        "name": "Apple Music 1",
+        "artwork": ARTWORK_CATALOG,
+        "isLive": True,
+        "kind": "radio",
+        "mediaKind": "audio",
+        "playParams": {
+            "id": "105900f77595dab2",
+            "kind": "radioStation",
+            "hasDrm": True,
+            "mediaType": "audio",
+            "stationHash": "0510829bf4f6692e",
+        },
+        "radioUrl": "https://itsliveradio.apple.com/gl/ra.978194965/index-cmaf.m3u8",
+        "requiresSubscription": True,
+        "url": "https://music.apple.com/us/station/ra.978194965",
+    },
+}
 
 
-def _post_continuous(mock: MusicKitApiMock) -> tuple[int, AppleResponse]:
+def _post_continuous(mock: MusicKitApiMock) -> tuple[int, object]:
     body = json.dumps({"data": [{"id": "1", "type": "songs"}]}).encode()
     resp = mock.handle_request(
         Request(
@@ -103,6 +115,15 @@ def _post_continuous(mock: MusicKitApiMock) -> tuple[int, AppleResponse]:
     )
     assert resp is not None
     return resp.status, json.loads(resp.body)
+
+
+def test_s02_continuous(mock: MusicKitApiMock, station: Station) -> None:
+    mock.endpoints.continuous_stations = lambda _: ContinuousStationsResponseSuccess(
+        continuous_station=ContinuousStation(station=station, tracks=["1"])
+    )
+    status, body = _post_continuous(mock)
+    assert status == 200
+    assert body == {"results": {"station": _CONTINUOUS_STATION, "tracks": [SONG]}}
 
 
 def test_s02_continuous_content_unsupported_emits_errors_envelope(
@@ -120,7 +141,17 @@ def test_s02_continuous_content_unsupported_emits_errors_envelope(
     )
     status, body = _post_continuous(mock)
     assert status == 200
-    assert body["errors"][0]["code"] == "40004"
+    assert body == {
+        "errors": [
+            {
+                "id": ERROR_ID,
+                "code": "40004",
+                "title": "Bad Request",
+                "status": "400",
+                "detail": "content unsupported",
+            }
+        ]
+    }
 
 
 def test_s02_continuous_no_station_emits_no_station_shape(
@@ -129,5 +160,4 @@ def test_s02_continuous_no_station_emits_no_station_shape(
     mock.endpoints.continuous_stations = ContinuousStationsResponseNoStation()
     status, body = _post_continuous(mock)
     assert status == 200
-    results = body.get("results", {})
-    assert "station" not in results
+    assert body == {"results": {}}

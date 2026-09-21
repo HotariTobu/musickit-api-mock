@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import base64
 import json
 from typing import TYPE_CHECKING
 
@@ -22,8 +21,6 @@ from musickit_api_mock import (
 if TYPE_CHECKING:
     from musickit_api_mock.json_value import _JSONValue
 
-    from tests._apple_response import LicenseResponseBody
-
 
 _ACQUIRE_LICENSE_URL = (
     "https://play.itunes.apple.com/WebObjects/MZPlay.woa/wa/acquireWebPlaybackLicense"
@@ -35,7 +32,7 @@ _STREAMING_KEY_DELIVERY_URL = (
 
 def _post_license(
     mock: MusicKitApiMock, body_dict: dict[str, _JSONValue]
-) -> tuple[int, LicenseResponseBody]:
+) -> tuple[int, object]:
     body = json.dumps(body_dict).encode()
     resp = mock.handle_request(
         Request(
@@ -57,7 +54,7 @@ def _post_license_raw(
 
 def _post_streaming_key_delivery(
     mock: MusicKitApiMock, body_dict: dict[str, _JSONValue]
-) -> tuple[int, LicenseResponseBody]:
+) -> tuple[int, object]:
     body = json.dumps(body_dict).encode()
     resp = mock.handle_request(
         Request(
@@ -87,9 +84,12 @@ def test_license_catalog_song_success_static(mock: MusicKitApiMock) -> None:
         },
     )
     assert status == 200
-    assert base64.b64decode(body["license"]) == b"hello"
-    assert body["renew-after"] == 600
-    assert body["status"] == 0
+    assert body == {
+        "license": "aGVsbG8=",
+        "errorCode": 0,
+        "status": 0,
+        "renew-after": 600,
+    }
 
 
 def test_license_catalog_song_geo_block(mock: MusicKitApiMock) -> None:
@@ -99,8 +99,7 @@ def test_license_catalog_song_geo_block(mock: MusicKitApiMock) -> None:
         mock, {"key-system": "com.widevine.alpha", "adamId": "1"}
     )
     assert status == 200
-    assert body["status"] == -1017
-    assert body["errorCode"] == -1017
+    assert body == {"license": "", "errorCode": -1017, "status": -1017}
 
 
 def test_license_catalog_song_callable_per_key_system(mock: MusicKitApiMock) -> None:
@@ -112,9 +111,9 @@ def test_license_catalog_song_callable_per_key_system(mock: MusicKitApiMock) -> 
     s1, b1 = _post_license(mock, {"key-system": "com.widevine.alpha", "adamId": "1"})
     s2, b2 = _post_license(mock, {"key-system": "com.apple.fps", "adamId": "1"})
     assert s1 == 200
-    assert b1["status"] == 3084
+    assert b1 == {"license": "", "errorCode": 3084, "status": 3084}
     assert s2 == 200
-    assert b2["status"] == 0
+    assert b2 == {"license": "", "errorCode": 0, "status": 0}
 
 
 def test_license_live_radio_dispatch(mock: MusicKitApiMock) -> None:
@@ -126,7 +125,7 @@ def test_license_live_radio_dispatch(mock: MusicKitApiMock) -> None:
         mock, {"key-system": "com.widevine.alpha", "adamId": "ra.978194965"}
     )
     assert status == 200
-    assert body["status"] == 3084
+    assert body == {"license": "", "errorCode": 3084, "status": 3084}
 
 
 def test_license_unset_raises(mock: MusicKitApiMock) -> None:
@@ -172,7 +171,12 @@ def test_license_success_emits_renew_after(mock: MusicKitApiMock) -> None:
         mock, {"key-system": "com.widevine.alpha", "adamId": "1"}
     )
     assert status == 200
-    assert body["renew-after"] == 900
+    assert body == {
+        "license": "aw==",
+        "errorCode": 0,
+        "status": 0,
+        "renew-after": 900,
+    }
 
 
 def test_license_success_emits_stkn(mock: MusicKitApiMock) -> None:
@@ -184,7 +188,12 @@ def test_license_success_emits_stkn(mock: MusicKitApiMock) -> None:
         mock, {"key-system": "com.widevine.alpha", "adamId": "1"}
     )
     assert status == 200
-    assert body["stkn"] == "session-token"
+    assert body == {
+        "license": "aw==",
+        "errorCode": 0,
+        "status": 0,
+        "stkn": "session-token",
+    }
 
 
 def test_license_success_omits_renew_after_when_unset(mock: MusicKitApiMock) -> None:
@@ -194,8 +203,7 @@ def test_license_success_omits_renew_after_when_unset(mock: MusicKitApiMock) -> 
         mock, {"key-system": "com.widevine.alpha", "adamId": "1"}
     )
     assert status == 200
-    assert "renew-after" not in body
-    assert "stkn" not in body
+    assert body == {"license": "aw==", "errorCode": 0, "status": 0}
 
 
 def test_license_playready_key_system_dispatch(mock: MusicKitApiMock) -> None:
@@ -206,10 +214,11 @@ def test_license_playready_key_system_dispatch(mock: MusicKitApiMock) -> None:
         return LicenseResponseSuccess(license=b"")
 
     mock.endpoints.license_catalog_song = handler
-    status, _ = _post_license(
+    status, body = _post_license(
         mock, {"key-system": "com.microsoft.playready", "adamId": "1"}
     )
     assert status == 200
+    assert body == {"license": "", "errorCode": 0, "status": 0}
     assert captured == ["com.microsoft.playready"]
 
 
@@ -227,11 +236,12 @@ def test_license_invalid_key_system_flows_through(mock: MusicKitApiMock) -> None
         return LicenseResponseSuccess(license=b"")
 
     mock.endpoints.license_catalog_song = handler
-    status, _ = _post_license(
+    status, body = _post_license(
         mock,
         {"key-system": "com.example.unknown-drm", "adamId": "1"},
     )
     assert status == 200
+    assert body == {"license": "", "errorCode": 0, "status": 0}
     assert captured == ["com.example.unknown-drm"]
 
 
@@ -262,7 +272,7 @@ def test_license_hls_offers_dispatch(mock: MusicKitApiMock) -> None:
         return LicenseResponseSuccess(license=b"")
 
     mock.endpoints.license_hls_offers = handler
-    status, _ = _post_license(
+    status, body = _post_license(
         mock,
         {
             "key-system": "com.widevine.alpha",
@@ -270,6 +280,7 @@ def test_license_hls_offers_dispatch(mock: MusicKitApiMock) -> None:
         },
     )
     assert status == 200
+    assert body == {"license": "", "errorCode": 0, "status": 0}
     assert len(captured) == 1
     assert captured[0].adam_id == "9876"
     assert captured[0].key_system == "com.widevine.alpha"
@@ -283,7 +294,7 @@ def test_license_hls_offers_first_not_dict_fallback(mock: MusicKitApiMock) -> No
         return LicenseResponseSuccess(license=b"")
 
     mock.endpoints.license_hls_offers = handler
-    status, _ = _post_license(
+    status, body = _post_license(
         mock,
         {
             "key-system": "com.widevine.alpha",
@@ -291,6 +302,7 @@ def test_license_hls_offers_first_not_dict_fallback(mock: MusicKitApiMock) -> No
         },
     )
     assert status == 200
+    assert body == {"license": "", "errorCode": 0, "status": 0}
     assert len(captured) == 1
     assert captured[0].adam_id == ""
 
@@ -303,11 +315,12 @@ def test_streaming_key_delivery_dispatch(mock: MusicKitApiMock) -> None:
         return LicenseResponseSuccess(license=b"k")
 
     mock.endpoints.license_live_radio = handler
-    status, _ = _post_streaming_key_delivery(
+    status, body = _post_streaming_key_delivery(
         mock,
         {"key-system": "com.apple.fps", "adamId": "ra.978194965"},
     )
     assert status == 200
+    assert body == {"license": "aw==", "errorCode": 0, "status": 0}
     assert len(captured) == 1
     assert captured[0].station_id == "ra.978194965"
     assert captured[0].key_system == "com.apple.fps"

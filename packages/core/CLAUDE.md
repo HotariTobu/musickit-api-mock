@@ -6,6 +6,16 @@ Guidance for the `musickit_api_mock` core package.
 
 Handlers must build response JSON via the schema layer, not inline.
 
+## Response tests
+
+A response test compares the whole decoded body (`assert body == {...}`)
+instead of reading individual fields through subscript chains: a chain leaves
+every field it does not touch unverified. Expected JSON is written as literals
+— the fragments shared across tests (each conftest fixture's reference and
+attribute block) live in `tests/_expected.py` and are transcribed from emitted
+output, never derived from the schema layer. The one volatile field, the random
+error id, is matched by the sentinel that module exports.
+
 ## Browser shim environment scope
 
 The shim must work across **all browser environments MusicKit JS targets**. Don't narrow to one runtime just because the test harness only installs one browser.

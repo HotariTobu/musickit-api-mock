@@ -136,8 +136,11 @@ def test_streaming_key_delivery_dispatches_to_live_radio_setter(
     )
     assert resp is not None
     assert resp.status == 200
-    parsed = json.loads(resp.body)
-    assert parsed["status"] == 0
+    assert json.loads(resp.body) == {
+        "license": "cmFkaW8ta2V5",
+        "errorCode": 0,
+        "status": 0,
+    }
 
 
 def test_streaming_key_delivery_failure_emits_failure_code(
@@ -156,8 +159,7 @@ def test_streaming_key_delivery_failure_emits_failure_code(
         )
     )
     assert resp is not None
-    parsed = json.loads(resp.body)
-    assert parsed["status"] == 3084
+    assert json.loads(resp.body) == {"license": "", "errorCode": 3084, "status": 3084}
 
 
 def test_fairplay_cert_success_returns_bytes(mock: MusicKitApiMock) -> None:

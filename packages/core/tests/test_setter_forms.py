@@ -16,7 +16,6 @@ resolver's documented forms are exercised at least once.
 from __future__ import annotations
 
 import json
-from typing import TYPE_CHECKING, cast
 
 import pytest
 from musickit_api_mock import (
@@ -47,22 +46,58 @@ from musickit_api_mock import (
     WebPlaybackResponseSuccess,
 )
 
-if TYPE_CHECKING:
-    from tests._apple_response import (
-        AccountMeta,
-        AppleResponse,
-        LicenseResponseBody,
-        WebPlaybackResponseBody,
-    )
+from tests._expected import ACCOUNT, ARTWORK_CATALOG
+
+_WEB_PLAYBACK_SONG_BODY = {
+    "songId": "s1",
+    "hls-key-cert-url": "https://s.mzstatic.com/skdtool_2021_certbundle.bin",
+    "hls-key-server-url": "https://play.itunes.apple.com/WebObjects/MZPlay.woa/wa/acquireWebPlaybackLicense",
+    "widevine-cert-url": "https://play.itunes.apple.com/WebObjects/MZPlay.woa/wa/widevineCert",
+    "assets": [
+        {
+            "flavor": "28:cbcp32",
+            "URL": "https://aod-ssl.itunes.apple.com/itunes-assets/s1/index.m3u8",
+        }
+    ],
+}
+
+_EMPTY_WEB_PLAYBACK_BODY = {"songList": [], "status": 0}
+
+_CONTINUOUS_STATION_BODY = {
+    "results": {
+        "station": {
+            "id": "105900f77595dab2",
+            "type": "stations",
+            "href": "/v1/catalog/us/stations/105900f77595dab2",
+            "attributes": {
+                "name": "Apple Music 1",
+                "artwork": ARTWORK_CATALOG,
+                "isLive": True,
+                "kind": "radio",
+                "mediaKind": "audio",
+                "playParams": {
+                    "id": "105900f77595dab2",
+                    "kind": "radioStation",
+                    "hasDrm": True,
+                    "mediaType": "audio",
+                    "stationHash": "0510829bf4f6692e",
+                },
+                "radioUrl": "https://itsliveradio.apple.com/gl/ra.978194965/index-cmaf.m3u8",
+                "requiresSubscription": True,
+                "url": "https://music.apple.com/us/station/ra.978194965",
+            },
+        },
+    }
+}
 
 
-def _get(mock: MusicKitApiMock, url: str) -> tuple[int, AppleResponse]:
+def _get(mock: MusicKitApiMock, url: str) -> tuple[int, object]:
     resp = mock.handle_request(Request(method="GET", url=url, headers={}, body=None))
     assert resp is not None
     return resp.status, json.loads(resp.body)
 
 
-def _post(mock: MusicKitApiMock, url: str, body: bytes) -> tuple[int, AppleResponse]:
+def _post(mock: MusicKitApiMock, url: str, body: bytes) -> tuple[int, object]:
     resp = mock.handle_request(Request(method="POST", url=url, headers={}, body=body))
     assert resp is not None
     return resp.status, json.loads(resp.body)
@@ -78,6 +113,24 @@ def _storefront() -> StorefrontResponse:
             explicit_content_policy="allowed",
         )
     )
+
+
+def _expected_storefront_body(storefront_id: str) -> dict[str, object]:
+    return {
+        "data": [
+            {
+                "id": storefront_id,
+                "type": "storefronts",
+                "href": f"/v1/storefronts/{storefront_id}",
+                "attributes": {
+                    "name": "X",
+                    "defaultLanguageTag": "en-US",
+                    "supportedLanguageTags": ["en-US"],
+                    "explicitContentPolicy": "allowed",
+                },
+            }
+        ]
+    }
 
 
 # --- _resolve_static: callable form ------------------------------------------------
@@ -104,8 +157,8 @@ def test_storefront_callable_form_evaluated_per_call() -> None:
     s1, b1 = _get(m, "https://api.music.apple.com/v1/me/storefront")
     s2, b2 = _get(m, "https://api.music.apple.com/v1/me/storefront")
     assert s1 == s2 == 200
-    assert b1["data"][0]["id"] == "sf-1"
-    assert b2["data"][0]["id"] == "sf-2"
+    assert b1 == _expected_storefront_body("sf-1")
+    assert b2 == _expected_storefront_body("sf-2")
 
 
 def test_account_callable_form() -> None:
@@ -121,19 +174,22 @@ def test_account_callable_form() -> None:
         m, "https://api.music.apple.com/v1/me/account?meta=subscription"
     )
     assert status == 200
-    meta = cast("AccountMeta", body["meta"])
-    assert meta["subscription"]["active"] is False
+    assert body == {
+        "data": [ACCOUNT],
+        "meta": {"subscription": {"active": False, "storefront": "us"}},
+    }
 
 
 def test_play_activity_callable_form() -> None:
     m = MusicKitApiMock()
     m.endpoints.play_activity = lambda: PlayActivityResponseSuccess()
-    status, _body = _post(
+    status, body = _post(
         m,
         "https://universal-activity-service.itunes.apple.com/play",
         b"{}",
     )
     assert status == 200
+    assert body == {}
 
 
 def test_webplayer_logout_callable_form() -> None:
@@ -172,15 +228,13 @@ def test_web_playback_dict_form_dispatches_on_salable_adam_id(
     }
     mock.endpoints.web_playback = web_playback_dict
     body = json.dumps({"salableAdamId": "s1"}).encode()
-    status, raw = _post(
+    status, parsed = _post(
         mock,
         "https://play.itunes.apple.com/WebObjects/MZPlay.woa/wa/webPlayback",
         body,
     )
-    parsed = cast("WebPlaybackResponseBody", raw)
     assert status == 200
-    assert parsed["status"] == 0
-    assert parsed["songList"][0]["songId"] == "s1"
+    assert parsed == {"songList": [_WEB_PLAYBACK_SONG_BODY], "status": 0}
 
 
 def test_web_playback_mapping_form_dispatches_on_universal_library_id(
@@ -206,15 +260,16 @@ def test_web_playback_mapping_form_dispatches_on_universal_library_id(
     body = json.dumps(
         {"subscriptionAdamId": "s1", "universalLibraryId": "i.abc"}
     ).encode()
-    status, raw = _post(
+    status, parsed = _post(
         mock,
         "https://play.itunes.apple.com/WebObjects/MZPlay.woa/wa/webPlayback",
         body,
     )
-    parsed = cast("WebPlaybackResponseBody", raw)
     assert status == 200
-    assert parsed["status"] == 0
-    assert parsed["songList"][0]["songId"] == "s1"
+    assert parsed == {
+        "songList": [{**_WEB_PLAYBACK_SONG_BODY, "needsPlaybackReporting": True}],
+        "status": 0,
+    }
 
 
 def test_web_playback_mapping_form_rejects_library_item_without_universal_library_id(
@@ -238,14 +293,13 @@ def test_web_playback_static_form_ignores_missing_universal_library_id(
 ) -> None:
     mock.endpoints.web_playback = WebPlaybackResponseSuccess(song_list=[])
     body = json.dumps({"subscriptionAdamId": "s1"}).encode()
-    status, raw = _post(
+    status, parsed = _post(
         mock,
         "https://play.itunes.apple.com/WebObjects/MZPlay.woa/wa/webPlayback",
         body,
     )
-    parsed = cast("WebPlaybackResponseBody", raw)
     assert status == 200
-    assert parsed["status"] == 0
+    assert parsed == _EMPTY_WEB_PLAYBACK_BODY
 
 
 def test_web_playback_callable_form_receives_omitted_library_fields_as_none(
@@ -259,11 +313,12 @@ def test_web_playback_callable_form_receives_omitted_library_fields_as_none(
 
     mock.endpoints.web_playback = fn
     body = json.dumps({"subscriptionAdamId": "s1"}).encode()
-    _post(
+    _, parsed = _post(
         mock,
         "https://play.itunes.apple.com/WebObjects/MZPlay.woa/wa/webPlayback",
         body,
     )
+    assert parsed == _EMPTY_WEB_PLAYBACK_BODY
     assert captured == [
         WebPlaybackLibraryItemContext(
             subscription_adam_id="s1",
@@ -284,11 +339,12 @@ def test_web_playback_callable_form_receives_catalog_item_context(
 
     mock.endpoints.web_playback = fn
     body = json.dumps({"salableAdamId": "abc"}).encode()
-    _post(
+    _, parsed = _post(
         mock,
         "https://play.itunes.apple.com/WebObjects/MZPlay.woa/wa/webPlayback",
         body,
     )
+    assert parsed == _EMPTY_WEB_PLAYBACK_BODY
     assert captured == [WebPlaybackCatalogItemContext(salable_adam_id="abc")]
 
 
@@ -309,11 +365,12 @@ def test_web_playback_callable_form_receives_library_item_context(
             "universalLibraryId": "i.abc",
         }
     ).encode()
-    _post(
+    _, parsed = _post(
         mock,
         "https://play.itunes.apple.com/WebObjects/MZPlay.woa/wa/webPlayback",
         body,
     )
+    assert parsed == _EMPTY_WEB_PLAYBACK_BODY
     assert captured == [
         WebPlaybackLibraryItemContext(
             subscription_adam_id="c1",
@@ -326,10 +383,10 @@ def test_web_playback_callable_form_receives_library_item_context(
 # --- _resolve_with_context: static form for continuous_stations ------------------
 
 
-def test_continuous_stations_static_form(mock: MusicKitApiMock) -> None:
+def test_continuous_stations_static_form(
+    mock: MusicKitApiMock, station: Station
+) -> None:
     """``endpoints.continuous_stations = <response>`` (no callable) is the static form."""
-    stations = cast("dict[str, Station]", mock.data.stations)
-    station = stations["ra.978194965"]
     static_resp: ContinuousStationsResponse = ContinuousStationsResponseSuccess(
         continuous_station=ContinuousStation(station=station, tracks=None)
     )
@@ -341,28 +398,28 @@ def test_continuous_stations_static_form(mock: MusicKitApiMock) -> None:
         body,
     )
     assert status == 200
-    assert "station" in parsed["results"]
+    assert parsed == _CONTINUOUS_STATION_BODY
 
 
 def test_continuous_stations_callable_receives_context(
-    mock: MusicKitApiMock,
+    mock: MusicKitApiMock, station: Station
 ) -> None:
     captured: list[int] = []
 
     def fn(ctx: ContinuousStationsContext) -> ContinuousStationsResponse:
         captured.append(len(ctx.seeds or []))
-        stations = cast("dict[str, Station]", mock.data.stations)
         return ContinuousStationsResponseSuccess(
-            continuous_station=ContinuousStation(
-                station=stations["ra.978194965"], tracks=None
-            )
+            continuous_station=ContinuousStation(station=station, tracks=None)
         )
 
     mock.endpoints.continuous_stations = fn
     body = json.dumps(
         {"data": [{"id": "1", "type": "songs"}, {"id": "2", "type": "songs"}]}
     ).encode()
-    _post(mock, "https://api.music.apple.com/v1/me/stations/continuous", body)
+    _, parsed = _post(
+        mock, "https://api.music.apple.com/v1/me/stations/continuous", body
+    )
+    assert parsed == _CONTINUOUS_STATION_BODY
     assert captured == [2]
 
 
@@ -380,18 +437,16 @@ def test_license_dict_form_keys_on_adam_id(mock: MusicKitApiMock) -> None:
     mock.endpoints.license_catalog_song = license_dict
     a = json.dumps({"key-system": "com.widevine.alpha", "adamId": "1"}).encode()
     b = json.dumps({"key-system": "com.widevine.alpha", "adamId": "2"}).encode()
-    s_a, raw_a = _post(
+    s_a, body_a = _post(
         mock,
         "https://play.itunes.apple.com/WebObjects/MZPlay.woa/wa/acquireWebPlaybackLicense",
         a,
     )
-    s_b, raw_b = _post(
+    s_b, body_b = _post(
         mock,
         "https://play.itunes.apple.com/WebObjects/MZPlay.woa/wa/acquireWebPlaybackLicense",
         b,
     )
-    body_a = cast("LicenseResponseBody", raw_a)
-    body_b = cast("LicenseResponseBody", raw_b)
     assert s_a == s_b == 200
-    assert body_a["status"] == 0
-    assert body_b["status"] == -1017
+    assert body_a == {"license": "Z29vZA==", "errorCode": 0, "status": 0}
+    assert body_b == {"license": "", "errorCode": -1017, "status": -1017}
