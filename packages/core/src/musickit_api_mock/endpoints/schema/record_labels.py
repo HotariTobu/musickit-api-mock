@@ -12,12 +12,12 @@ from musickit_api_mock.endpoints.schema.builders import (
 
 if TYPE_CHECKING:
     from musickit_api_mock.data.record_label import RecordLabel
-    from musickit_api_mock.json_value import _JSONValue
+    from musickit_api_mock.endpoints.schema.shapes import AppleResource
 
 
 def _record_label_resource(
     sf: str, record_label_id: str, record_label: RecordLabel
-) -> dict[str, _JSONValue]:
+) -> AppleResource:
     return {
         "id": record_label_id,
         "type": "record-labels",

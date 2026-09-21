@@ -57,6 +57,7 @@ from musickit_api_mock.endpoints.request_locale import _check_and_resolve_locale
 from musickit_api_mock.endpoints.schema import (
     _album_resource,
     _artist_resource,
+    _batch_envelope,
     _catalog_ref,
     _curator_resource,
     _empty_ids_400_envelope,
@@ -85,7 +86,10 @@ if TYPE_CHECKING:
     from musickit_api_mock.data.library_album import LibraryAlbum
     from musickit_api_mock.data.personal_recommendation import PersonalRecommendation
     from musickit_api_mock.data.song import CatalogSong
-    from musickit_api_mock.json_value import _JSONValue
+    from musickit_api_mock.endpoints.schema import (
+        AppleRelationshipBlock,
+        AppleResource,
+    )
     from musickit_api_mock.mock import MusicKitApiMock
     from musickit_api_mock.surfaces.data import _DataResolver
     from musickit_api_mock.transport.http import Request, Response
@@ -99,14 +103,14 @@ def _build_artist_sub_rels(
     locale: str | None,
     includes: set[str],
     resolver: _DataResolver,
-) -> dict[str, _JSONValue]:
+) -> dict[str, AppleRelationshipBlock]:
     """Build sub-rels for an artist resource.
 
     Apple emits default ``relationships.albums`` (shallow refs, 20 entries)
     for artists in any catalog endpoint that returns artist resources.
     ``?include=albums`` upgrades the same block to full album resources.
     """
-    rels: dict[str, _JSONValue] = {}
+    rels: dict[str, AppleRelationshipBlock] = {}
     if "albums" in includes:
         block = _paginated_relationship_block(
             f"/v1/catalog/{sf}/artists/{artist_id}/albums",
@@ -137,9 +141,9 @@ def _build_album_sub_rels(
     locale: str | None,
     includes: set[str],
     resolver: _DataResolver,
-) -> dict[str, _JSONValue]:
+) -> dict[str, AppleRelationshipBlock]:
     """Build sub-rels for an album: ``?include=tracks,artists``."""
-    rels: dict[str, _JSONValue] = {}
+    rels: dict[str, AppleRelationshipBlock] = {}
     if "tracks" in includes:
         block = _paginated_relationship_block(
             f"/v1/catalog/{sf}/albums/{album_id}/tracks",
@@ -175,9 +179,9 @@ def _build_song_sub_rels(
     locale: str | None,
     includes: set[str],
     resolver: _DataResolver,
-) -> dict[str, _JSONValue]:
+) -> dict[str, AppleRelationshipBlock]:
     """Build sub-rels for a song: ``?include=albums,artists,composers``."""
-    rels: dict[str, _JSONValue] = {}
+    rels: dict[str, AppleRelationshipBlock] = {}
     if "albums" in includes:
         block = _paginated_relationship_block(
             f"/v1/catalog/{sf}/songs/{song_id}/albums",
@@ -224,9 +228,9 @@ def _build_library_album_sub_rels(
     locale: str | None,
     includes: set[str],
     resolver: _DataResolver,
-) -> dict[str, _JSONValue]:
+) -> dict[str, AppleRelationshipBlock]:
     """Build sub-rels for a library album: ``?include=tracks,artists``."""
-    rels: dict[str, _JSONValue] = {}
+    rels: dict[str, AppleRelationshipBlock] = {}
     if "tracks" in includes:
         block = _paginated_relationship_block(
             f"/v1/me/library/albums/{library_album_id}/tracks",
@@ -267,7 +271,7 @@ def _handle_artist_albums(
         return err
     artist = mock._data_resolver.artist.get(LookupContext(artist_id, locale))
     if artist is None:
-        return _json_response({"data": []})
+        return _json_response(_batch_envelope([]))
     resolver = mock._data_resolver
     includes = _parse_csv_param(req.url, "include")
     items = _slice_resolved(
@@ -276,7 +280,7 @@ def _handle_artist_albums(
         limit,
         lambda aid: resolver.album.get(LookupContext(aid, locale)),
     )
-    data: list[dict[str, _JSONValue]] = []
+    data: list[AppleResource] = []
     for aid, album in items:
         sub_rels = _build_album_sub_rels(
             sf, aid, album, locale=locale, includes=includes, resolver=resolver
@@ -303,7 +307,7 @@ def _handle_album_tracks(
         return err
     album = mock._data_resolver.album.get(LookupContext(album_id, locale))
     if album is None:
-        return _json_response({"data": []})
+        return _json_response(_batch_envelope([]))
     resolver = mock._data_resolver
     includes = _parse_csv_param(req.url, "include")
     items = _slice_resolved(
@@ -312,7 +316,7 @@ def _handle_album_tracks(
         limit,
         lambda sid: resolver.song.get(LookupContext(sid, locale)),
     )
-    data: list[dict[str, _JSONValue]] = []
+    data: list[AppleResource] = []
     for sid, song in items:
         sub_rels = _build_song_sub_rels(
             sf, sid, song, locale=locale, includes=includes, resolver=resolver
@@ -339,7 +343,7 @@ def _handle_album_artists(
         return err
     album = mock._data_resolver.album.get(LookupContext(album_id, locale))
     if album is None:
-        return _json_response({"data": []})
+        return _json_response(_batch_envelope([]))
     resolver = mock._data_resolver
     includes = _parse_csv_param(req.url, "include")
     items = _slice_resolved(
@@ -348,7 +352,7 @@ def _handle_album_artists(
         limit,
         lambda aid: resolver.artist.get(LookupContext(aid, locale)),
     )
-    data: list[dict[str, _JSONValue]] = []
+    data: list[AppleResource] = []
     for aid, ar in items:
         sub_rels = _build_artist_sub_rels(
             sf, aid, ar, locale=locale, includes=includes, resolver=resolver
@@ -375,7 +379,7 @@ def _handle_playlist_tracks(
         return err
     playlist = mock._data_resolver.playlist.get(LookupContext(playlist_id, locale))
     if playlist is None:
-        return _json_response({"data": []})
+        return _json_response(_batch_envelope([]))
     resolver = mock._data_resolver
     includes = _parse_csv_param(req.url, "include")
     items = _slice_resolved(
@@ -384,7 +388,7 @@ def _handle_playlist_tracks(
         limit,
         lambda sid: resolver.song.get(LookupContext(sid, locale)),
     )
-    data: list[dict[str, _JSONValue]] = []
+    data: list[AppleResource] = []
     for sid, song in items:
         sub_rels = _build_song_sub_rels(
             sf, sid, song, locale=locale, includes=includes, resolver=resolver
@@ -413,7 +417,7 @@ def _handle_music_video_albums(
         LookupContext(music_video_id, locale)
     )
     if music_video is None:
-        return _json_response({"data": []})
+        return _json_response(_batch_envelope([]))
     resolver = mock._data_resolver
     includes = _parse_csv_param(req.url, "include")
     items = _slice_resolved(
@@ -422,7 +426,7 @@ def _handle_music_video_albums(
         limit,
         lambda aid: resolver.album.get(LookupContext(aid, locale)),
     )
-    data: list[dict[str, _JSONValue]] = []
+    data: list[AppleResource] = []
     for aid, al in items:
         sub_rels = _build_album_sub_rels(
             sf, aid, al, locale=locale, includes=includes, resolver=resolver
@@ -451,7 +455,7 @@ def _handle_music_video_artists(
         LookupContext(music_video_id, locale)
     )
     if music_video is None:
-        return _json_response({"data": []})
+        return _json_response(_batch_envelope([]))
     resolver = mock._data_resolver
     includes = _parse_csv_param(req.url, "include")
     items = _slice_resolved(
@@ -460,7 +464,7 @@ def _handle_music_video_artists(
         limit,
         lambda aid: resolver.artist.get(LookupContext(aid, locale)),
     )
-    data: list[dict[str, _JSONValue]] = []
+    data: list[AppleResource] = []
     for aid, ar in items:
         sub_rels = _build_artist_sub_rels(
             sf, aid, ar, locale=locale, includes=includes, resolver=resolver
@@ -487,7 +491,7 @@ def _handle_song_albums(
         return err
     song = mock._data_resolver.song.get(LookupContext(song_id, locale))
     if song is None:
-        return _json_response({"data": []})
+        return _json_response(_batch_envelope([]))
     resolver = mock._data_resolver
     includes = _parse_csv_param(req.url, "include")
     items = _slice_resolved(
@@ -496,7 +500,7 @@ def _handle_song_albums(
         limit,
         lambda aid: resolver.album.get(LookupContext(aid, locale)),
     )
-    data: list[dict[str, _JSONValue]] = []
+    data: list[AppleResource] = []
     for aid, al in items:
         sub_rels = _build_album_sub_rels(
             sf, aid, al, locale=locale, includes=includes, resolver=resolver
@@ -523,7 +527,7 @@ def _handle_song_artists(
         return err
     song = mock._data_resolver.song.get(LookupContext(song_id, locale))
     if song is None:
-        return _json_response({"data": []})
+        return _json_response(_batch_envelope([]))
     resolver = mock._data_resolver
     includes = _parse_csv_param(req.url, "include")
     items = _slice_resolved(
@@ -532,7 +536,7 @@ def _handle_song_artists(
         limit,
         lambda aid: resolver.artist.get(LookupContext(aid, locale)),
     )
-    data: list[dict[str, _JSONValue]] = []
+    data: list[AppleResource] = []
     for aid, ar in items:
         sub_rels = _build_artist_sub_rels(
             sf, aid, ar, locale=locale, includes=includes, resolver=resolver
@@ -559,7 +563,7 @@ def _handle_song_composers(
         return err
     song = mock._data_resolver.song.get(LookupContext(song_id, locale))
     if song is None:
-        return _json_response({"data": []})
+        return _json_response(_batch_envelope([]))
     resolver = mock._data_resolver
     includes = _parse_csv_param(req.url, "include")
     items = _slice_resolved(
@@ -568,7 +572,7 @@ def _handle_song_composers(
         limit,
         lambda aid: resolver.artist.get(LookupContext(aid, locale)),
     )
-    data: list[dict[str, _JSONValue]] = []
+    data: list[AppleResource] = []
     for aid, ar in items:
         sub_rels = _build_artist_sub_rels(
             sf, aid, ar, locale=locale, includes=includes, resolver=resolver
@@ -597,7 +601,7 @@ def _handle_library_album_tracks(
         LookupContext(library_album_id, locale)
     )
     if library_album is None:
-        return _json_response({"data": []})
+        return _json_response(_batch_envelope([]))
     resolver = mock._data_resolver
     items = _slice_resolved(
         library_album.track_ids,
@@ -630,7 +634,7 @@ def _handle_library_album_artists(
         LookupContext(library_album_id, locale)
     )
     if library_album is None:
-        return _json_response({"data": []})
+        return _json_response(_batch_envelope([]))
     resolver = mock._data_resolver
     items = _slice_resolved(
         library_album.artist_ids,
@@ -662,7 +666,7 @@ def _handle_library_playlist_tracks(
         LookupContext(library_playlist_id, locale)
     )
     if library_playlist is None:
-        return _json_response({"data": []})
+        return _json_response(_batch_envelope([]))
     resolver = mock._data_resolver
     items = _slice_resolved(
         library_playlist.track_ids,
@@ -695,7 +699,7 @@ def _handle_library_music_video_albums(
         LookupContext(library_music_video_id, locale)
     )
     if library_music_video is None:
-        return _json_response({"data": []})
+        return _json_response(_batch_envelope([]))
     resolver = mock._data_resolver
     includes = _parse_csv_param(req.url, "include")
     items = _slice_resolved(
@@ -704,7 +708,7 @@ def _handle_library_music_video_albums(
         limit,
         lambda aid: resolver.library_album.get(LookupContext(aid, locale)),
     )
-    data: list[dict[str, _JSONValue]] = []
+    data: list[AppleResource] = []
     for aid, la in items:
         sub_rels = _build_library_album_sub_rels(
             aid, la, locale=locale, includes=includes, resolver=resolver
@@ -737,7 +741,7 @@ def _handle_library_music_video_artists(
         LookupContext(library_music_video_id, locale)
     )
     if library_music_video is None:
-        return _json_response({"data": []})
+        return _json_response(_batch_envelope([]))
     resolver = mock._data_resolver
     items = _slice_resolved(
         library_music_video.artist_ids,
@@ -768,14 +772,14 @@ def _handle_song_library(
         return err
     song = mock._data_resolver.song.get(LookupContext(song_id, locale))
     if song is None or song.library_song_id is None:
-        return _json_response({"data": []})
+        return _json_response(_batch_envelope([]))
     library_song = mock._data_resolver.library_song.get(
         LookupContext(song.library_song_id, locale)
     )
     if library_song is None:
-        return _json_response({"data": []})
+        return _json_response(_batch_envelope([]))
     return _json_response(
-        {"data": [_library_song_resource(song.library_song_id, library_song)]}
+        _batch_envelope([_library_song_resource(song.library_song_id, library_song)])
     )
 
 
@@ -787,14 +791,16 @@ def _handle_album_library(
         return err
     album = mock._data_resolver.album.get(LookupContext(album_id, locale))
     if album is None or album.library_album_id is None:
-        return _json_response({"data": []})
+        return _json_response(_batch_envelope([]))
     library_album = mock._data_resolver.library_album.get(
         LookupContext(album.library_album_id, locale)
     )
     if library_album is None:
-        return _json_response({"data": []})
+        return _json_response(_batch_envelope([]))
     return _json_response(
-        {"data": [_library_album_resource(album.library_album_id, library_album)]}
+        _batch_envelope(
+            [_library_album_resource(album.library_album_id, library_album)]
+        )
     )
 
 
@@ -808,20 +814,20 @@ def _handle_music_video_library(
         LookupContext(music_video_id, locale)
     )
     if music_video is None or music_video.library_music_video_id is None:
-        return _json_response({"data": []})
+        return _json_response(_batch_envelope([]))
     library_music_video = mock._data_resolver.library_music_video.get(
         LookupContext(music_video.library_music_video_id, locale)
     )
     if library_music_video is None:
-        return _json_response({"data": []})
+        return _json_response(_batch_envelope([]))
     return _json_response(
-        {
-            "data": [
+        _batch_envelope(
+            [
                 _library_music_video_resource(
                     music_video.library_music_video_id, library_music_video
                 )
             ]
-        }
+        )
     )
 
 
@@ -833,20 +839,16 @@ def _handle_playlist_library(
         return err
     playlist = mock._data_resolver.playlist.get(LookupContext(playlist_id, locale))
     if playlist is None or playlist.library_playlist_id is None:
-        return _json_response({"data": []})
+        return _json_response(_batch_envelope([]))
     library_playlist = mock._data_resolver.library_playlist.get(
         LookupContext(playlist.library_playlist_id, locale)
     )
     if library_playlist is None:
-        return _json_response({"data": []})
+        return _json_response(_batch_envelope([]))
     return _json_response(
-        {
-            "data": [
-                _library_playlist_resource(
-                    playlist.library_playlist_id, library_playlist
-                )
-            ]
-        }
+        _batch_envelope(
+            [_library_playlist_resource(playlist.library_playlist_id, library_playlist)]
+        )
     )
 
 
@@ -863,7 +865,7 @@ def _handle_library_song_albums(
         LookupContext(library_song_id, locale)
     )
     if library_song is None:
-        return _json_response({"data": []})
+        return _json_response(_batch_envelope([]))
     resolver = mock._data_resolver
     items = _slice_resolved(
         library_song.album_ids,
@@ -895,7 +897,7 @@ def _handle_library_song_artists(
         LookupContext(library_song_id, locale)
     )
     if library_song is None:
-        return _json_response({"data": []})
+        return _json_response(_batch_envelope([]))
     resolver = mock._data_resolver
     items = _slice_resolved(
         library_song.artist_ids,
@@ -927,7 +929,7 @@ def _handle_library_artist_albums(
         LookupContext(library_artist_id, locale)
     )
     if library_artist is None:
-        return _json_response({"data": []})
+        return _json_response(_batch_envelope([]))
     resolver = mock._data_resolver
     items = _slice_resolved(
         library_artist.album_ids,
@@ -958,7 +960,7 @@ def _handle_library_song_catalog(
         LookupContext(library_song_id, locale)
     )
     if library_song is None:
-        return _json_response({"data": []})
+        return _json_response(_batch_envelope([]))
     if isinstance(library_song, UploadedLibrarySong):
         return _json_response(_generic_error_envelope(404), status=404)
     catalog_song = mock._data_resolver.library_song.catalog_for(
@@ -966,7 +968,7 @@ def _handle_library_song_catalog(
     )
     sf = _user_storefront_slug(mock)
     return _json_response(
-        {"data": [_song_resource(sf, library_song.catalog_id, catalog_song)]}
+        _batch_envelope([_song_resource(sf, library_song.catalog_id, catalog_song)])
     )
 
 
@@ -982,7 +984,7 @@ def _handle_library_album_catalog(
         LookupContext(library_album_id, locale)
     )
     if library_album is None:
-        return _json_response({"data": []})
+        return _json_response(_batch_envelope([]))
     if isinstance(library_album, UploadedLibraryAlbum):
         return _json_response(_generic_error_envelope(404), status=404)
     catalog_album = mock._data_resolver.library_album.catalog_for(
@@ -990,7 +992,7 @@ def _handle_library_album_catalog(
     )
     sf = _user_storefront_slug(mock)
     return _json_response(
-        {"data": [_album_resource(sf, library_album.catalog_id, catalog_album)]}
+        _batch_envelope([_album_resource(sf, library_album.catalog_id, catalog_album)])
     )
 
 
@@ -1006,21 +1008,21 @@ def _handle_library_music_video_catalog(
         LookupContext(library_music_video_id, locale)
     )
     if library_music_video is None or library_music_video.catalog_id is None:
-        return _json_response({"data": []})
+        return _json_response(_batch_envelope([]))
     catalog_music_video = mock._data_resolver.music_video.get(
         LookupContext(library_music_video.catalog_id, locale)
     )
     if catalog_music_video is None:
-        return _json_response({"data": []})
+        return _json_response(_batch_envelope([]))
     sf = _user_storefront_slug(mock)
     return _json_response(
-        {
-            "data": [
+        _batch_envelope(
+            [
                 _music_video_resource(
                     sf, library_music_video.catalog_id, catalog_music_video
                 )
             ]
-        }
+        )
     )
 
 
@@ -1036,19 +1038,17 @@ def _handle_library_playlist_catalog(
         LookupContext(library_playlist_id, locale)
     )
     if library_playlist is None or library_playlist.catalog_id is None:
-        return _json_response({"data": []})
+        return _json_response(_batch_envelope([]))
     catalog_playlist = mock._data_resolver.playlist.get(
         LookupContext(library_playlist.catalog_id, locale)
     )
     if catalog_playlist is None:
-        return _json_response({"data": []})
+        return _json_response(_batch_envelope([]))
     sf = _user_storefront_slug(mock)
     return _json_response(
-        {
-            "data": [
-                _playlist_resource(sf, library_playlist.catalog_id, catalog_playlist)
-            ]
-        }
+        _batch_envelope(
+            [_playlist_resource(sf, library_playlist.catalog_id, catalog_playlist)]
+        )
     )
 
 
@@ -1064,7 +1064,7 @@ def _handle_library_artist_catalog(
         LookupContext(library_artist_id, locale)
     )
     if library_artist is None:
-        return _json_response({"data": []})
+        return _json_response(_batch_envelope([]))
     if isinstance(library_artist, UploadedLibraryArtist):
         return _json_response(_generic_error_envelope(404), status=404)
     catalog_artist = mock._data_resolver.library_artist.catalog_for(
@@ -1072,7 +1072,9 @@ def _handle_library_artist_catalog(
     )
     sf = _user_storefront_slug(mock)
     return _json_response(
-        {"data": [_artist_resource(sf, library_artist.catalog_id, catalog_artist)]}
+        _batch_envelope(
+            [_artist_resource(sf, library_artist.catalog_id, catalog_artist)]
+        )
     )
 
 
@@ -1087,7 +1089,7 @@ def _handle_song_genres(
         return err
     song = mock._data_resolver.song.get(LookupContext(song_id, locale))
     if song is None:
-        return _json_response({"data": []})
+        return _json_response(_batch_envelope([]))
     resolver = mock._data_resolver
     items = _slice_resolved(
         song.genre_ids,
@@ -1114,11 +1116,13 @@ def _handle_song_station(
         return err
     song = mock._data_resolver.song.get(LookupContext(song_id, locale))
     if song is None or song.station_id is None:
-        return _json_response({"data": []})
+        return _json_response(_batch_envelope([]))
     station = mock._data_resolver.station.get(LookupContext(song.station_id, locale))
     if station is None:
-        return _json_response({"data": []})
-    return _json_response({"data": [_station_resource(sf, song.station_id, station)]})
+        return _json_response(_batch_envelope([]))
+    return _json_response(
+        _batch_envelope([_station_resource(sf, song.station_id, station)])
+    )
 
 
 def _handle_song_music_videos(
@@ -1132,7 +1136,7 @@ def _handle_song_music_videos(
         return err
     song = mock._data_resolver.song.get(LookupContext(song_id, locale))
     if song is None:
-        return _json_response({"data": []})
+        return _json_response(_batch_envelope([]))
     resolver = mock._data_resolver
     items = _slice_resolved(
         song.music_video_ids,
@@ -1162,7 +1166,7 @@ def _handle_album_genres(
         return err
     album = mock._data_resolver.album.get(LookupContext(album_id, locale))
     if album is None:
-        return _json_response({"data": []})
+        return _json_response(_batch_envelope([]))
     resolver = mock._data_resolver
     items = _slice_resolved(
         album.genre_ids,
@@ -1192,7 +1196,7 @@ def _handle_album_record_labels(
         return err
     album = mock._data_resolver.album.get(LookupContext(album_id, locale))
     if album is None:
-        return _json_response({"data": []})
+        return _json_response(_batch_envelope([]))
     resolver = mock._data_resolver
     items = _slice_resolved(
         album.record_label_ids,
@@ -1222,7 +1226,7 @@ def _handle_artist_genres(
         return err
     artist = mock._data_resolver.artist.get(LookupContext(artist_id, locale))
     if artist is None:
-        return _json_response({"data": []})
+        return _json_response(_batch_envelope([]))
     resolver = mock._data_resolver
     items = _slice_resolved(
         artist.genre_ids,
@@ -1252,7 +1256,7 @@ def _handle_artist_music_videos(
         return err
     artist = mock._data_resolver.artist.get(LookupContext(artist_id, locale))
     if artist is None:
-        return _json_response({"data": []})
+        return _json_response(_batch_envelope([]))
     resolver = mock._data_resolver
     items = _slice_resolved(
         artist.music_video_ids,
@@ -1282,7 +1286,7 @@ def _handle_artist_playlists(
         return err
     artist = mock._data_resolver.artist.get(LookupContext(artist_id, locale))
     if artist is None:
-        return _json_response({"data": []})
+        return _json_response(_batch_envelope([]))
     resolver = mock._data_resolver
     items = _slice_resolved(
         artist.playlist_ids,
@@ -1309,11 +1313,13 @@ def _handle_artist_station(
         return err
     artist = mock._data_resolver.artist.get(LookupContext(artist_id, locale))
     if artist is None or artist.station_id is None:
-        return _json_response({"data": []})
+        return _json_response(_batch_envelope([]))
     station = mock._data_resolver.station.get(LookupContext(artist.station_id, locale))
     if station is None:
-        return _json_response({"data": []})
-    return _json_response({"data": [_station_resource(sf, artist.station_id, station)]})
+        return _json_response(_batch_envelope([]))
+    return _json_response(
+        _batch_envelope([_station_resource(sf, artist.station_id, station)])
+    )
 
 
 def _handle_music_video_genres(
@@ -1329,7 +1335,7 @@ def _handle_music_video_genres(
         LookupContext(music_video_id, locale)
     )
     if music_video is None:
-        return _json_response({"data": []})
+        return _json_response(_batch_envelope([]))
     resolver = mock._data_resolver
     items = _slice_resolved(
         music_video.genre_ids,
@@ -1361,7 +1367,7 @@ def _handle_music_video_songs(
         LookupContext(music_video_id, locale)
     )
     if music_video is None:
-        return _json_response({"data": []})
+        return _json_response(_batch_envelope([]))
     resolver = mock._data_resolver
     items = _slice_resolved(
         music_video.song_ids,
@@ -1388,14 +1394,14 @@ def _handle_station_radio_show(
         return err
     station = mock._data_resolver.station.get(LookupContext(station_id, locale))
     if station is None or station.radio_show_id is None:
-        return _json_response({"data": []})
+        return _json_response(_batch_envelope([]))
     curator = mock._data_resolver.curator.get(
         LookupContext(station.radio_show_id, locale)
     )
     if curator is None:
-        return _json_response({"data": []})
+        return _json_response(_batch_envelope([]))
     return _json_response(
-        {"data": [_curator_resource(sf, station.radio_show_id, curator)]}
+        _batch_envelope([_curator_resource(sf, station.radio_show_id, curator)])
     )
 
 
@@ -1412,7 +1418,7 @@ def _handle_apple_curator_playlists(
         return err
     curator = mock._data_resolver.curator.get(LookupContext(apple_curator_id, locale))
     if curator is None:
-        return _json_response({"data": []})
+        return _json_response(_batch_envelope([]))
     resolver = mock._data_resolver
     items = _slice_resolved(
         curator.playlist_ids,
@@ -1439,14 +1445,14 @@ def _handle_apple_curator_grouping(
         return err
     curator = mock._data_resolver.curator.get(LookupContext(apple_curator_id, locale))
     if curator is None or curator.grouping_id is None:
-        return _json_response({"data": []})
+        return _json_response(_batch_envelope([]))
     grouping = mock._data_resolver.grouping.get(
         LookupContext(curator.grouping_id, locale)
     )
     if grouping is None:
-        return _json_response({"data": []})
+        return _json_response(_batch_envelope([]))
     return _json_response(
-        {"data": [_grouping_resource(sf, curator.grouping_id, grouping)]}
+        _batch_envelope([_grouping_resource(sf, curator.grouping_id, grouping)])
     )
 
 
@@ -1461,7 +1467,7 @@ def _handle_curator_playlists(
         return err
     curator = mock._data_resolver.curator.get(LookupContext(curator_id, locale))
     if curator is None:
-        return _json_response({"data": []})
+        return _json_response(_batch_envelope([]))
     resolver = mock._data_resolver
     items = _slice_resolved(
         curator.playlist_ids,
@@ -1488,7 +1494,7 @@ def _build_curator_rels(
     locale: str | None,
     includes: set[str],
     resolver: _DataResolver,
-) -> dict[str, _JSONValue]:
+) -> dict[str, AppleRelationshipBlock]:
     """Build sub-rels for a curator resource.
 
     Apple emits both ``relationships.playlists`` (with ids-only by default,
@@ -1496,7 +1502,7 @@ def _build_curator_rels(
     (for ``apple-curators`` only — default-included with the grouping ref,
     full grouping on ``?include=grouping``).
     """
-    rels: dict[str, _JSONValue] = {}
+    rels: dict[str, AppleRelationshipBlock] = {}
     pagination = (
         _CATALOG_APPLE_CURATOR_PLAYLISTS
         if curator.type == "apple-curators"
@@ -1517,7 +1523,7 @@ def _build_curator_rels(
 
     if curator.type == "apple-curators" and curator.grouping_id is not None:
         grouping_href = f"/v1/catalog/{sf}/apple-curators/{curator_id}/grouping"
-        grouping_data: dict[str, _JSONValue] | None = None
+        grouping_data: AppleResource | None = None
         if "grouping" in includes:
             grouping = resolver.grouping.get(LookupContext(curator.grouping_id, locale))
             if grouping is not None:
@@ -1547,13 +1553,13 @@ def _handle_apple_curator_singular(
         resolver=mock._data_resolver,
     )
     return _json_response(
-        {
-            "data": [
+        _batch_envelope(
+            [
                 _curator_resource(
                     sf, apple_curator_id, curator, relationships=rels or None
                 )
             ]
-        }
+        )
     )
 
 
@@ -1576,11 +1582,9 @@ def _handle_curator_singular(
         resolver=mock._data_resolver,
     )
     return _json_response(
-        {
-            "data": [
-                _curator_resource(sf, curator_id, curator, relationships=rels or None)
-            ]
-        }
+        _batch_envelope(
+            [_curator_resource(sf, curator_id, curator, relationships=rels or None)]
+        )
     )
 
 
@@ -1591,12 +1595,12 @@ def _build_recommendation_rels(
     *,
     locale: str | None,
     resolver: _DataResolver,
-) -> dict[str, _JSONValue]:
+) -> dict[str, AppleRelationshipBlock]:
     """Build the default-included ``relationships.contents`` block."""
     if recommendation.contents is None:
         return {}
     contents_href = f"/v1/me/recommendations/{recommendation_id}/contents"
-    data: list[dict[str, _JSONValue]] = []
+    data: list[AppleResource] = []
     page_size = _ME_RECOMMENDATION_CONTENTS.page_size
     for content in recommendation.contents[:page_size]:
         if content.type == "playlists":
@@ -1620,7 +1624,7 @@ def _build_recommendation_rels(
                 data.append(_music_video_resource(sf, content.id, mv))
                 continue
         data.append(_catalog_ref(sf, content.type, content.id))
-    out: dict[str, _JSONValue] = {"href": contents_href, "data": data}
+    out: AppleRelationshipBlock = {"href": contents_href, "data": data}
     if len(recommendation.contents) > page_size:
         out["next"] = f"{contents_href}?offset={page_size}"
     return {"contents": out}
@@ -1639,7 +1643,7 @@ def _handle_recommendation_singular(
         LookupContext(recommendation_id, locale)
     )
     if recommendation is None:
-        return _json_response({"data": []})
+        return _json_response(_batch_envelope([]))
     sf = _user_storefront_slug(mock)
     rels = _build_recommendation_rels(
         sf,
@@ -1649,13 +1653,13 @@ def _handle_recommendation_singular(
         resolver=mock._data_resolver,
     )
     return _json_response(
-        {
-            "data": [
+        _batch_envelope(
+            [
                 _personal_recommendation_resource(
                     recommendation_id, recommendation, relationships=rels or None
                 )
             ]
-        }
+        )
     )
 
 
@@ -1685,7 +1689,7 @@ def _handle_recommendations_batch(mock: MusicKitApiMock, req: Request) -> Respon
         )
     sf = _user_storefront_slug(mock)
     resolver = mock._data_resolver
-    resources: list[dict[str, _JSONValue]] = []
+    resources: list[AppleResource] = []
     for rid in rec_ids:
         rec = resolver.personal_recommendation.get(LookupContext(rid, locale))
         if rec is None:
@@ -1696,7 +1700,7 @@ def _handle_recommendations_batch(mock: MusicKitApiMock, req: Request) -> Respon
         resources.append(
             _personal_recommendation_resource(rid, rec, relationships=rels or None)
         )
-    return _json_response({"data": resources})
+    return _json_response(_batch_envelope(resources))
 
 
 def _handle_genres_batch(mock: MusicKitApiMock, req: Request, sf: str) -> Response:
@@ -1718,13 +1722,13 @@ def _handle_genres_batch(mock: MusicKitApiMock, req: Request, sf: str) -> Respon
     else:
         genre_ids = _list_source_ids(mock.data.genres, "data.genres")
     resolver = mock._data_resolver
-    resources: list[dict[str, _JSONValue]] = []
+    resources: list[AppleResource] = []
     for gid in genre_ids:
         g = resolver.genre.get(LookupContext(gid, locale))
         if g is None:
             continue
         resources.append(_genre_resource(sf, gid, g))
-    return _json_response({"data": resources})
+    return _json_response(_batch_envelope(resources))
 
 
 def _handle_genre_singular(
@@ -1735,8 +1739,8 @@ def _handle_genre_singular(
         return err
     g = mock._data_resolver.genre.get(LookupContext(genre_id, locale))
     if g is None:
-        return _json_response({"data": []})
-    return _json_response({"data": [_genre_resource(sf, genre_id, g)]})
+        return _json_response(_batch_envelope([]))
+    return _json_response(_batch_envelope([_genre_resource(sf, genre_id, g)]))
 
 
 def _handle_record_labels_batch(
@@ -1760,13 +1764,13 @@ def _handle_record_labels_batch(
     else:
         rl_ids = _list_source_ids(mock.data.record_labels, "data.record_labels")
     resolver = mock._data_resolver
-    resources: list[dict[str, _JSONValue]] = []
+    resources: list[AppleResource] = []
     for rid in rl_ids:
         rl = resolver.record_label.get(LookupContext(rid, locale))
         if rl is None:
             continue
         resources.append(_record_label_resource(sf, rid, rl))
-    return _json_response({"data": resources})
+    return _json_response(_batch_envelope(resources))
 
 
 def _handle_record_label_singular(
@@ -1777,5 +1781,7 @@ def _handle_record_label_singular(
         return err
     rl = mock._data_resolver.record_label.get(LookupContext(record_label_id, locale))
     if rl is None:
-        return _json_response({"data": []})
-    return _json_response({"data": [_record_label_resource(sf, record_label_id, rl)]})
+        return _json_response(_batch_envelope([]))
+    return _json_response(
+        _batch_envelope([_record_label_resource(sf, record_label_id, rl)])
+    )

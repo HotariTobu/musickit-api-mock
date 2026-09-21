@@ -8,10 +8,10 @@ from musickit_api_mock.endpoints.schema.builders import _strip_none
 
 if TYPE_CHECKING:
     from musickit_api_mock.data.genre import Genre
-    from musickit_api_mock.json_value import _JSONValue
+    from musickit_api_mock.endpoints.schema.shapes import AppleResource
 
 
-def _genre_resource(sf: str, genre_id: str, genre: Genre) -> dict[str, _JSONValue]:
+def _genre_resource(sf: str, genre_id: str, genre: Genre) -> AppleResource:
     return {
         "id": genre_id,
         "type": "genres",

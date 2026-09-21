@@ -40,6 +40,7 @@ from musickit_api_mock.endpoints.schema import (
     _batch_envelope,
     _catalog_ref,
     _curator_resource,
+    _empty_errors_404_envelope,
     _empty_ids_400_envelope,
     _genre_resource,
     _library_album_resource,
@@ -62,7 +63,10 @@ if TYPE_CHECKING:
     from musickit_api_mock.data.playlist import Playlist
     from musickit_api_mock.data.song import CatalogSong
     from musickit_api_mock.data.station import Station
-    from musickit_api_mock.json_value import _JSONValue
+    from musickit_api_mock.endpoints.schema import (
+        AppleRelationshipBlock,
+        AppleResource,
+    )
     from musickit_api_mock.mock import MusicKitApiMock
     from musickit_api_mock.transport.http import Request, Response
 
@@ -76,9 +80,9 @@ def _build_song_rels(
     locale: str | None,
     includes: set[str],
     sizes: dict[str, int],
-) -> dict[str, _JSONValue]:
+) -> dict[str, AppleRelationshipBlock]:
     resolver = mock._data_resolver
-    rels: dict[str, _JSONValue] = {}
+    rels: dict[str, AppleRelationshipBlock] = {}
 
     albums_block = _paginated_relationship_block(
         f"/v1/catalog/{sf}/songs/{song_id}/albums",
@@ -173,9 +177,9 @@ def _build_album_rels(
     locale: str | None,
     includes: set[str],
     sizes: dict[str, int],
-) -> dict[str, _JSONValue]:
+) -> dict[str, AppleRelationshipBlock]:
     resolver = mock._data_resolver
-    rels: dict[str, _JSONValue] = {}
+    rels: dict[str, AppleRelationshipBlock] = {}
 
     tracks_block = _paginated_relationship_block(
         f"/v1/catalog/{sf}/albums/{album_id}/tracks",
@@ -249,9 +253,9 @@ def _build_playlist_rels(
     locale: str | None,
     includes: set[str],
     sizes: dict[str, int],
-) -> dict[str, _JSONValue]:
+) -> dict[str, AppleRelationshipBlock]:
     resolver = mock._data_resolver
-    rels: dict[str, _JSONValue] = {}
+    rels: dict[str, AppleRelationshipBlock] = {}
 
     tracks_block = _paginated_relationship_block(
         f"/v1/catalog/{sf}/playlists/{playlist_id}/tracks",
@@ -272,7 +276,7 @@ def _build_playlist_rels(
                 f"playlist {playlist_id!r} references curator_id {playlist.curator_id!r}"
                 f" but mock.data.curators has no entry for it"
             )
-        curator_data: list[dict[str, _JSONValue]]
+        curator_data: list[AppleResource]
         if "curator" in includes:
             curator_data = [_curator_resource(sf, playlist.curator_id, curator)]
         else:
@@ -308,9 +312,9 @@ def _build_artist_rels(
     locale: str | None,
     includes: set[str],
     sizes: dict[str, int],
-) -> dict[str, _JSONValue]:
+) -> dict[str, AppleRelationshipBlock]:
     resolver = mock._data_resolver
-    rels: dict[str, _JSONValue] = {}
+    rels: dict[str, AppleRelationshipBlock] = {}
 
     albums_block = _paginated_relationship_block(
         f"/v1/catalog/{sf}/artists/{artist_id}/albums",
@@ -383,9 +387,9 @@ def _build_music_video_rels(
     locale: str | None,
     includes: set[str],
     sizes: dict[str, int],
-) -> dict[str, _JSONValue]:
+) -> dict[str, AppleRelationshipBlock]:
     resolver = mock._data_resolver
-    rels: dict[str, _JSONValue] = {}
+    rels: dict[str, AppleRelationshipBlock] = {}
 
     albums_block = _paginated_relationship_block(
         f"/v1/catalog/{sf}/music-videos/{music_video_id}/albums",
@@ -475,7 +479,7 @@ def _handle_songs(mock: MusicKitApiMock, req: Request, sf: str) -> Response:
     if err is not None:
         return err
     resolver = mock._data_resolver
-    resources: list[dict[str, _JSONValue]] = []
+    resources: list[AppleResource] = []
     for song_id in _dedupe(ids):
         song = resolver.song.get(LookupContext(song_id, locale))
         if song is None:
@@ -508,7 +512,7 @@ def _handle_albums(mock: MusicKitApiMock, req: Request, sf: str) -> Response:
     if err is not None:
         return err
     resolver = mock._data_resolver
-    resources: list[dict[str, _JSONValue]] = []
+    resources: list[AppleResource] = []
     for album_id in _dedupe(ids):
         album = resolver.album.get(LookupContext(album_id, locale))
         if album is None:
@@ -545,7 +549,7 @@ def _handle_playlists(mock: MusicKitApiMock, req: Request, sf: str) -> Response:
     if err is not None:
         return err
     resolver = mock._data_resolver
-    resources: list[dict[str, _JSONValue]] = []
+    resources: list[AppleResource] = []
     for playlist_id in _dedupe(ids):
         playlist = resolver.playlist.get(LookupContext(playlist_id, locale))
         if playlist is None:
@@ -579,7 +583,7 @@ def _handle_artists(mock: MusicKitApiMock, req: Request, sf: str) -> Response:
     if err is not None:
         return err
     resolver = mock._data_resolver
-    resources: list[dict[str, _JSONValue]] = []
+    resources: list[AppleResource] = []
     for artist_id in _dedupe(ids):
         artist = resolver.artist.get(LookupContext(artist_id, locale))
         if artist is None:
@@ -619,7 +623,7 @@ def _handle_music_videos(mock: MusicKitApiMock, req: Request, sf: str) -> Respon
     if err is not None:
         return err
     resolver = mock._data_resolver
-    resources: list[dict[str, _JSONValue]] = []
+    resources: list[AppleResource] = []
     for music_video_id in _dedupe(ids):
         music_video = resolver.music_video.get(LookupContext(music_video_id, locale))
         if music_video is None:
@@ -651,7 +655,7 @@ def _handle_stations(mock: MusicKitApiMock, req: Request, sf: str) -> Response:
     if not ids:
         return _json_response(_empty_ids_400_envelope(), status=400)
     resolver = mock._data_resolver
-    resources: list[dict[str, _JSONValue]] = []
+    resources: list[AppleResource] = []
     for station_id in _dedupe(ids):
         station = resolver.station.get(LookupContext(station_id, locale))
         if station is None:
@@ -668,12 +672,12 @@ def _build_station_rels(
     *,
     locale: str | None,
     includes: set[str],
-) -> dict[str, _JSONValue]:
+) -> dict[str, AppleRelationshipBlock]:
     resolver = mock._data_resolver
-    rels: dict[str, _JSONValue] = {}
+    rels: dict[str, AppleRelationshipBlock] = {}
     if "radio-show" in includes:
         href = f"/v1/catalog/{sf}/stations/{station_id}/radio-show"
-        data: list[dict[str, _JSONValue]] = []
+        data: list[AppleResource] = []
         if station.radio_show_id is not None:
             curator = resolver.curator.get(LookupContext(station.radio_show_id, locale))
             if curator is not None:
@@ -691,7 +695,7 @@ def _handle_station_singular(
     includes = _parse_csv_param(req.url, "include")
     station = mock._data_resolver.station.get(LookupContext(station_id, locale))
     if station is None:
-        return _json_response({"data": []})
+        return _json_response(_batch_envelope([]))
     rels = _build_station_rels(
         mock, sf, station_id, station, locale=locale, includes=includes
     )
@@ -727,7 +731,7 @@ def _handle_song_singular(
         return err
     song = mock._data_resolver.song.get(LookupContext(song_id, locale))
     if song is None:
-        return _json_response({"data": []})
+        return _json_response(_batch_envelope([]))
     rels = _build_song_rels(
         mock, sf, song_id, song, locale=locale, includes=includes, sizes=sizes
     )
@@ -737,4 +741,4 @@ def _handle_song_singular(
 
 
 def _handle_unsupported_kind() -> Response:
-    return _json_response({"errors": []}, status=404)
+    return _json_response(_empty_errors_404_envelope(), status=404)

@@ -11,6 +11,10 @@ from musickit_api_mock.endpoints.schema.builders import (
 
 if TYPE_CHECKING:
     from musickit_api_mock.data.artist import CatalogArtist
+    from musickit_api_mock.endpoints.schema.shapes import (
+        AppleRelationshipBlock,
+        AppleResource,
+    )
     from musickit_api_mock.json_value import _JSONValue
 
 
@@ -19,8 +23,8 @@ def _artist_resource(
     artist_id: str,
     artist: CatalogArtist,
     *,
-    relationships: dict[str, _JSONValue] | None = None,
-) -> dict[str, _JSONValue]:
+    relationships: dict[str, AppleRelationshipBlock] | None = None,
+) -> AppleResource:
     attrs: dict[str, _JSONValue] = _strip_none(
         {
             "name": artist.name,
@@ -29,7 +33,7 @@ def _artist_resource(
             "url": artist.url,
         }
     )
-    out: dict[str, _JSONValue] = {
+    out: AppleResource = {
         "id": artist_id,
         "type": "artists",
         "href": f"/v1/catalog/{sf}/artists/{artist_id}",

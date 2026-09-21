@@ -6,39 +6,40 @@ import http
 import uuid
 from typing import TYPE_CHECKING
 
-from musickit_api_mock.endpoints.schema.builders import _strip_none
-
 if TYPE_CHECKING:
     from collections.abc import Iterable
 
     from musickit_api_mock.endpoints.responses.continuous_stations import (
         ErrorEnvelope,
     )
-    from musickit_api_mock.json_value import _JSONValue
+    from musickit_api_mock.endpoints.schema.shapes import (
+        AppleError,
+        AppleResource,
+        AppleResponse,
+        RenewTokenErrorBody,
+    )
 
 
-def _batch_envelope(
-    resources: Iterable[dict[str, _JSONValue]],
-) -> dict[str, _JSONValue]:
+def _batch_envelope(resources: Iterable[AppleResource]) -> AppleResponse:
     return {"data": list(resources)}
 
 
-_LIBRARY_SONGS_DEAD_PATH_ERROR: dict[str, str] = {
-    "title": "Invalid Path Value",
-    "detail": "Unknown library resource type 'library-songs'",
-    "status": "400",
-    "code": "40008",
-}
-
-
-def _library_songs_dead_path_400_envelope() -> dict[str, _JSONValue]:
+def _library_songs_dead_path_400_envelope() -> AppleResponse:
     """400 envelope for the ``library-songs`` dead-path batch case."""
     return {
-        "errors": [{"id": uuid.uuid4().hex.upper(), **_LIBRARY_SONGS_DEAD_PATH_ERROR}]
+        "errors": [
+            {
+                "id": uuid.uuid4().hex.upper(),
+                "title": "Invalid Path Value",
+                "detail": "Unknown library resource type 'library-songs'",
+                "status": "400",
+                "code": "40008",
+            }
+        ]
     }
 
 
-def _empty_ids_400_envelope() -> dict[str, _JSONValue]:
+def _empty_ids_400_envelope() -> AppleResponse:
     return {
         "errors": [
             {
@@ -53,7 +54,7 @@ def _empty_ids_400_envelope() -> dict[str, _JSONValue]:
     }
 
 
-def _missing_ids_param_400_envelope() -> dict[str, _JSONValue]:
+def _missing_ids_param_400_envelope() -> AppleResponse:
     return {
         "errors": [
             {
@@ -68,7 +69,12 @@ def _missing_ids_param_400_envelope() -> dict[str, _JSONValue]:
     }
 
 
-def _resource_not_found_404_envelope() -> dict[str, _JSONValue]:
+def _empty_errors_404_envelope() -> AppleResponse:
+    """404 envelope Apple emits with an empty ``errors`` list."""
+    return {"errors": []}
+
+
+def _resource_not_found_404_envelope() -> AppleResponse:
     return {
         "errors": [
             {
@@ -82,7 +88,7 @@ def _resource_not_found_404_envelope() -> dict[str, _JSONValue]:
     }
 
 
-def _session_expired_403_envelope() -> dict[str, _JSONValue]:
+def _session_expired_403_envelope() -> AppleResponse:
     return {
         "errors": [
             {
@@ -96,7 +102,7 @@ def _session_expired_403_envelope() -> dict[str, _JSONValue]:
     }
 
 
-def _session_expired_renew_401_body() -> dict[str, _JSONValue]:
+def _session_expired_renew_401_body() -> RenewTokenErrorBody:
     return {
         "error_description": (
             "The token does not exist, it may have been revoked by the user."
@@ -105,7 +111,7 @@ def _session_expired_renew_401_body() -> dict[str, _JSONValue]:
     }
 
 
-def _generic_error_envelope(status: int) -> dict[str, _JSONValue]:
+def _generic_error_envelope(status: int) -> AppleResponse:
     """Errors envelope for a generic non-2xx HTTP status."""
     try:
         title = http.HTTPStatus(status).phrase
@@ -124,7 +130,7 @@ def _generic_error_envelope(status: int) -> dict[str, _JSONValue]:
 
 def _play_assets_403_envelope(
     error_code: str, title: str, detail: str
-) -> dict[str, _JSONValue]:
+) -> AppleResponse:
     """403 errors envelope for the play-assets endpoints."""
     return {
         "errors": [
@@ -141,30 +147,30 @@ def _play_assets_403_envelope(
 
 def _continuous_stations_errors_envelope(
     errors: list[ErrorEnvelope],
-) -> dict[str, _JSONValue]:
+) -> AppleResponse:
     """Errors envelope for the continuous-stations CONTENT_UNSUPPORTED case."""
-    out: list[dict[str, _JSONValue]] = [
-        _strip_none(
-            {
-                "id": uuid.uuid4().hex.upper(),
-                "code": e.code,
-                "title": e.title,
-                "status": e.status,
-                "detail": e.detail,
-                "source": e.source,
-            }
-        )
-        for e in errors
-    ]
+    out: list[AppleError] = []
+    for e in errors:
+        entry: AppleError = {
+            "id": uuid.uuid4().hex.upper(),
+            "code": e.code,
+            "title": e.title,
+            "status": e.status,
+        }
+        if e.detail is not None:
+            entry["detail"] = e.detail
+        if e.source is not None:
+            entry["source"] = e.source
+        out.append(entry)
     return {"errors": out}
 
 
-def _continuous_stations_no_station_envelope() -> dict[str, _JSONValue]:
+def _continuous_stations_no_station_envelope() -> AppleResponse:
     """Empty results envelope (``results.station`` missing) → CONTENT_UNAVAILABLE."""
     return {"results": {}}
 
 
-def _parameter_invalid_envelope(parameter: str, detail: str) -> dict[str, _JSONValue]:
+def _parameter_invalid_envelope(parameter: str, detail: str) -> AppleResponse:
     """400 envelope for ``Invalid Parameter Value`` errors.
 
     ``parameter`` becomes ``source.parameter`` (e.g. ``"limit"`` or
@@ -185,7 +191,7 @@ def _parameter_invalid_envelope(parameter: str, detail: str) -> dict[str, _JSONV
     }
 
 
-def _limit_exceeded_envelope(max_limit: int, requested: int) -> dict[str, _JSONValue]:
+def _limit_exceeded_envelope(max_limit: int, requested: int) -> AppleResponse:
     """400 envelope returned when ``?limit=N`` exceeds the endpoint cap."""
     return _parameter_invalid_envelope(
         "limit",
@@ -194,7 +200,7 @@ def _limit_exceeded_envelope(max_limit: int, requested: int) -> dict[str, _JSONV
     )
 
 
-def _invalid_language_tag_envelope(tag: str) -> dict[str, _JSONValue]:
+def _invalid_language_tag_envelope(tag: str) -> AppleResponse:
     """400 envelope returned when ``?l=`` is not a valid BCP 47 language tag."""
     return {
         "errors": [

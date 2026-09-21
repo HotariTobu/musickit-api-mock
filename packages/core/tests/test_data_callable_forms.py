@@ -38,7 +38,7 @@ from musickit_api_mock import (
 )
 
 if TYPE_CHECKING:
-    from tests._apple_response import AppleResponse
+    from musickit_api_mock.endpoints.schema import AppleResponse
 
 
 def _get(mock: MusicKitApiMock, url: str) -> tuple[int, AppleResponse]:

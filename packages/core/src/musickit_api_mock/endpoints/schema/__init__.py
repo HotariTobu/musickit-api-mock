@@ -16,6 +16,7 @@ from musickit_api_mock.endpoints.schema.envelope import (
     _batch_envelope,
     _continuous_stations_errors_envelope,
     _continuous_stations_no_station_envelope,
+    _empty_errors_404_envelope,
     _empty_ids_400_envelope,
     _generic_error_envelope,
     _invalid_language_tag_envelope,
@@ -55,6 +56,26 @@ from musickit_api_mock.endpoints.schema.play_assets import (
 from musickit_api_mock.endpoints.schema.playlists import _playlist_resource
 from musickit_api_mock.endpoints.schema.record_labels import _record_label_resource
 from musickit_api_mock.endpoints.schema.refs import _catalog_ref, _library_ref
+from musickit_api_mock.endpoints.schema.shapes import (
+    AccountChallenge,
+    AccountMeta,
+    AccountSubscription,
+    AppleArtwork,
+    AppleError,
+    ApplePreview,
+    AppleRelationshipBlock,
+    AppleResource,
+    AppleResponse,
+    AppleResults,
+    LicenseBody,
+    LogoutBody,
+    PlayAssetsEntry,
+    RenewTokenBody,
+    RenewTokenErrorBody,
+    WebPlaybackAssetEntry,
+    WebPlaybackBody,
+    WebPlaybackSongEntry,
+)
 from musickit_api_mock.endpoints.schema.songs import _song_resource
 from musickit_api_mock.endpoints.schema.stations import (
     _continuous_station_envelope,
@@ -67,6 +88,24 @@ from musickit_api_mock.endpoints.schema.web_playback import (
 )
 
 __all__ = [
+    "AccountChallenge",
+    "AccountMeta",
+    "AccountSubscription",
+    "AppleArtwork",
+    "AppleError",
+    "ApplePreview",
+    "AppleRelationshipBlock",
+    "AppleResource",
+    "AppleResponse",
+    "AppleResults",
+    "LicenseBody",
+    "LogoutBody",
+    "PlayAssetsEntry",
+    "RenewTokenBody",
+    "RenewTokenErrorBody",
+    "WebPlaybackAssetEntry",
+    "WebPlaybackBody",
+    "WebPlaybackSongEntry",
     "_account_envelope",
     "_album_resource",
     "_artist_resource",
@@ -76,6 +115,7 @@ __all__ = [
     "_continuous_stations_errors_envelope",
     "_continuous_stations_no_station_envelope",
     "_curator_resource",
+    "_empty_errors_404_envelope",
     "_empty_ids_400_envelope",
     "_generic_error_envelope",
     "_genre_resource",

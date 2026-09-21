@@ -16,7 +16,7 @@ from musickit_api_mock import (
 )
 
 if TYPE_CHECKING:
-    from tests._apple_response import AppleResponse
+    from musickit_api_mock.endpoints.schema import AppleResponse
 
 
 def test_s01_next_tracks_default_limit_2(mock: MusicKitApiMock) -> None:

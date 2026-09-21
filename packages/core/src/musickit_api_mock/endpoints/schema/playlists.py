@@ -14,6 +14,10 @@ from musickit_api_mock.endpoints.schema.play_params import _play_params_playlist
 
 if TYPE_CHECKING:
     from musickit_api_mock.data.playlist import Playlist
+    from musickit_api_mock.endpoints.schema.shapes import (
+        AppleRelationshipBlock,
+        AppleResource,
+    )
     from musickit_api_mock.json_value import _JSONValue
 
 
@@ -22,8 +26,8 @@ def _playlist_resource(
     playlist_id: str,
     playlist: Playlist,
     *,
-    relationships: dict[str, _JSONValue] | None = None,
-) -> dict[str, _JSONValue]:
+    relationships: dict[str, AppleRelationshipBlock] | None = None,
+) -> AppleResource:
     attrs: dict[str, _JSONValue] = _strip_none(
         {
             "name": playlist.name,
@@ -51,7 +55,7 @@ def _playlist_resource(
             "url": playlist.url,
         }
     )
-    out: dict[str, _JSONValue] = {
+    out: AppleResource = {
         "id": playlist_id,
         "type": "playlists",
         "href": f"/v1/catalog/{sf}/playlists/{playlist_id}",

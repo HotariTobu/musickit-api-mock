@@ -4,15 +4,17 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from musickit_api_mock.endpoints.schema.builders import _strip_none
-
 if TYPE_CHECKING:
     from musickit_api_mock.endpoints.responses.account import Account
     from musickit_api_mock.endpoints.responses.storefront import Storefront
+    from musickit_api_mock.endpoints.schema.shapes import (
+        AppleResource,
+        AppleResponse,
+    )
     from musickit_api_mock.json_value import _JSONValue
 
 
-def _storefront_resource(sf: Storefront) -> dict[str, _JSONValue]:
+def _storefront_resource(sf: Storefront) -> AppleResource:
     return {
         "id": sf.id,
         "type": "storefronts",
@@ -31,8 +33,8 @@ def _account_envelope(
     *,
     emit_subscription: bool = False,
     subscription_capabilities: list[str] | None = None,
-) -> dict[str, _JSONValue]:
-    out: dict[str, _JSONValue] = {
+) -> AppleResponse:
+    out: AppleResponse = {
         "data": [
             {
                 "id": "me",
@@ -42,27 +44,18 @@ def _account_envelope(
             }
         ]
     }
-    meta = _strip_none(
-        {
-            "challenge": (
-                {"subscriptionCapabilities": subscription_capabilities}
-                if subscription_capabilities is not None
-                else None
-            ),
-            "subscription": (
-                {
-                    "active": account.subscription_active,
-                    "storefront": account.subscription_storefront,
-                }
-                if emit_subscription
-                else None
-            ),
+    meta: dict[str, _JSONValue] = {}
+    if subscription_capabilities is not None:
+        meta["challenge"] = {"subscriptionCapabilities": subscription_capabilities}
+    if emit_subscription:
+        meta["subscription"] = {
+            "active": account.subscription_active,
+            "storefront": account.subscription_storefront,
         }
-    )
     if meta:
         out["meta"] = meta
     return out
 
 
-def _storefront_envelope(sf: Storefront) -> dict[str, _JSONValue]:
+def _storefront_envelope(sf: Storefront) -> AppleResponse:
     return {"data": [_storefront_resource(sf)]}
