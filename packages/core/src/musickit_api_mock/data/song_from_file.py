@@ -53,11 +53,22 @@ def _meta_genres(meta: dict[str, str]) -> list[str] | None:
     return [s.strip() for s in raw.split(",") if s.strip()]
 
 
+_RELEASE_DATE_KEYS = ("TDOR", "ORIGINALDATE", "date", "DATE")
+_RELEASE_DATE_RE = re.compile(r"\d{4}-\d{2}-\d{2}")
+
+
+def _meta_release_date(meta: dict[str, str]) -> str | None:
+    for key in _RELEASE_DATE_KEYS:
+        value = meta.get(key)
+        if value is not None and _RELEASE_DATE_RE.fullmatch(value):
+            return value
+    return None
+
+
 _STR_FILE_FIELDS: dict[str, tuple[str, ...]] = {
     "title": ("title",),
     "artist": ("artist",),
     "album": ("album",),
-    "release_date": ("date", "year", "creation_time"),
     "composer": ("composer",),
     "isrc": ("ISRC", "isrc"),
 }
@@ -104,6 +115,10 @@ def _pick_str(
     *,
     required: bool,
 ) -> str | None:
+    if field == "release_date":
+        v = _meta_release_date(meta)
+        if v is not None:
+            return v
     keys = _STR_FILE_FIELDS.get(field)
     if keys is not None:
         v = _meta_get(meta, *keys)

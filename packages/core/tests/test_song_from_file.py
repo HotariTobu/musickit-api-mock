@@ -134,7 +134,7 @@ def test_extracts_metadata_from_file(
             "title": "File Title",
             "artist": "File Artist",
             "album": "File Album",
-            "date": "2023",
+            "date": "2023-05-17",
             "track": "5",
             "disc": "2",
             "genre": "Rock",
@@ -146,7 +146,7 @@ def test_extracts_metadata_from_file(
     assert song.title == "File Title"
     assert song.artist == "File Artist"
     assert song.album == "File Album"
-    assert song.release_date == "2023"
+    assert song.release_date == "2023-05-17"
     assert song.track_number == 5
     assert song.disc_number == 2
     assert song.genres == ["Rock"]
@@ -161,7 +161,7 @@ def test_extracts_artwork_from_file(
             "title": "T",
             "artist": "A",
             "album": "Al",
-            "date": "2024",
+            "date": "2024-01-01",
             "track": "1",
             "disc": "1",
             "genre": "P",
@@ -182,7 +182,7 @@ def test_falls_back_when_file_has_no_artwork(
             "title": "T",
             "artist": "A",
             "album": "Al",
-            "date": "2024",
+            "date": "2024-01-01",
             "track": "1",
             "disc": "1",
             "genre": "P",
@@ -229,7 +229,7 @@ def test_track_number_with_total(
             "title": "T",
             "artist": "A",
             "album": "Al",
-            "date": "2024",
+            "date": "2024-01-01",
             "track": "3/12",
             "disc": "1/2",
             "genre": "P",
@@ -247,7 +247,7 @@ def test_genre_comma_split(make_audio: AudioFactory, artwork_library: Artwork) -
             "title": "T",
             "artist": "A",
             "album": "Al",
-            "date": "2024",
+            "date": "2024-01-01",
             "track": "1",
             "disc": "1",
             "genre": "Rock, Pop, Jazz",
@@ -285,7 +285,7 @@ def test_bool_fields_from_fallback(
             "title": "T",
             "artist": "A",
             "album": "Al",
-            "date": "2024",
+            "date": "2024-01-01",
             "track": "1",
             "disc": "1",
             "genre": "P",

@@ -73,13 +73,13 @@ class CatalogSong:
         isrc: International Standard Recording Code.
         track_number: Track number within the album.
         disc_number: Disc number within the album.
+        release_date: Original release date of the song as ``YYYY-MM-DD``.
         hls_layout: fMP4 segment layout for the HLS manifest.
         hls_segment: Raw bytes of the fMP4 segment served for HLS playback.
         preview_audio: Raw bytes the mock serves as the preview asset.
         bitrate: Bitrate in kilobits per second.
         sample_rate: Sample rate in hertz.
         file_size: Source file size in bytes.
-        release_date: ISO-8601 release date.
         composer: Display name of the primary composer.
         content_rating: Apple content-rating tag.
         play_assets: Per-bit-rate play-asset variants surfaced in station
@@ -110,13 +110,13 @@ class CatalogSong:
     isrc: str
     track_number: int
     disc_number: int
+    release_date: str
     hls_layout: HlsLayout
     hls_segment: bytes
     preview_audio: bytes
     bitrate: int
     sample_rate: int
     file_size: int
-    release_date: str | None = None
     composer: str | None = None
     content_rating: str | None = None
     play_assets: list[StationContextPlayAsset] | None = None
