@@ -71,6 +71,7 @@ def test_song_albums_pagination_emits_next_when_overflowing(
         track_number=song.track_number,
         disc_number=song.disc_number,
         composer=song.composer,
+        isrc=song.isrc,
         has_lyrics=song.has_lyrics,
         is_apple_digital_master=song.is_apple_digital_master,
         url=song.url,

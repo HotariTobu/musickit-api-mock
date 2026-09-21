@@ -76,6 +76,7 @@ def song(artwork_catalog: Artwork) -> CatalogSong:
         track_number=1,
         disc_number=1,
         composer="Test Composer",
+        isrc="USABC1234567",
         has_lyrics=False,
         is_apple_digital_master=True,
         url="https://music.apple.com/us/song/1",

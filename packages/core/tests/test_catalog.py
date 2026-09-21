@@ -461,6 +461,7 @@ def test_data_songs_callable_resolves_per_id() -> None:
             track_number=1,
             disc_number=1,
             composer="C",
+            isrc="USABC1234567",
             has_lyrics=False,
             is_apple_digital_master=False,
             url="x",

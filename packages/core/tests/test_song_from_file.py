@@ -274,7 +274,11 @@ def test_release_date_prefers_original_release_tag(
     make_audio: AudioFactory, artwork_library: Artwork
 ) -> None:
     path = make_audio(
-        metadata={**_RELEASE_DATE_BASE_TAGS, "TDOR": "2001-01-01", "date": "2023-05-17"},
+        metadata={
+            **_RELEASE_DATE_BASE_TAGS,
+            "TDOR": "2001-01-01",
+            "date": "2023-05-17",
+        },
         with_artwork=True,
         suffix="mp3",
     )

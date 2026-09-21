@@ -74,9 +74,10 @@ def _minimal_song() -> CatalogSong:
         duration_ms=1,
         artwork=Artwork(url="x", width=1, height=1),
         genres=[],
-        has_lyrics=False,
-        is_apple_digital_master=False,
-        url="x",
+        isrc="USABC1234567",
+        track_number=1,
+        disc_number=1,
+        release_date="2020-01-01",
         hls_layout=HlsLayout(
             target_duration_sec=1,
             init_byte_offset=0,
@@ -95,11 +96,10 @@ def test_song_optional_fields_absent_when_none(bare_mock: MusicKitApiMock) -> No
     bare_mock.data.songs = {"1": _minimal_song()}
     body = _get(bare_mock, "https://api.music.apple.com/v1/catalog/us/songs?ids=1")
     attrs = body["data"][0]["attributes"]
-    assert "releaseDate" not in attrs
-    assert "trackNumber" not in attrs
-    assert "discNumber" not in attrs
+    assert "hasLyrics" not in attrs
+    assert "isAppleDigitalMaster" not in attrs
+    assert "url" not in attrs
     assert "composerName" not in attrs
-    assert "isrc" not in attrs
     assert "contentRating" not in attrs
 
 

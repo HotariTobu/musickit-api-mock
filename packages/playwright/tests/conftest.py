@@ -103,6 +103,7 @@ def dev_token() -> str:
 def _silence_fallback(page_url: str) -> SongMetadataFallback:
     return SongMetadataFallback(
         artwork=Artwork(url=f"{page_url}a.jpg", width=64, height=64),
+        isrc="USABC1234567",
         has_lyrics=False,
         is_apple_digital_master=False,
         url="https://music.apple.com/us/song/s1",
