@@ -21,11 +21,13 @@ mock.data.songs = {
     "1000000001": CatalogSong.from_file("path/to/song.m4a"),
 }
 
+
 # callable form
 def resolve_song(ctx: LookupContext) -> CatalogSong | None:
     if not ctx.id.startswith("test-"):
         return None
     return CatalogSong.from_file(f"path/to/songs/{ctx.id}.m4a")
+
 
 mock.data.songs = resolve_song
 ```

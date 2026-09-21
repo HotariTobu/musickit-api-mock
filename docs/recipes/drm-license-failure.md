@@ -9,7 +9,9 @@ from musickit_api_mock import MusicKitApiMock
 
 mock = MusicKitApiMock()
 
-mock.browser.eme_flavor = "com.widevine.alpha"  # or "com.apple.fps" / "com.microsoft.playready"
+mock.browser.eme_flavor = (
+    "com.widevine.alpha"  # or "com.apple.fps" / "com.microsoft.playready"
+)
 ```
 
 The shim reports this value when MusicKit JS probes Encrypted Media Extensions, so the page proceeds down the matching DRM code path regardless of the host browser's native CDM.

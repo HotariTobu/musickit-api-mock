@@ -35,10 +35,12 @@ def test_declines(page):
 When one test opens the popup multiple times, set a callable so each open can return a different result:
 
 ```python
-results = iter([
-    AuthorizeClose(),       # user dismisses the first prompt
-    AuthorizeSuccess(user_token="t", cid="c"),  # accepts on retry
-])
+results = iter(
+    [
+        AuthorizeClose(),  # user dismisses the first prompt
+        AuthorizeSuccess(user_token="t", cid="c"),  # accepts on retry
+    ]
+)
 
 mock.browser.authorize_response = lambda: next(results)
 ```
