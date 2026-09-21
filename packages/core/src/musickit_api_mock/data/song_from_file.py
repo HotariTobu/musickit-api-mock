@@ -213,12 +213,10 @@ def _pick_list_str(
     raise _wrong_type(field, "list[str]", fb_val)
 
 
-def _pick_bool(fallback: SongMetadataFallback, field: str) -> bool:
+def _pick_bool(fallback: SongMetadataFallback, field: str) -> bool | None:
     fb_val: object = getattr(fallback, field)
-    if isinstance(fb_val, bool):
+    if isinstance(fb_val, bool) or fb_val is None:
         return fb_val
-    if fb_val is None:
-        raise _missing(field)
     raise _wrong_type(field, "bool", fb_val)
 
 
@@ -480,7 +478,7 @@ def _song_from_file(
         isrc=_pick_str(meta, f, "isrc", required=False),
         content_rating=_pick_str(meta, f, "content_rating", required=False),
         is_apple_digital_master=_pick_bool(f, "is_apple_digital_master"),
-        url=_pick_str(meta, f, "url", required=True),
+        url=_pick_str(meta, f, "url", required=False),
         duration_ms=duration_ms,
         bitrate=bitrate_kbps,
         sample_rate=sample_rate,

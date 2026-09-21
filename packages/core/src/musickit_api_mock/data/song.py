@@ -67,9 +67,6 @@ class CatalogSong:
         duration_ms: Duration in milliseconds.
         artwork: Cover artwork.
         genres: Display names of the song's genres.
-        has_lyrics: Whether lyrics are available.
-        is_apple_digital_master: Apple's "Apple Digital Master" badge.
-        url: Song landing-page URL on Apple Music.
         isrc: International Standard Recording Code.
         track_number: Track number within the album.
         disc_number: Disc number within the album.
@@ -80,6 +77,9 @@ class CatalogSong:
         bitrate: Bitrate in kilobits per second.
         sample_rate: Sample rate in hertz.
         file_size: Source file size in bytes.
+        has_lyrics: Whether lyrics are available.
+        is_apple_digital_master: Apple's "Apple Digital Master" badge.
+        url: Song landing-page URL on Apple Music.
         composer: Display name of the primary composer.
         content_rating: Apple content-rating tag.
         play_assets: Per-bit-rate play-asset variants surfaced in station
@@ -104,9 +104,6 @@ class CatalogSong:
     duration_ms: int
     artwork: Artwork
     genres: list[str]
-    has_lyrics: bool
-    is_apple_digital_master: bool
-    url: str
     isrc: str
     track_number: int
     disc_number: int
@@ -117,6 +114,9 @@ class CatalogSong:
     bitrate: int
     sample_rate: int
     file_size: int
+    has_lyrics: bool | None = None
+    is_apple_digital_master: bool | None = None
+    url: str | None = None
     composer: str | None = None
     content_rating: str | None = None
     play_assets: list[StationContextPlayAsset] | None = None
@@ -141,13 +141,14 @@ class CatalogSong:
         Reads tags and audio data from the file at ``audio_path`` and
         populates every field of the result, including HLS segment bytes
         and layout. Missing tag fields are filled from ``fallback`` when
-        supplied; fields with neither a tag nor a fallback raise.
+        supplied; a required field with neither a tag nor a fallback
+        raises, an optional one is left unset.
 
         Args:
             audio_path: Filesystem path to the source audio file.
             fallback: Metadata defaults applied when tags are missing the
-                corresponding field. Leave unset to require every field to
-                be present in the file's tags.
+                corresponding field. Leave unset to take every field from
+                the file's tags.
             preview: Either an explicit byte payload to serve as the preview,
                 or a time window to extract from the source audio. Leave
                 unset to use the full source audio as the preview.
@@ -166,8 +167,9 @@ class SongMetadataFallback:
 
     Each field corresponds to the same-named attribute on the song
     dataclass and is used only when the source file's tags do not supply
-    the value. Fields left unset (``None``) provide no fallback and the
-    loader raises if the tag is also missing.
+    the value. Fields left unset (``None``) provide no fallback; the
+    loader raises if the tag is also missing and the song requires the
+    field, and leaves the field unset otherwise.
 
     Attributes:
         title: Display title fallback.
