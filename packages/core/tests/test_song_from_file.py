@@ -258,6 +258,61 @@ def test_genre_comma_split(make_audio: AudioFactory, artwork_library: Artwork) -
     assert song.genres == ["Rock", "Pop", "Jazz"]
 
 
+_RELEASE_DATE_BASE_TAGS = {
+    "title": "T",
+    "artist": "A",
+    "album": "Al",
+    "track": "1",
+    "disc": "1",
+    "genre": "P",
+}
+
+
+def test_release_date_prefers_original_release_tag(
+    make_audio: AudioFactory, artwork_library: Artwork
+) -> None:
+    path = make_audio(
+        metadata={**_RELEASE_DATE_BASE_TAGS, "TDOR": "2001-01-01", "date": "2023-05-17"},
+        with_artwork=True,
+        suffix="mp3",
+    )
+    song = CatalogSong.from_file(path, fallback=_full_fallback(artwork_library))
+    assert song.release_date == "2001-01-01"
+
+
+def test_release_date_skips_tags_not_in_iso_form(
+    make_audio: AudioFactory, artwork_library: Artwork
+) -> None:
+    path = make_audio(
+        metadata={**_RELEASE_DATE_BASE_TAGS, "TDOR": "2001", "date": "2023-05-17"},
+        with_artwork=True,
+        suffix="mp3",
+    )
+    song = CatalogSong.from_file(path, fallback=_full_fallback(artwork_library))
+    assert song.release_date == "2023-05-17"
+
+
+def test_release_date_falls_back_when_no_tag_is_iso(
+    make_audio: AudioFactory, artwork_library: Artwork
+) -> None:
+    path = make_audio(
+        metadata={**_RELEASE_DATE_BASE_TAGS, "date": "2023"}, with_artwork=True
+    )
+    fb = replace(_full_fallback(artwork_library), release_date="2020-01-01")
+    song = CatalogSong.from_file(path, fallback=fb)
+    assert song.release_date == "2020-01-01"
+
+
+def test_release_date_missing_raises(
+    make_audio: AudioFactory, artwork_library: Artwork
+) -> None:
+    path = make_audio(
+        metadata={**_RELEASE_DATE_BASE_TAGS, "date": "2023"}, with_artwork=True
+    )
+    with pytest.raises(ValueError, match="missing 'release_date'"):
+        CatalogSong.from_file(path, fallback=_full_fallback(artwork_library))
+
+
 def test_missing_required_field_raises(
     make_audio: AudioFactory, artwork_library: Artwork
 ) -> None:
