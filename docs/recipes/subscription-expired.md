@@ -43,11 +43,13 @@ Both setters accept a callable. Use a closure to start with success and switch t
 ```python
 calls = {"count": 0}
 
+
 def web_playback_for(ctx):
     calls["count"] += 1
     if calls["count"] == 1:
         return healthy_response(ctx)
     return WebPlaybackResponseSubscriptionError()
+
 
 mock.endpoints.web_playback = web_playback_for
 ```

@@ -38,17 +38,17 @@ from musickit_api_mock import (
 if TYPE_CHECKING:
     from musickit_api_mock.json_value import _JSONValue
 
-    from tests._apple_response import _AppleArtwork, _ApplePreview, _AppleResponse
+    from tests._apple_response import AppleArtwork, ApplePreview, AppleResponse
 
 
-def _get(mock: MusicKitApiMock, url: str) -> _AppleResponse:
+def _get(mock: MusicKitApiMock, url: str) -> AppleResponse:
     resp = mock.handle_request(Request(method="GET", url=url, headers={}, body=None))
     assert resp is not None
     assert resp.status == 200
     return json.loads(resp.body)
 
 
-def _attrs(body: _AppleResponse) -> dict[str, _JSONValue]:
+def _attrs(body: AppleResponse) -> dict[str, _JSONValue]:
     attrs = body["data"][0].get("attributes")
     assert attrs is not None
     return attrs
@@ -71,7 +71,7 @@ def test_song_attributes_emit_configured_fields(
     assert attrs["hasLyrics"] == song.has_lyrics
     assert attrs["isAppleDigitalMaster"] == song.is_apple_digital_master
     assert attrs["url"] == song.url
-    artwork = cast("_AppleArtwork", attrs["artwork"])
+    artwork = cast("AppleArtwork", attrs["artwork"])
     assert artwork["width"] == song.artwork.width
     assert artwork["height"] == song.artwork.height
     assert artwork["url"] == song.artwork.url
@@ -108,7 +108,7 @@ def test_artist_attributes_emit_configured_fields(
     assert attrs["genreNames"] == artist.genre_names
     assert attrs["url"] == artist.url
     assert artist.artwork is not None
-    assert cast("_AppleArtwork", attrs["artwork"])["width"] == artist.artwork.width
+    assert cast("AppleArtwork", attrs["artwork"])["width"] == artist.artwork.width
 
 
 def test_playlist_attributes_emit_configured_fields(
@@ -141,7 +141,7 @@ def test_music_video_attributes_emit_configured_fields(
     assert attrs["releaseDate"] == music_video.release_date
     assert attrs["url"] == music_video.url
     assert attrs["videoTraits"] == music_video.video_traits
-    previews = cast("list[_ApplePreview]", attrs["previews"])
+    previews = cast("list[ApplePreview]", attrs["previews"])
     assert previews[0]["url"] == music_video.previews[0].url
 
 

@@ -42,10 +42,10 @@ from musickit_api_mock import (
 )
 
 if TYPE_CHECKING:
-    from tests._apple_response import _AppleResponse
+    from tests._apple_response import AppleResponse
 
 
-def _get(mock: MusicKitApiMock, url: str) -> tuple[int, _AppleResponse]:
+def _get(mock: MusicKitApiMock, url: str) -> tuple[int, AppleResponse]:
     resp = mock.handle_request(Request(method="GET", url=url, headers={}, body=None))
     assert resp is not None
     return resp.status, json.loads(resp.body)

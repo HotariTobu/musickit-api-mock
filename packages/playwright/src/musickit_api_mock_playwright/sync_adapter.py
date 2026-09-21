@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-import sys
+import logging
 from typing import TYPE_CHECKING
 
 from musickit_api_mock_playwright.shared import _to_core_request
@@ -10,6 +10,8 @@ from musickit_api_mock_playwright.shared import _to_core_request
 if TYPE_CHECKING:
     from musickit_api_mock.mock import MusicKitApiMock
     from playwright.sync_api import BrowserContext, Page, Route
+
+_logger = logging.getLogger(__name__)
 
 
 def intercept(mock: MusicKitApiMock, target: Page | BrowserContext) -> None:
@@ -20,7 +22,7 @@ def intercept(mock: MusicKitApiMock, target: Page | BrowserContext) -> None:
     handles MusicKit JS HTTP traffic and the browser-side shim covers
     in-page interactions (e.g. the authorize popup, EME flavor reporting).
     If the mock raises (e.g. an unset setter), the adapter logs the error
-    to stderr and aborts the request at the network layer.
+    and aborts the request at the network layer.
 
     Args:
         mock: The mock instance to bind.
@@ -36,16 +38,13 @@ def _handle(mock: MusicKitApiMock, route: Route) -> None:
     req = _to_core_request(route.request)
     try:
         resp = mock.handle_request(req)
-    except Exception as e:
-        # The mock raised (e.g. a setter is unset). Surface the original
-        # message to stderr (it would otherwise be lost in the network-level
-        # abort) and end the request as a network failure rather than hanging.
-        # Returning any HTTP status here would collide with mock-produced
-        # status responses, so abort is the only collision-free choice.
-        print(
-            f"[musickit-api-mock] handler error: {type(e).__name__}: {e}",
-            file=sys.stderr,
-        )
+    except Exception:
+        # The mock raised (e.g. a setter is unset). Log the original error (it
+        # would otherwise be lost in the network-level abort) and end the
+        # request as a network failure rather than hanging. Returning any HTTP
+        # status here would collide with mock-produced status responses, so
+        # abort is the only collision-free choice.
+        _logger.exception("handler error")
         route.abort()
         return
     if resp is None:

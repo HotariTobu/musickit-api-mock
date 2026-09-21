@@ -49,20 +49,20 @@ from musickit_api_mock import (
 
 if TYPE_CHECKING:
     from tests._apple_response import (
-        _AccountMeta,
-        _AppleResponse,
-        _LicenseResponseBody,
-        _WebPlaybackResponseBody,
+        AccountMeta,
+        AppleResponse,
+        LicenseResponseBody,
+        WebPlaybackResponseBody,
     )
 
 
-def _get(mock: MusicKitApiMock, url: str) -> tuple[int, _AppleResponse]:
+def _get(mock: MusicKitApiMock, url: str) -> tuple[int, AppleResponse]:
     resp = mock.handle_request(Request(method="GET", url=url, headers={}, body=None))
     assert resp is not None
     return resp.status, json.loads(resp.body)
 
 
-def _post(mock: MusicKitApiMock, url: str, body: bytes) -> tuple[int, _AppleResponse]:
+def _post(mock: MusicKitApiMock, url: str, body: bytes) -> tuple[int, AppleResponse]:
     resp = mock.handle_request(Request(method="POST", url=url, headers={}, body=body))
     assert resp is not None
     return resp.status, json.loads(resp.body)
@@ -121,7 +121,7 @@ def test_account_callable_form() -> None:
         m, "https://api.music.apple.com/v1/me/account?meta=subscription"
     )
     assert status == 200
-    meta = cast("_AccountMeta", body["meta"])
+    meta = cast("AccountMeta", body["meta"])
     assert meta["subscription"]["active"] is False
 
 
@@ -177,7 +177,7 @@ def test_web_playback_dict_form_dispatches_on_salable_adam_id(
         "https://play.itunes.apple.com/WebObjects/MZPlay.woa/wa/webPlayback",
         body,
     )
-    parsed = cast("_WebPlaybackResponseBody", raw)
+    parsed = cast("WebPlaybackResponseBody", raw)
     assert status == 200
     assert parsed["status"] == 0
     assert parsed["songList"][0]["songId"] == "s1"
@@ -211,7 +211,7 @@ def test_web_playback_mapping_form_dispatches_on_universal_library_id(
         "https://play.itunes.apple.com/WebObjects/MZPlay.woa/wa/webPlayback",
         body,
     )
-    parsed = cast("_WebPlaybackResponseBody", raw)
+    parsed = cast("WebPlaybackResponseBody", raw)
     assert status == 200
     assert parsed["status"] == 0
     assert parsed["songList"][0]["songId"] == "s1"
@@ -243,7 +243,7 @@ def test_web_playback_static_form_ignores_missing_universal_library_id(
         "https://play.itunes.apple.com/WebObjects/MZPlay.woa/wa/webPlayback",
         body,
     )
-    parsed = cast("_WebPlaybackResponseBody", raw)
+    parsed = cast("WebPlaybackResponseBody", raw)
     assert status == 200
     assert parsed["status"] == 0
 
@@ -390,8 +390,8 @@ def test_license_dict_form_keys_on_adam_id(mock: MusicKitApiMock) -> None:
         "https://play.itunes.apple.com/WebObjects/MZPlay.woa/wa/acquireWebPlaybackLicense",
         b,
     )
-    body_a = cast("_LicenseResponseBody", raw_a)
-    body_b = cast("_LicenseResponseBody", raw_b)
+    body_a = cast("LicenseResponseBody", raw_a)
+    body_b = cast("LicenseResponseBody", raw_b)
     assert s_a == s_b == 200
     assert body_a["status"] == 0
     assert body_b["status"] == -1017

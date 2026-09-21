@@ -22,7 +22,7 @@ from musickit_api_mock import (
 if TYPE_CHECKING:
     from musickit_api_mock.json_value import _JSONValue
 
-    from tests._apple_response import _LicenseResponseBody
+    from tests._apple_response import LicenseResponseBody
 
 
 _ACQUIRE_LICENSE_URL = (
@@ -35,7 +35,7 @@ _STREAMING_KEY_DELIVERY_URL = (
 
 def _post_license(
     mock: MusicKitApiMock, body_dict: dict[str, _JSONValue]
-) -> tuple[int, _LicenseResponseBody]:
+) -> tuple[int, LicenseResponseBody]:
     body = json.dumps(body_dict).encode()
     resp = mock.handle_request(
         Request(
@@ -57,7 +57,7 @@ def _post_license_raw(
 
 def _post_streaming_key_delivery(
     mock: MusicKitApiMock, body_dict: dict[str, _JSONValue]
-) -> tuple[int, _LicenseResponseBody]:
+) -> tuple[int, LicenseResponseBody]:
     body = json.dumps(body_dict).encode()
     resp = mock.handle_request(
         Request(

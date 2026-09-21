@@ -6,10 +6,10 @@ from typing import TYPE_CHECKING, cast
 from musickit_api_mock import CatalogSong, MusicKitApiMock, Request
 
 if TYPE_CHECKING:
-    from tests._apple_response import _AppleArtwork, _AppleResponse
+    from tests._apple_response import AppleArtwork, AppleResponse
 
 
-def _get(mock: MusicKitApiMock, url: str) -> tuple[int, _AppleResponse]:
+def _get(mock: MusicKitApiMock, url: str) -> tuple[int, AppleResponse]:
     resp = mock.handle_request(Request(method="GET", url=url, headers={}, body=None))
     assert resp is not None
     return resp.status, json.loads(resp.body)
@@ -321,7 +321,7 @@ def test_album_extend_editorial_artwork(mock: MusicKitApiMock) -> None:
     assert status == 200
     attrs = body["data"][0]["attributes"]
     assert "editorialArtwork" in attrs
-    editorial = cast("dict[str, _AppleArtwork]", attrs["editorialArtwork"])
+    editorial = cast("dict[str, AppleArtwork]", attrs["editorialArtwork"])
     assert "superHeroTall" in editorial
     assert editorial["superHeroTall"]["width"] == 1680
 

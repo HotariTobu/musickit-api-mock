@@ -16,7 +16,7 @@ from musickit_api_mock import (
 )
 
 if TYPE_CHECKING:
-    from tests._apple_response import _AppleResponse
+    from tests._apple_response import AppleResponse
 
 
 def test_s01_next_tracks_default_limit_2(mock: MusicKitApiMock) -> None:
@@ -91,7 +91,7 @@ def test_s02_continuous(mock: MusicKitApiMock) -> None:
     assert "tracks" in parsed["results"]
 
 
-def _post_continuous(mock: MusicKitApiMock) -> tuple[int, _AppleResponse]:
+def _post_continuous(mock: MusicKitApiMock) -> tuple[int, AppleResponse]:
     body = json.dumps({"data": [{"id": "1", "type": "songs"}]}).encode()
     resp = mock.handle_request(
         Request(

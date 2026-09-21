@@ -45,7 +45,7 @@ class _AppleError(TypedDict, total=False):
     source: dict[str, _JSONValue]
 
 
-class _AppleResponse(TypedDict, total=False):
+class AppleResponse(TypedDict, total=False):
     data: list[_AppleResource]
     errors: list[_AppleError]
     meta: dict[str, _JSONValue]
@@ -54,7 +54,7 @@ class _AppleResponse(TypedDict, total=False):
     results: dict[str, _JSONValue]
 
 
-class _AppleArtwork(TypedDict, total=False):
+class AppleArtwork(TypedDict, total=False):
     url: str
     width: int
     height: int
@@ -66,12 +66,12 @@ class _AppleArtwork(TypedDict, total=False):
     hasP3: bool
 
 
-class _ApplePreview(TypedDict, total=False):
+class ApplePreview(TypedDict, total=False):
     url: str
 
 
-_LicenseResponseBody = TypedDict(
-    "_LicenseResponseBody",
+LicenseResponseBody = TypedDict(
+    "LicenseResponseBody",
     {
         "license": str,
         "status": int,
@@ -91,7 +91,7 @@ class _WebPlaybackSongEntry(TypedDict, total=False):
     artworkURL: str
 
 
-class _WebPlaybackResponseBody(TypedDict, total=False):
+class WebPlaybackResponseBody(TypedDict, total=False):
     status: int
     songList: list[_WebPlaybackSongEntry]
 
@@ -101,5 +101,5 @@ class _AccountSubscription(TypedDict, total=False):
     storefront: str
 
 
-class _AccountMeta(TypedDict, total=False):
+class AccountMeta(TypedDict, total=False):
     subscription: _AccountSubscription
