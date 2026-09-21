@@ -75,6 +75,19 @@ def test_library_album_tracks_standalone(mock: MusicKitApiMock) -> None:
     assert body["meta"]["total"] == 1
 
 
+def test_library_album_tracks_standalone_include(mock: MusicKitApiMock) -> None:
+    status, body = _get(
+        mock,
+        "https://api.music.apple.com/v1/me/library/albums/l.a1/tracks"
+        "?include=catalog,albums,artists",
+    )
+    assert status == 200
+    rels = body["data"][0]["relationships"]
+    assert [x["id"] for x in rels["catalog"]["data"]] == ["1"]
+    assert [x["id"] for x in rels["albums"]["data"]] == ["l.a1"]
+    assert [x["id"] for x in rels["artists"]["data"]] == ["r.ar1"]
+
+
 def test_library_album_artists_standalone(mock: MusicKitApiMock) -> None:
     status, body = _get(
         mock, "https://api.music.apple.com/v1/me/library/albums/l.a1/artists"
@@ -90,6 +103,28 @@ def test_library_playlist_tracks_standalone(mock: MusicKitApiMock) -> None:
     )
     assert status == 200
     assert [x["id"] for x in body["data"]] == ["i.s1"]
+
+
+def test_library_playlist_tracks_standalone_no_include(mock: MusicKitApiMock) -> None:
+    status, body = _get(
+        mock, "https://api.music.apple.com/v1/me/library/playlists/p.pl1/tracks"
+    )
+    assert status == 200
+    assert "relationships" not in body["data"][0]
+
+
+def test_library_playlist_tracks_standalone_include(mock: MusicKitApiMock) -> None:
+    status, body = _get(
+        mock,
+        "https://api.music.apple.com/v1/me/library/playlists/p.pl1/tracks"
+        "?include=catalog,albums,artists",
+    )
+    assert status == 200
+    rels = body["data"][0]["relationships"]
+    assert [x["id"] for x in rels["catalog"]["data"]] == ["1"]
+    assert rels["catalog"]["data"][0]["type"] == "songs"
+    assert [x["id"] for x in rels["albums"]["data"]] == ["l.a1"]
+    assert [x["id"] for x in rels["artists"]["data"]] == ["r.ar1"]
 
 
 def test_library_music_video_albums_standalone(mock: MusicKitApiMock) -> None:
