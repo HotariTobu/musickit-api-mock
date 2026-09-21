@@ -26,10 +26,10 @@ from musickit_api_mock import (
 )
 
 if TYPE_CHECKING:
-    from tests._apple_response import _AppleResponse
+    from tests._apple_response import AppleResponse
 
 
-def _get(mock: MusicKitApiMock, url: str) -> _AppleResponse:
+def _get(mock: MusicKitApiMock, url: str) -> AppleResponse:
     resp = mock.handle_request(Request(method="GET", url=url, headers={}, body=None))
     assert resp is not None
     assert resp.status == 200

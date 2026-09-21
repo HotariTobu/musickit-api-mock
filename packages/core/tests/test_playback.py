@@ -32,7 +32,7 @@ from musickit_api_mock import (
 )
 
 if TYPE_CHECKING:
-    from tests._apple_response import _WebPlaybackResponseBody
+    from tests._apple_response import WebPlaybackResponseBody
 
 
 def test_p02_web_playback(mock: MusicKitApiMock) -> None:
@@ -268,7 +268,7 @@ def _drm_fields() -> dict[str, str]:
 
 def _web_playback(
     mock: MusicKitApiMock, body: dict[str, str]
-) -> _WebPlaybackResponseBody:
+) -> WebPlaybackResponseBody:
     resp = mock.handle_request(
         Request(
             method="POST",
@@ -279,7 +279,7 @@ def _web_playback(
     )
     assert resp is not None
     assert resp.status == 200
-    return cast("_WebPlaybackResponseBody", json.loads(resp.body))
+    return cast("WebPlaybackResponseBody", json.loads(resp.body))
 
 
 def test_p02_web_playback_catalog_song_omits_playback_reporting(
