@@ -10,7 +10,7 @@ jobs:
   preflight:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6.0.2
+      - uses: actions/checkout@v6.1.0
       - uses: actions/setup-python@v6.2.0
         with:
           python-version-file: packages/core/pyproject.toml
@@ -27,7 +27,7 @@ jobs:
         os: [ubuntu-latest, macos-latest, windows-latest]
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v6.0.2
+      - uses: actions/checkout@v6.1.0
       - uses: actions/setup-python@v6.2.0
         with:
           python-version-file: packages/core/pyproject.toml
@@ -52,7 +52,7 @@ jobs:
             playwright-cache: ~\AppData\Local\ms-playwright
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v6.0.2
+      - uses: actions/checkout@v6.1.0
       - uses: actions/setup-python@v6.2.0
         with:
           python-version-file: packages/core/pyproject.toml
