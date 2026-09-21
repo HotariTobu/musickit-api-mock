@@ -67,26 +67,20 @@ class CatalogSong:
         duration_ms: Duration in milliseconds.
         artwork: Cover artwork.
         genres: Display names of the song's genres.
-        has_lyrics: Whether lyrics are available.
-        audio_locale: BCP-47 locale tag of the recorded audio.
-        audio_traits: Audio capability tags (lossless, dolby-atmos, etc.).
-        has_time_synced_lyrics: Whether time-synced lyrics are available.
-        is_apple_digital_master: Apple's "Apple Digital Master" badge.
-        is_mastered_for_itunes: Apple's "Mastered for iTunes" badge.
-        is_vocal_attenuation_allowed: Whether vocal attenuation (Sing) is
-            allowed.
-        url: Song landing-page URL on Apple Music.
+        isrc: International Standard Recording Code.
+        track_number: Track number within the album.
+        disc_number: Disc number within the album.
+        release_date: Original release date of the song as ``YYYY-MM-DD``.
         hls_layout: fMP4 segment layout for the HLS manifest.
         hls_segment: Raw bytes of the fMP4 segment served for HLS playback.
         preview_audio: Raw bytes the mock serves as the preview asset.
         bitrate: Bitrate in kilobits per second.
         sample_rate: Sample rate in hertz.
         file_size: Source file size in bytes.
-        release_date: ISO-8601 release date.
-        track_number: Track number within the album.
-        disc_number: Disc number when part of a multi-disc album.
+        has_lyrics: Whether lyrics are available.
+        is_apple_digital_master: Apple's "Apple Digital Master" badge.
+        url: Song landing-page URL on Apple Music.
         composer: Display name of the primary composer.
-        isrc: International Standard Recording Code.
         content_rating: Apple content-rating tag.
         play_assets: Per-bit-rate play-asset variants surfaced in station
             track-info responses.
@@ -110,25 +104,20 @@ class CatalogSong:
     duration_ms: int
     artwork: Artwork
     genres: list[str]
-    has_lyrics: bool
-    audio_locale: str
-    audio_traits: list[str]
-    has_time_synced_lyrics: bool
-    is_apple_digital_master: bool
-    is_mastered_for_itunes: bool
-    is_vocal_attenuation_allowed: bool
-    url: str
+    isrc: str
+    track_number: int
+    disc_number: int
+    release_date: str
     hls_layout: HlsLayout
     hls_segment: bytes
     preview_audio: bytes
     bitrate: int
     sample_rate: int
     file_size: int
-    release_date: str | None = None
-    track_number: int | None = None
-    disc_number: int | None = None
+    has_lyrics: bool | None = None
+    is_apple_digital_master: bool | None = None
+    url: str | None = None
     composer: str | None = None
-    isrc: str | None = None
     content_rating: str | None = None
     play_assets: list[StationContextPlayAsset] | None = None
     album_ids: list[str] | None = None
@@ -149,22 +138,49 @@ class CatalogSong:
     ) -> CatalogSong:
         """Build a song by reading metadata and audio bytes from a file on disk.
 
-        Reads tags and audio data from the file at ``audio_path`` and
-        populates every field of the result, including HLS segment bytes
-        and layout. Missing tag fields are filled from ``fallback`` when
-        supplied; fields with neither a tag nor a fallback raise.
+        Each metadata field is taken from the file's tags first and from
+        ``fallback`` when the tag is absent; an empty tag counts as absent.
+        A required field with neither raises; an optional one is left
+        unset.
+
+        Read from tags:
+
+        - ``title`` / ``artist`` / ``album`` / ``composer``: the tag of the
+          same name.
+        - ``isrc``: the ``ISRC`` tag.
+        - ``track_number`` / ``disc_number``: the leading integer of the
+          ``track`` / ``disc`` tag, so ``"3/12"`` gives ``3``; a tag with no
+          leading integer counts as absent.
+        - ``genres``: the ``genre`` tag split on commas.
+        - ``release_date``: the original-release tag (``TDOR`` for ID3,
+          ``ORIGINALDATE`` for Vorbis comments) when present, else the
+          ``date`` tag; only a ``YYYY-MM-DD`` value is used, any other form
+          counts as absent.
+        - ``artwork``: the first embedded picture as a data URL, at the
+          picture's own size.
+
+        Only from ``fallback``, as no tag carries them: ``has_lyrics``,
+        ``is_apple_digital_master``, ``url``, ``content_rating``.
+
+        From the audio itself: ``duration_ms``, ``bitrate``,
+        ``sample_rate``, ``file_size``, the HLS layout and segment (the
+        audio transcoded to AAC), and ``preview_audio``.
 
         Args:
             audio_path: Filesystem path to the source audio file.
             fallback: Metadata defaults applied when tags are missing the
-                corresponding field. Leave unset to require every field to
-                be present in the file's tags.
+                corresponding field. Leave unset to take every field from
+                the file's tags.
             preview: Either an explicit byte payload to serve as the preview,
                 or a time window to extract from the source audio. Leave
                 unset to use the full source audio as the preview.
 
         Returns:
             A fully-populated song built from the file.
+
+        Raises:
+            ValueError: A required field has neither a tag nor a fallback.
+            TypeError: A fallback field holds a value of the wrong type.
         """
         from musickit_api_mock.data.song_from_file import _song_from_file
 
@@ -177,8 +193,9 @@ class SongMetadataFallback:
 
     Each field corresponds to the same-named attribute on the song
     dataclass and is used only when the source file's tags do not supply
-    the value. Fields left unset (``None``) provide no fallback and the
-    loader raises if the tag is also missing.
+    the value. Fields left unset (``None``) provide no fallback; the
+    loader raises if the tag is also missing and the song requires the
+    field, and leaves the field unset otherwise.
 
     Attributes:
         title: Display title fallback.
@@ -193,12 +210,7 @@ class SongMetadataFallback:
         has_lyrics: Lyrics-availability fallback.
         isrc: ISRC fallback.
         content_rating: Content-rating fallback.
-        audio_locale: BCP-47 audio-locale fallback.
-        audio_traits: Audio-traits fallback.
-        has_time_synced_lyrics: Time-synced lyrics-availability fallback.
         is_apple_digital_master: Apple Digital Master fallback.
-        is_mastered_for_itunes: Mastered for iTunes fallback.
-        is_vocal_attenuation_allowed: Vocal-attenuation-allowed fallback.
         url: Landing-page URL fallback.
     """
 
@@ -214,12 +226,7 @@ class SongMetadataFallback:
     has_lyrics: bool | None = None
     isrc: str | None = None
     content_rating: str | None = None
-    audio_locale: str | None = None
-    audio_traits: list[str] | None = None
-    has_time_synced_lyrics: bool | None = None
     is_apple_digital_master: bool | None = None
-    is_mastered_for_itunes: bool | None = None
-    is_vocal_attenuation_allowed: bool | None = None
     url: str | None = None
 
 

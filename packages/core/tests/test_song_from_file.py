@@ -120,13 +120,9 @@ def make_audio(tmp_path: Path) -> AudioFactory:
 def _full_fallback(artwork: Artwork) -> SongMetadataFallback:
     return SongMetadataFallback(
         artwork=artwork,
+        isrc="USABC1234567",
         has_lyrics=True,
-        audio_locale="en-US",
-        audio_traits=["lossless"],
-        has_time_synced_lyrics=False,
         is_apple_digital_master=False,
-        is_mastered_for_itunes=True,
-        is_vocal_attenuation_allowed=False,
         url="https://music.apple.com/us/song/x",
     )
 
@@ -139,7 +135,7 @@ def test_extracts_metadata_from_file(
             "title": "File Title",
             "artist": "File Artist",
             "album": "File Album",
-            "date": "2023",
+            "date": "2023-05-17",
             "track": "5",
             "disc": "2",
             "genre": "Rock",
@@ -151,7 +147,7 @@ def test_extracts_metadata_from_file(
     assert song.title == "File Title"
     assert song.artist == "File Artist"
     assert song.album == "File Album"
-    assert song.release_date == "2023"
+    assert song.release_date == "2023-05-17"
     assert song.track_number == 5
     assert song.disc_number == 2
     assert song.genres == ["Rock"]
@@ -166,7 +162,7 @@ def test_extracts_artwork_from_file(
             "title": "T",
             "artist": "A",
             "album": "Al",
-            "date": "2024",
+            "date": "2024-01-01",
             "track": "1",
             "disc": "1",
             "genre": "P",
@@ -187,7 +183,7 @@ def test_falls_back_when_file_has_no_artwork(
             "title": "T",
             "artist": "A",
             "album": "Al",
-            "date": "2024",
+            "date": "2024-01-01",
             "track": "1",
             "disc": "1",
             "genre": "P",
@@ -206,18 +202,14 @@ def test_falls_back_when_file_has_no_metadata(
         title="FB Title",
         artist="FB Artist",
         album="FB Album",
+        isrc="USABC1234567",
         artwork=artwork_library,
         genres=["Pop"],
         release_date="2020-01-01",
         track_number=3,
         disc_number=1,
         has_lyrics=True,
-        audio_locale="en-US",
-        audio_traits=["lossless"],
-        has_time_synced_lyrics=False,
         is_apple_digital_master=False,
-        is_mastered_for_itunes=True,
-        is_vocal_attenuation_allowed=False,
         url="https://example.com/x",
     )
     song = CatalogSong.from_file(path, fallback=fb)
@@ -239,7 +231,7 @@ def test_track_number_with_total(
             "title": "T",
             "artist": "A",
             "album": "Al",
-            "date": "2024",
+            "date": "2024-01-01",
             "track": "3/12",
             "disc": "1/2",
             "genre": "P",
@@ -257,7 +249,7 @@ def test_genre_comma_split(make_audio: AudioFactory, artwork_library: Artwork) -
             "title": "T",
             "artist": "A",
             "album": "Al",
-            "date": "2024",
+            "date": "2024-01-01",
             "track": "1",
             "disc": "1",
             "genre": "Rock, Pop, Jazz",
@@ -266,6 +258,65 @@ def test_genre_comma_split(make_audio: AudioFactory, artwork_library: Artwork) -
     )
     song = CatalogSong.from_file(path, fallback=_full_fallback(artwork_library))
     assert song.genres == ["Rock", "Pop", "Jazz"]
+
+
+_RELEASE_DATE_BASE_TAGS = {
+    "title": "T",
+    "artist": "A",
+    "album": "Al",
+    "track": "1",
+    "disc": "1",
+    "genre": "P",
+}
+
+
+def test_release_date_prefers_original_release_tag(
+    make_audio: AudioFactory, artwork_library: Artwork
+) -> None:
+    path = make_audio(
+        metadata={
+            **_RELEASE_DATE_BASE_TAGS,
+            "TDOR": "2001-01-01",
+            "date": "2023-05-17",
+        },
+        with_artwork=True,
+        suffix="mp3",
+    )
+    song = CatalogSong.from_file(path, fallback=_full_fallback(artwork_library))
+    assert song.release_date == "2001-01-01"
+
+
+def test_release_date_skips_tags_not_in_iso_form(
+    make_audio: AudioFactory, artwork_library: Artwork
+) -> None:
+    path = make_audio(
+        metadata={**_RELEASE_DATE_BASE_TAGS, "TDOR": "2001", "date": "2023-05-17"},
+        with_artwork=True,
+        suffix="mp3",
+    )
+    song = CatalogSong.from_file(path, fallback=_full_fallback(artwork_library))
+    assert song.release_date == "2023-05-17"
+
+
+def test_release_date_falls_back_when_no_tag_is_iso(
+    make_audio: AudioFactory, artwork_library: Artwork
+) -> None:
+    path = make_audio(
+        metadata={**_RELEASE_DATE_BASE_TAGS, "date": "2023"}, with_artwork=True
+    )
+    fb = replace(_full_fallback(artwork_library), release_date="2020-01-01")
+    song = CatalogSong.from_file(path, fallback=fb)
+    assert song.release_date == "2020-01-01"
+
+
+def test_release_date_missing_raises(
+    make_audio: AudioFactory, artwork_library: Artwork
+) -> None:
+    path = make_audio(
+        metadata={**_RELEASE_DATE_BASE_TAGS, "date": "2023"}, with_artwork=True
+    )
+    with pytest.raises(ValueError, match="missing 'release_date'"):
+        CatalogSong.from_file(path, fallback=_full_fallback(artwork_library))
 
 
 def test_missing_required_field_raises(
@@ -280,12 +331,7 @@ def test_missing_required_field_raises(
         track_number=1,
         disc_number=1,
         has_lyrics=False,
-        audio_locale="en-US",
-        audio_traits=[],
-        has_time_synced_lyrics=False,
         is_apple_digital_master=False,
-        is_mastered_for_itunes=False,
-        is_vocal_attenuation_allowed=False,
         url="x",
     )
     with pytest.raises(ValueError, match="missing 'title'"):
@@ -300,7 +346,7 @@ def test_bool_fields_from_fallback(
             "title": "T",
             "artist": "A",
             "album": "Al",
-            "date": "2024",
+            "date": "2024-01-01",
             "track": "1",
             "disc": "1",
             "genre": "P",
@@ -309,21 +355,14 @@ def test_bool_fields_from_fallback(
     )
     fb = SongMetadataFallback(
         artwork=artwork_library,
+        isrc="USABC1234567",
         has_lyrics=True,
-        audio_locale="en-US",
-        audio_traits=["lossless"],
-        has_time_synced_lyrics=True,
         is_apple_digital_master=True,
-        is_mastered_for_itunes=False,
-        is_vocal_attenuation_allowed=True,
         url="https://example.com/x",
     )
     song = CatalogSong.from_file(path, fallback=fb)
     assert song.has_lyrics is True
-    assert song.has_time_synced_lyrics is True
     assert song.is_apple_digital_master is True
-    assert song.is_mastered_for_itunes is False
-    assert song.is_vocal_attenuation_allowed is True
 
 
 def test_uploaded_library_song_from_file_extracts_metadata_and_audio(
