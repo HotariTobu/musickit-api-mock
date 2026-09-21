@@ -2397,7 +2397,7 @@ reading an unset source raises <code>ValueError</code>.</p>
   </span>
 
 <a href="#musickit_api_mock.CatalogSong" class="headerlink" title="Permanent link">&para;</a></h2>
-<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">CatalogSong</span><span class="p">(</span><span class="n">title</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">artist</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">album</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">duration_ms</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">artwork</span><span class="p">:</span> <span class="n">Artwork</span><span class="p">,</span> <span class="n">genres</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">has_lyrics</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span> <span class="n">audio_locale</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">audio_traits</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">has_time_synced_lyrics</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span> <span class="n">is_apple_digital_master</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span> <span class="n">is_mastered_for_itunes</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span> <span class="n">is_vocal_attenuation_allowed</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span> <span class="n">url</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">hls_layout</span><span class="p">:</span> <span class="n">HlsLayout</span><span class="p">,</span> <span class="n">hls_segment</span><span class="p">:</span> <span class="nb">bytes</span><span class="p">,</span> <span class="n">preview_audio</span><span class="p">:</span> <span class="nb">bytes</span><span class="p">,</span> <span class="n">bitrate</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">sample_rate</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">file_size</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">release_date</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">track_number</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">disc_number</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">composer</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">isrc</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">content_rating</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">play_assets</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">StationContextPlayAsset</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">album_ids</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">artist_ids</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">composer_ids</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">genre_ids</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">music_video_ids</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">station_id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">library_song_id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span>
+<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">CatalogSong</span><span class="p">(</span><span class="n">title</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">artist</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">album</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">duration_ms</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">artwork</span><span class="p">:</span> <span class="n">Artwork</span><span class="p">,</span> <span class="n">genres</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">isrc</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">track_number</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">disc_number</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">release_date</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">hls_layout</span><span class="p">:</span> <span class="n">HlsLayout</span><span class="p">,</span> <span class="n">hls_segment</span><span class="p">:</span> <span class="nb">bytes</span><span class="p">,</span> <span class="n">preview_audio</span><span class="p">:</span> <span class="nb">bytes</span><span class="p">,</span> <span class="n">bitrate</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">sample_rate</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">file_size</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">has_lyrics</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">is_apple_digital_master</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">url</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">composer</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">content_rating</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">play_assets</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">StationContextPlayAsset</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">album_ids</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">artist_ids</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">composer_ids</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">genre_ids</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">music_video_ids</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">station_id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">library_song_id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span>
 </span></code></pre></div>
 
     <div class="doc doc-contents first">
@@ -2493,91 +2493,46 @@ disk, transcoding the audio to AAC as Apple does for its catalog.</p>
             </td>
           </tr>
           <tr class="doc-section-item">
-            <td><code><span title="musickit_api_mock.CatalogSong.has_lyrics">has_lyrics</span></code></td>
-            <td>
-                  <code><span title="bool">bool</span></code>
-            </td>
-            <td>
-              <div class="doc-md-description">
-                <p>Whether lyrics are available.</p>
-              </div>
-            </td>
-          </tr>
-          <tr class="doc-section-item">
-            <td><code><span title="musickit_api_mock.CatalogSong.audio_locale">audio_locale</span></code></td>
+            <td><code><span title="musickit_api_mock.CatalogSong.isrc">isrc</span></code></td>
             <td>
                   <code><span title="str">str</span></code>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>BCP-47 locale tag of the recorded audio.</p>
+                <p>International Standard Recording Code.</p>
               </div>
             </td>
           </tr>
           <tr class="doc-section-item">
-            <td><code><span title="musickit_api_mock.CatalogSong.audio_traits">audio_traits</span></code></td>
+            <td><code><span title="musickit_api_mock.CatalogSong.track_number">track_number</span></code></td>
             <td>
-                  <code><span title="list">list</span>[<span title="str">str</span>]</code>
+                  <code><span title="int">int</span></code>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>Audio capability tags (lossless, dolby-atmos, etc.).</p>
+                <p>Track number within the album.</p>
               </div>
             </td>
           </tr>
           <tr class="doc-section-item">
-            <td><code><span title="musickit_api_mock.CatalogSong.has_time_synced_lyrics">has_time_synced_lyrics</span></code></td>
+            <td><code><span title="musickit_api_mock.CatalogSong.disc_number">disc_number</span></code></td>
             <td>
-                  <code><span title="bool">bool</span></code>
+                  <code><span title="int">int</span></code>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>Whether time-synced lyrics are available.</p>
+                <p>Disc number within the album.</p>
               </div>
             </td>
           </tr>
           <tr class="doc-section-item">
-            <td><code><span title="musickit_api_mock.CatalogSong.is_apple_digital_master">is_apple_digital_master</span></code></td>
-            <td>
-                  <code><span title="bool">bool</span></code>
-            </td>
-            <td>
-              <div class="doc-md-description">
-                <p>Apple's "Apple Digital Master" badge.</p>
-              </div>
-            </td>
-          </tr>
-          <tr class="doc-section-item">
-            <td><code><span title="musickit_api_mock.CatalogSong.is_mastered_for_itunes">is_mastered_for_itunes</span></code></td>
-            <td>
-                  <code><span title="bool">bool</span></code>
-            </td>
-            <td>
-              <div class="doc-md-description">
-                <p>Apple's "Mastered for iTunes" badge.</p>
-              </div>
-            </td>
-          </tr>
-          <tr class="doc-section-item">
-            <td><code><span title="musickit_api_mock.CatalogSong.is_vocal_attenuation_allowed">is_vocal_attenuation_allowed</span></code></td>
-            <td>
-                  <code><span title="bool">bool</span></code>
-            </td>
-            <td>
-              <div class="doc-md-description">
-                <p>Whether vocal attenuation (Sing) is
-allowed.</p>
-              </div>
-            </td>
-          </tr>
-          <tr class="doc-section-item">
-            <td><code><span title="musickit_api_mock.CatalogSong.url">url</span></code></td>
+            <td><code><span title="musickit_api_mock.CatalogSong.release_date">release_date</span></code></td>
             <td>
                   <code><span title="str">str</span></code>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>Song landing-page URL on Apple Music.</p>
+                <p>Original release date of the song as <code>YYYY-MM-DD</code>.</p>
               </div>
             </td>
           </tr>
@@ -2653,35 +2608,35 @@ allowed.</p>
             </td>
           </tr>
           <tr class="doc-section-item">
-            <td><code><span title="musickit_api_mock.CatalogSong.release_date">release_date</span></code></td>
+            <td><code><span title="musickit_api_mock.CatalogSong.has_lyrics">has_lyrics</span></code></td>
+            <td>
+                  <code><span title="bool">bool</span> | None</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Whether lyrics are available.</p>
+              </div>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code><span title="musickit_api_mock.CatalogSong.is_apple_digital_master">is_apple_digital_master</span></code></td>
+            <td>
+                  <code><span title="bool">bool</span> | None</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Apple's "Apple Digital Master" badge.</p>
+              </div>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code><span title="musickit_api_mock.CatalogSong.url">url</span></code></td>
             <td>
                   <code><span title="str">str</span> | None</code>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>ISO-8601 release date.</p>
-              </div>
-            </td>
-          </tr>
-          <tr class="doc-section-item">
-            <td><code><span title="musickit_api_mock.CatalogSong.track_number">track_number</span></code></td>
-            <td>
-                  <code><span title="int">int</span> | None</code>
-            </td>
-            <td>
-              <div class="doc-md-description">
-                <p>Track number within the album.</p>
-              </div>
-            </td>
-          </tr>
-          <tr class="doc-section-item">
-            <td><code><span title="musickit_api_mock.CatalogSong.disc_number">disc_number</span></code></td>
-            <td>
-                  <code><span title="int">int</span> | None</code>
-            </td>
-            <td>
-              <div class="doc-md-description">
-                <p>Disc number when part of a multi-disc album.</p>
+                <p>Song landing-page URL on Apple Music.</p>
               </div>
             </td>
           </tr>
@@ -2693,17 +2648,6 @@ allowed.</p>
             <td>
               <div class="doc-md-description">
                 <p>Display name of the primary composer.</p>
-              </div>
-            </td>
-          </tr>
-          <tr class="doc-section-item">
-            <td><code><span title="musickit_api_mock.CatalogSong.isrc">isrc</span></code></td>
-            <td>
-                  <code><span title="str">str</span> | None</code>
-            </td>
-            <td>
-              <div class="doc-md-description">
-                <p>International Standard Recording Code.</p>
               </div>
             </td>
           </tr>
@@ -2859,10 +2803,31 @@ the user's library.</p>
     <div class="doc doc-contents ">
 
         <p>Build a song by reading metadata and audio bytes from a file on disk.</p>
-<p>Reads tags and audio data from the file at <code>audio_path</code> and
-populates every field of the result, including HLS segment bytes
-and layout. Missing tag fields are filled from <code>fallback</code> when
-supplied; fields with neither a tag nor a fallback raise.</p>
+<p>Each metadata field is taken from the file's tags first and from
+<code>fallback</code> when the tag is absent; an empty tag counts as absent.
+A required field with neither raises; an optional one is left
+unset.</p>
+<p>Read from tags:</p>
+<ul>
+<li><code>title</code> / <code>artist</code> / <code>album</code> / <code>composer</code>: the tag of the
+  same name.</li>
+<li><code>isrc</code>: the <code>ISRC</code> tag.</li>
+<li><code>track_number</code> / <code>disc_number</code>: the leading integer of the
+  <code>track</code> / <code>disc</code> tag, so <code>"3/12"</code> gives <code>3</code>; a tag with no
+  leading integer counts as absent.</li>
+<li><code>genres</code>: the <code>genre</code> tag split on commas.</li>
+<li><code>release_date</code>: the original-release tag (<code>TDOR</code> for ID3,
+  <code>ORIGINALDATE</code> for Vorbis comments) when present, else the
+  <code>date</code> tag; only a <code>YYYY-MM-DD</code> value is used, any other form
+  counts as absent.</li>
+<li><code>artwork</code>: the first embedded picture as a data URL, at the
+  picture's own size.</li>
+</ul>
+<p>Only from <code>fallback</code>, as no tag carries them: <code>has_lyrics</code>,
+<code>is_apple_digital_master</code>, <code>url</code>, <code>content_rating</code>.</p>
+<p>From the audio itself: <code>duration_ms</code>, <code>bitrate</code>,
+<code>sample_rate</code>, <code>file_size</code>, the HLS layout and segment (the
+audio transcoded to AAC), and <code>preview_audio</code>.</p>
 
 
 <p><span class="doc-section-title">Parameters:</span></p>
@@ -2907,8 +2872,8 @@ supplied; fields with neither a tag nor a fallback raise.</p>
             <td>
               <div class="doc-md-description">
                 <p>Metadata defaults applied when tags are missing the
-corresponding field. Leave unset to require every field to
-be present in the file's tags.</p>
+corresponding field. Leave unset to take every field from
+the file's tags.</p>
               </div>
             </td>
             <td>
@@ -2963,6 +2928,39 @@ unset to use the full source audio as the preview.</p>
             <td>
               <div class="doc-md-description">
                 <p>A fully-populated song built from the file.</p>
+              </div>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+<p><span class="doc-section-title">Raises:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Type</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                  <code><span title="ValueError">ValueError</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>A required field has neither a tag nor a fallback.</p>
+              </div>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                  <code><span title="TypeError">TypeError</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>A fallback field holds a value of the wrong type.</p>
               </div>
             </td>
           </tr>
@@ -7457,7 +7455,7 @@ segment file.</p>
   </span>
 
 <a href="#musickit_api_mock.SongMetadataFallback" class="headerlink" title="Permanent link">&para;</a></h2>
-<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">SongMetadataFallback</span><span class="p">(</span><span class="n">title</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">artist</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">album</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">artwork</span><span class="p">:</span> <span class="n">Artwork</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">genres</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">release_date</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">track_number</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">disc_number</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">composer</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">has_lyrics</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">isrc</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">content_rating</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">audio_locale</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">audio_traits</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">has_time_synced_lyrics</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">is_apple_digital_master</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">is_mastered_for_itunes</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">is_vocal_attenuation_allowed</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">url</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span>
+<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">SongMetadataFallback</span><span class="p">(</span><span class="n">title</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">artist</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">album</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">artwork</span><span class="p">:</span> <span class="n">Artwork</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">genres</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">release_date</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">track_number</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">disc_number</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">composer</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">has_lyrics</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">isrc</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">content_rating</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">is_apple_digital_master</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">url</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span>
 </span></code></pre></div>
 
     <div class="doc doc-contents first">
@@ -7467,8 +7465,9 @@ segment file.</p>
         <p>Metadata defaults applied when an audio file's tags are missing fields.</p>
 <p>Each field corresponds to the same-named attribute on the song
 dataclass and is used only when the source file's tags do not supply
-the value. Fields left unset (<code>None</code>) provide no fallback and the
-loader raises if the tag is also missing.</p>
+the value. Fields left unset (<code>None</code>) provide no fallback; the
+loader raises if the tag is also missing and the song requires the
+field, and leaves the field unset otherwise.</p>
 
 
 <p><span class="doc-section-title">Attributes:</span></p>
@@ -7619,39 +7618,6 @@ loader raises if the tag is also missing.</p>
             </td>
           </tr>
           <tr class="doc-section-item">
-            <td><code><span title="musickit_api_mock.SongMetadataFallback.audio_locale">audio_locale</span></code></td>
-            <td>
-                  <code><span title="str">str</span> | None</code>
-            </td>
-            <td>
-              <div class="doc-md-description">
-                <p>BCP-47 audio-locale fallback.</p>
-              </div>
-            </td>
-          </tr>
-          <tr class="doc-section-item">
-            <td><code><span title="musickit_api_mock.SongMetadataFallback.audio_traits">audio_traits</span></code></td>
-            <td>
-                  <code><span title="list">list</span>[<span title="str">str</span>] | None</code>
-            </td>
-            <td>
-              <div class="doc-md-description">
-                <p>Audio-traits fallback.</p>
-              </div>
-            </td>
-          </tr>
-          <tr class="doc-section-item">
-            <td><code><span title="musickit_api_mock.SongMetadataFallback.has_time_synced_lyrics">has_time_synced_lyrics</span></code></td>
-            <td>
-                  <code><span title="bool">bool</span> | None</code>
-            </td>
-            <td>
-              <div class="doc-md-description">
-                <p>Time-synced lyrics-availability fallback.</p>
-              </div>
-            </td>
-          </tr>
-          <tr class="doc-section-item">
             <td><code><span title="musickit_api_mock.SongMetadataFallback.is_apple_digital_master">is_apple_digital_master</span></code></td>
             <td>
                   <code><span title="bool">bool</span> | None</code>
@@ -7659,28 +7625,6 @@ loader raises if the tag is also missing.</p>
             <td>
               <div class="doc-md-description">
                 <p>Apple Digital Master fallback.</p>
-              </div>
-            </td>
-          </tr>
-          <tr class="doc-section-item">
-            <td><code><span title="musickit_api_mock.SongMetadataFallback.is_mastered_for_itunes">is_mastered_for_itunes</span></code></td>
-            <td>
-                  <code><span title="bool">bool</span> | None</code>
-            </td>
-            <td>
-              <div class="doc-md-description">
-                <p>Mastered for iTunes fallback.</p>
-              </div>
-            </td>
-          </tr>
-          <tr class="doc-section-item">
-            <td><code><span title="musickit_api_mock.SongMetadataFallback.is_vocal_attenuation_allowed">is_vocal_attenuation_allowed</span></code></td>
-            <td>
-                  <code><span title="bool">bool</span> | None</code>
-            </td>
-            <td>
-              <div class="doc-md-description">
-                <p>Vocal-attenuation-allowed fallback.</p>
               </div>
             </td>
           </tr>
