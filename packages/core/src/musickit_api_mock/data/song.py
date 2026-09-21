@@ -138,11 +138,33 @@ class CatalogSong:
     ) -> CatalogSong:
         """Build a song by reading metadata and audio bytes from a file on disk.
 
-        Reads tags and audio data from the file at ``audio_path`` and
-        populates every field of the result, including HLS segment bytes
-        and layout. Missing tag fields are filled from ``fallback`` when
-        supplied; a required field with neither a tag nor a fallback
-        raises, an optional one is left unset.
+        Each metadata field is taken from the file's tags first and from
+        ``fallback`` when the tag is absent; an empty tag counts as absent.
+        A required field with neither raises; an optional one is left
+        unset.
+
+        Read from tags:
+
+        - ``title`` / ``artist`` / ``album`` / ``composer``: the tag of the
+          same name.
+        - ``isrc``: the ``ISRC`` tag.
+        - ``track_number`` / ``disc_number``: the leading integer of the
+          ``track`` / ``disc`` tag, so ``"3/12"`` gives ``3``; a tag with no
+          leading integer counts as absent.
+        - ``genres``: the ``genre`` tag split on commas.
+        - ``release_date``: the original-release tag (``TDOR`` for ID3,
+          ``ORIGINALDATE`` for Vorbis comments) when present, else the
+          ``date`` tag; only a ``YYYY-MM-DD`` value is used, any other form
+          counts as absent.
+        - ``artwork``: the first embedded picture as a data URL, at the
+          picture's own size.
+
+        Only from ``fallback``, as no tag carries them: ``has_lyrics``,
+        ``is_apple_digital_master``, ``url``, ``content_rating``.
+
+        From the audio itself: ``duration_ms``, ``bitrate``,
+        ``sample_rate``, ``file_size``, the HLS layout and segment (the
+        audio transcoded to AAC), and ``preview_audio``.
 
         Args:
             audio_path: Filesystem path to the source audio file.
@@ -155,6 +177,10 @@ class CatalogSong:
 
         Returns:
             A fully-populated song built from the file.
+
+        Raises:
+            ValueError: A required field has neither a tag nor a fallback.
+            TypeError: A fallback field holds a value of the wrong type.
         """
         from musickit_api_mock.data.song_from_file import _song_from_file
 
