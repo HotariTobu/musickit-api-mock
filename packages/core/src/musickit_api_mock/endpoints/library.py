@@ -8,6 +8,7 @@ from musickit_api_mock.data.library_album import UploadedLibraryAlbum
 from musickit_api_mock.data.library_artist import UploadedLibraryArtist
 from musickit_api_mock.data.library_song import UploadedLibrarySong
 from musickit_api_mock.data.lookup import LookupContext
+from musickit_api_mock.endpoints.library_playlist_folders import _parent_block
 from musickit_api_mock.endpoints.pagination import (
     _LIBRARY_ALBUM_ARTISTS,
     _LIBRARY_ALBUM_TRACKS,
@@ -282,6 +283,14 @@ def _build_library_playlist_rels(
                 href,
                 [_playlist_resource(sf, library_playlist.catalog_id, catalog_playlist)],
             )
+    if "parent" in includes:
+        rels["parent"] = _parent_block(
+            mock,
+            library_id,
+            f"/v1/me/library/playlists/{library_id}/parent",
+            locale,
+            recursive=False,
+        )
     return rels
 
 

@@ -17,6 +17,10 @@ from musickit_api_mock.data.library_artist import (
 )
 from musickit_api_mock.data.library_music_video import LibraryMusicVideo
 from musickit_api_mock.data.library_playlist import LibraryPlaylist
+from musickit_api_mock.data.library_playlist_folder import (
+    LibraryPlaylistFolder,
+    LibraryPlaylistFolderChild,
+)
 from musickit_api_mock.data.library_song import (
     CatalogLibrarySong,
     LibrarySong,
@@ -66,6 +70,8 @@ __all__ = [
     "LibraryArtist",
     "LibraryMusicVideo",
     "LibraryPlaylist",
+    "LibraryPlaylistFolder",
+    "LibraryPlaylistFolderChild",
     "LibrarySong",
     "LookupContext",
     "MusicVideo",

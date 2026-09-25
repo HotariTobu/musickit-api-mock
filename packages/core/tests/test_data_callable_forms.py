@@ -1,11 +1,11 @@
-"""Every ``mock.data.*`` source accepts ``Callable[[LookupContext], T | None]``.
+"""Every id-keyed ``mock.data.*`` source accepts ``Callable[[LookupContext], T | None]``.
 
 The data resolver layer is uniform across resource types: per-id lookup
 runs through ``_lookup_source``, which dispatches dict / callable / None
 the same way for every resource. ``test_catalog.py`` covers the songs +
 artists callable forms and the locale-thread case for albums; this file
-fills in the remaining resources so every public ``mock.data.<field>``
-surface has at least one callable-form test.
+fills in the remaining resources so every public id-keyed
+``mock.data.<field>`` surface has at least one callable-form test.
 """
 
 from __future__ import annotations
@@ -13,6 +13,7 @@ from __future__ import annotations
 import json
 from typing import TYPE_CHECKING
 
+import pytest
 from musickit_api_mock import (
     Account,
     AccountResponseSuccess,
@@ -22,6 +23,8 @@ from musickit_api_mock import (
     LibraryArtist,
     LibraryMusicVideo,
     LibraryPlaylist,
+    LibraryPlaylistFolder,
+    LibraryPlaylistFolderChild,
     LibrarySong,
     LookupContext,
     MusicKitApiMock,
@@ -257,6 +260,88 @@ def test_data_library_playlists_callable() -> None:
     status, body = _get(m, "https://api.music.apple.com/v1/me/library/playlists/p.pl-x")
     assert status == 200
     assert body["data"][0]["attributes"]["name"] == "LPL p.pl-x"
+
+
+def _library_playlist_folders_callable_mock() -> MusicKitApiMock:
+    m = _bare_mock()
+    folders = {
+        "p.f-x": LibraryPlaylistFolder(
+            name="LPF p.f-x",
+            children=[
+                LibraryPlaylistFolderChild(type="library-playlist-folders", id="p.f-y")
+            ],
+        ),
+        "p.f-y": LibraryPlaylistFolder(name="LPF p.f-y"),
+    }
+
+    def resolver(ctx: LookupContext) -> LibraryPlaylistFolder | None:
+        return folders.get(ctx.id)
+
+    m.data.library_playlist_folders = resolver
+    m.data.library_playlist_root_children = [
+        LibraryPlaylistFolderChild(type="library-playlist-folders", id="p.f-x")
+    ]
+    return m
+
+
+def _folder_resource(folder_id: str) -> dict[str, object]:
+    return {
+        "id": folder_id,
+        "type": "library-playlist-folders",
+        "href": f"/v1/me/library/playlist-folders/{folder_id}",
+        "attributes": {"name": f"LPF {folder_id}"},
+    }
+
+
+def test_data_library_playlist_folders_callable() -> None:
+    m = _library_playlist_folders_callable_mock()
+    base = "https://api.music.apple.com/v1/me/library/playlist-folders"
+
+    status, body = _get(m, f"{base}/p.f-x")
+    assert status == 200
+    assert body == {"data": [_folder_resource("p.f-x")]}
+
+    status, body = _get(m, f"{base}?ids=p.f-x,p.f-y")
+    assert status == 200
+    assert body == {"data": [_folder_resource("p.f-x"), _folder_resource("p.f-y")]}
+
+    status, body = _get(m, f"{base}/p.f-x/children")
+    assert status == 200
+    assert body == {"data": [_folder_resource("p.f-y")], "meta": {"total": 1}}
+
+    status, body = _get(m, f"{base}/p.f-x/parent")
+    assert status == 200
+    assert body == {
+        "data": [
+            {
+                "id": "p.playlistsroot",
+                "type": "library-playlist-folders",
+                "href": "/v1/me/library/playlist-folders/p.playlistsroot",
+            }
+        ],
+        "meta": {"total": 1},
+    }
+
+
+@pytest.mark.parametrize(
+    "path",
+    [
+        "/v1/me/library/playlist-folders",
+        "/v1/me/library/playlist-folders/p.f-y/parent",
+        "/v1/me/library/playlist-folders/p.f-y?include=parent",
+    ],
+)
+def test_data_library_playlist_folders_callable_rejects_enumeration(path: str) -> None:
+    m = _library_playlist_folders_callable_mock()
+    with pytest.raises(ValueError, match="require a mapping source"):
+        m.handle_request(
+            Request(
+                method="GET",
+                url=f"https://api.music.apple.com{path}",
+                headers={},
+                body=None,
+            )
+        )
 
 
 def test_data_library_artists_callable() -> None:

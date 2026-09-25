@@ -489,6 +489,46 @@ def _build_url_map() -> Map:
     )
     m.add(
         Rule(
+            "/v1/me/library/playlists/<library_playlist_id>/parent",
+            host=_HOST_API,
+            endpoint="library.playlist_parent",
+            methods=["GET"],
+        )
+    )
+    m.add(
+        Rule(
+            "/v1/me/library/playlist-folders",
+            host=_HOST_API,
+            endpoint="library.playlist_folders",
+            methods=["GET"],
+        )
+    )
+    m.add(
+        Rule(
+            "/v1/me/library/playlist-folders/<folder_id>",
+            host=_HOST_API,
+            endpoint="library.playlist_folder",
+            methods=["GET"],
+        )
+    )
+    m.add(
+        Rule(
+            "/v1/me/library/playlist-folders/<folder_id>/children",
+            host=_HOST_API,
+            endpoint="library.playlist_folder_children",
+            methods=["GET"],
+        )
+    )
+    m.add(
+        Rule(
+            "/v1/me/library/playlist-folders/<folder_id>/parent",
+            host=_HOST_API,
+            endpoint="library.playlist_folder_parent",
+            methods=["GET"],
+        )
+    )
+    m.add(
+        Rule(
             "/v1/me/library/playlists/<playlist_id>/tracks",
             host=_HOST_API,
             endpoint="library.playlist_tracks",

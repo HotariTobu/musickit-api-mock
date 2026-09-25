@@ -34,6 +34,11 @@ from musickit_api_mock.data.library_playlist import (
     LibraryPlaylistsSource,
     _LibraryPlaylistResolver,
 )
+from musickit_api_mock.data.library_playlist_folder import (
+    LibraryPlaylistFoldersSource,
+    LibraryPlaylistRootChildrenSource,
+    _LibraryPlaylistFolderResolver,
+)
 from musickit_api_mock.data.library_song import (
     LibrarySongsSource,
     _LibrarySongResolver,
@@ -56,11 +61,16 @@ from musickit_api_mock.data.station import StationsSource, _StationResolver
 class DataSources:
     """Shared resource sources read by multiple endpoints.
 
-    Each field accepts an id-keyed mapping. Callable lookups are also
-    accepted where per-id resolution is sufficient; ``genres``,
-    ``record_labels``, and ``personal_recommendations`` require the mapping
-    form because their endpoints enumerate ids. Fields default to ``None``;
-    reading an unset source raises ``ValueError``.
+    Each field except ``library_playlist_root_children`` accepts an
+    id-keyed mapping. Callable lookups are also accepted where per-id
+    resolution is sufficient; ``genres``, ``record_labels``, and
+    ``personal_recommendations`` require the mapping form because their
+    endpoints enumerate ids. ``library_playlist_folders`` accepts a
+    callable for per-id lookups, but listing all folders and looking up
+    the parent of anything other than a direct child of the root require
+    the mapping form. ``library_playlist_root_children`` takes a list.
+    Fields default to ``None``; reading an unset source raises
+    ``ValueError``.
 
     Attributes:
         songs: Catalog song source.
@@ -77,6 +87,9 @@ class DataSources:
         library_songs: User-library song source.
         library_albums: User-library album source.
         library_playlists: User-library playlist source.
+        library_playlist_folders: User-library playlist folder source.
+        library_playlist_root_children: Children of the playlist folder
+            tree's root, in library order.
         library_artists: User-library artist source.
         library_music_videos: User-library music-video source.
     """
@@ -95,6 +108,8 @@ class DataSources:
     library_songs: LibrarySongsSource = None
     library_albums: LibraryAlbumsSource = None
     library_playlists: LibraryPlaylistsSource = None
+    library_playlist_folders: LibraryPlaylistFoldersSource = None
+    library_playlist_root_children: LibraryPlaylistRootChildrenSource = None
     library_artists: LibraryArtistsSource = None
     library_music_videos: LibraryMusicVideosSource = None
 
@@ -123,6 +138,7 @@ class _DataResolver:
     library_song: _LibrarySongResolver
     library_album: _LibraryAlbumResolver
     library_playlist: _LibraryPlaylistResolver
+    library_playlist_folder: _LibraryPlaylistFolderResolver
     library_artist: _LibraryArtistResolver
     library_music_video: _LibraryMusicVideoResolver
 
@@ -149,6 +165,10 @@ class _DataResolver:
         )
         self.library_playlist = _LibraryPlaylistResolver(
             lambda: get_data().library_playlists
+        )
+        self.library_playlist_folder = _LibraryPlaylistFolderResolver(
+            lambda: get_data().library_playlist_folders,
+            lambda: get_data().library_playlist_root_children,
         )
         self.library_artist = _LibraryArtistResolver(
             lambda: get_data().library_artists, self.artist.get

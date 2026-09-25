@@ -22,6 +22,7 @@ from musickit_api_mock.endpoints.schema.envelope import (
     _library_songs_dead_path_400_envelope,
     _limit_exceeded_envelope,
     _missing_ids_param_400_envelope,
+    _no_related_resources_404_envelope,
     _parameter_invalid_envelope,
     _play_assets_403_envelope,
     _resource_not_found_404_envelope,
@@ -34,6 +35,13 @@ from musickit_api_mock.endpoints.schema.library_albums import _library_album_res
 from musickit_api_mock.endpoints.schema.library_artists import _library_artist_resource
 from musickit_api_mock.endpoints.schema.library_music_videos import (
     _library_music_video_resource,
+)
+from musickit_api_mock.endpoints.schema.library_playlist_folders import (
+    _counted_relationship_block,
+    _library_playlist_folder_href,
+    _library_playlist_folder_ref,
+    _library_playlist_folder_resource,
+    _library_playlist_folder_root_resource,
 )
 from musickit_api_mock.endpoints.schema.library_playlists import (
     _library_playlist_resource,
@@ -75,6 +83,7 @@ __all__ = [
     "_continuous_station_envelope",
     "_continuous_stations_errors_envelope",
     "_continuous_stations_no_station_envelope",
+    "_counted_relationship_block",
     "_curator_resource",
     "_empty_ids_400_envelope",
     "_generic_error_envelope",
@@ -84,6 +93,10 @@ __all__ = [
     "_library_album_resource",
     "_library_artist_resource",
     "_library_music_video_resource",
+    "_library_playlist_folder_href",
+    "_library_playlist_folder_ref",
+    "_library_playlist_folder_resource",
+    "_library_playlist_folder_root_resource",
     "_library_playlist_resource",
     "_library_ref",
     "_library_song_resource",
@@ -93,6 +106,7 @@ __all__ = [
     "_limit_exceeded_envelope",
     "_missing_ids_param_400_envelope",
     "_music_video_resource",
+    "_no_related_resources_404_envelope",
     "_parameter_invalid_envelope",
     "_personal_recommendation_resource",
     "_play_assets_403_envelope",
