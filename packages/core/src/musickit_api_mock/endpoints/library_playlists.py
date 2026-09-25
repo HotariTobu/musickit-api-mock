@@ -65,7 +65,7 @@ def _resolve(mock: MusicKitApiMock, item_id: str, locale: str | None) -> _Item:
     library_playlist = resolver.library_playlist.get(context)
     if library_playlist is not None:
         return library_playlist
-    return resolver.library_playlist_folder.get(context)
+    return resolver.library_playlist_folder.find(context)
 
 
 def _encode(

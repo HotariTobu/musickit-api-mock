@@ -69,10 +69,11 @@ class DataSources:
     per-id lookups, but listing all library playlists requires the mapping
     form. The library playlist paths also answer for a folder id, so an id
     missing from ``library_playlists`` is looked up in
-    ``library_playlist_folders``. ``library_playlist_folders`` accepts a
-    callable for per-id lookups, but listing all folders and looking up the
-    parent of anything other than a direct child of the root require the
-    mapping form. ``library_playlist_root_children`` takes a list.
+    ``library_playlist_folders`` when that source is set.
+    ``library_playlist_folders`` accepts a callable for per-id lookups, but
+    listing all folders and looking up the parent of anything other than a
+    direct child of the root require the mapping form.
+    ``library_playlist_root_children`` takes a list.
     Fields default to ``None``; reading an unset source raises
     ``ValueError``.
 

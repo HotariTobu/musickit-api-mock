@@ -83,6 +83,16 @@ class _LibraryPlaylistFolderResolver:
             self._get_source(), "data.library_playlist_folders", context
         )
 
+    def find(self, context: LookupContext) -> LibraryPlaylistFolder | None:
+        """Return the folder for ``context.id``, reading an unset source as no folders.
+
+        Used where a folder is an optional alternative to another resource,
+        so an unset folder source never turns a lookup miss into an error.
+        """
+        if self._get_source() is None:
+            return None
+        return self.get(context)
+
     def list_ids(self) -> list[str]:
         """Return every folder id; requires a mapping source."""
         return _list_source_ids(self._get_source(), "data.library_playlist_folders")

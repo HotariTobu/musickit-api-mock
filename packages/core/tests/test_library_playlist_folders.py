@@ -964,6 +964,28 @@ def test_single_playlist_not_found_404(mock: MusicKitApiMock) -> None:
     assert body == _not_found()
 
 
+@pytest.fixture
+def mock_without_folders(storefront: Storefront) -> MusicKitApiMock:
+    m = MusicKitApiMock()
+    m.endpoints.storefront = StorefrontResponseSuccess(storefront=storefront)
+    m.data.library_playlists = {"p.pl1": _library_playlist("Top")}
+    return m
+
+
+def test_single_playlist_not_found_without_folders_404(
+    mock_without_folders: MusicKitApiMock,
+) -> None:
+    status, body = _get(mock_without_folders, f"{_PLAYLISTS}/p.missing")
+    assert status == 404
+    assert body == _not_found()
+
+
+def test_playlist_ids_without_folders(mock_without_folders: MusicKitApiMock) -> None:
+    status, body = _get(mock_without_folders, f"{_PLAYLISTS}?ids=p.pl1,p.missing")
+    assert status == 200
+    assert body == {"data": [_playlist("p.pl1", "Top"), _placeholder("p.missing")]}
+
+
 def test_playlist_description(mock: MusicKitApiMock) -> None:
     mock.data.library_playlists = {
         "p.pl1": replace(_library_playlist("Top"), description=Description(standard=""))
