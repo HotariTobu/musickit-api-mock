@@ -8,14 +8,12 @@ from musickit_api_mock.data.library_album import UploadedLibraryAlbum
 from musickit_api_mock.data.library_artist import UploadedLibraryArtist
 from musickit_api_mock.data.library_song import UploadedLibrarySong
 from musickit_api_mock.data.lookup import LookupContext
-from musickit_api_mock.endpoints.library_playlist_folders import _parent_block
 from musickit_api_mock.endpoints.pagination import (
     _LIBRARY_ALBUM_ARTISTS,
     _LIBRARY_ALBUM_TRACKS,
     _LIBRARY_ARTIST_ALBUMS,
     _LIBRARY_MUSIC_VIDEO_ALBUMS,
     _LIBRARY_MUSIC_VIDEO_ARTISTS,
-    _LIBRARY_PLAYLIST_TRACKS,
     _LIBRARY_SONG_ALBUMS,
     _LIBRARY_SONG_ARTISTS,
     _paginated_relationship_block,
@@ -37,13 +35,11 @@ from musickit_api_mock.endpoints.schema import (
     _library_album_resource,
     _library_artist_resource,
     _library_music_video_resource,
-    _library_playlist_resource,
     _library_ref,
     _library_song_resource,
     _library_songs_dead_path_400_envelope,
     _missing_ids_param_400_envelope,
     _music_video_resource,
-    _playlist_resource,
     _song_resource,
 )
 from musickit_api_mock.transport.response_builders import _json_response
@@ -52,7 +48,6 @@ if TYPE_CHECKING:
     from musickit_api_mock.data.library_album import LibraryAlbum
     from musickit_api_mock.data.library_artist import LibraryArtist
     from musickit_api_mock.data.library_music_video import LibraryMusicVideo
-    from musickit_api_mock.data.library_playlist import LibraryPlaylist
     from musickit_api_mock.data.library_song import LibrarySong
     from musickit_api_mock.json_value import _JSONValue
     from musickit_api_mock.mock import MusicKitApiMock
@@ -247,53 +242,6 @@ def _build_library_album_rels(
     return rels
 
 
-def _build_library_playlist_rels(
-    mock: MusicKitApiMock,
-    library_id: str,
-    library_playlist: LibraryPlaylist,
-    *,
-    locale: str | None,
-    includes: set[str],
-    sizes: dict[str, int],
-) -> dict[str, _JSONValue]:
-    resolver = mock._data_resolver
-    rels: dict[str, _JSONValue] = {}
-    tracks_block = _paginated_relationship_block(
-        f"/v1/me/library/playlists/{library_id}/tracks",
-        library_playlist.track_ids,
-        sizes["tracks"],
-        resolver=lambda sid: resolver.library_song.get(LookupContext(sid, locale)),
-        encode=lambda sid, ls: _library_song_resource(sid, ls),
-        fallback_ref=lambda sid: _library_ref("library-songs", sid),
-        include_full=True,
-        include_meta_total=True,
-    )
-    if tracks_block is not None:
-        rels["tracks"] = tracks_block
-    if "catalog" in includes and library_playlist.catalog_id is not None:
-        sf = _user_storefront_slug(mock)
-        href = f"/v1/me/library/playlists/{library_id}/catalog"
-        catalog_playlist = resolver.playlist.get(
-            LookupContext(library_playlist.catalog_id, locale)
-        )
-        if catalog_playlist is None:
-            rels["catalog"] = _singleton_relationship_block(href, [])
-        else:
-            rels["catalog"] = _singleton_relationship_block(
-                href,
-                [_playlist_resource(sf, library_playlist.catalog_id, catalog_playlist)],
-            )
-    if "parent" in includes:
-        rels["parent"] = _parent_block(
-            mock,
-            library_id,
-            f"/v1/me/library/playlists/{library_id}/parent",
-            locale,
-            recursive=False,
-        )
-    return rels
-
-
 def _build_library_music_video_rels(
     mock: MusicKitApiMock,
     library_id: str,
@@ -440,40 +388,6 @@ def _handle_library_album(
             [
                 _library_album_resource(
                     item_id, library_album, relationships=rels or None
-                )
-            ]
-        )
-    )
-
-
-def _handle_library_playlist(
-    mock: MusicKitApiMock, req: Request, item_id: str
-) -> Response:
-    locale, err = _check_and_resolve_locale(req, storefront_slug=None, mock=mock)
-    if err is not None:
-        return err
-    library_playlist = mock._data_resolver.library_playlist.get(
-        LookupContext(item_id, locale)
-    )
-    if library_playlist is None:
-        return _json_response({"data": []})
-    includes = _parse_csv_param(req.url, "include")
-    sizes, err = _parse_inline_limits(req, {"tracks": _LIBRARY_PLAYLIST_TRACKS})
-    if err is not None:
-        return err
-    rels = _build_library_playlist_rels(
-        mock,
-        item_id,
-        library_playlist,
-        locale=locale,
-        includes=includes,
-        sizes=sizes,
-    )
-    return _json_response(
-        _batch_envelope(
-            [
-                _library_playlist_resource(
-                    item_id, library_playlist, relationships=rels or None
                 )
             ]
         )

@@ -272,13 +272,11 @@ def library_album(artwork_library: Artwork) -> LibraryAlbum:
 def library_playlist() -> LibraryPlaylist:
     return LibraryPlaylist(
         name="Lib Playlist",
-        can_delete=True,
         can_edit=True,
         is_public=False,
         date_added="2024-01-01",
         last_modified_date="2024-01-02",
         has_catalog=False,
-        has_collaboration=False,
         track_ids=["i.s1"],
         catalog_id="pl1",
     )

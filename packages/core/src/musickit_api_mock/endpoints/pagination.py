@@ -56,6 +56,7 @@ _CATALOG_SONG_COMPOSERS = _PaginationConfig(page_size=10, max_limit=10)
 _LIBRARY_ALBUM_TRACKS = _PaginationConfig(page_size=300, max_limit=300)
 _LIBRARY_ALBUM_ARTISTS = _PaginationConfig(page_size=10, max_limit=10)
 _LIBRARY_PLAYLIST_TRACKS = _PaginationConfig(page_size=100, max_limit=100)
+_LIBRARY_PLAYLISTS = _PaginationConfig(page_size=25, max_limit=100)
 _LIBRARY_MUSIC_VIDEO_ALBUMS = _PaginationConfig(page_size=10, max_limit=10)
 _LIBRARY_MUSIC_VIDEO_ARTISTS = _PaginationConfig(page_size=10, max_limit=10)
 _LIBRARY_SONG_ALBUMS = _PaginationConfig(page_size=10, max_limit=10)
@@ -170,6 +171,28 @@ def _parse_validated_standalone_pagination(
     return _parse_standalone_pagination(req, cfg)
 
 
+def _validate_offset(req: Request) -> Response | None:
+    """Return Apple's 400 for a non-integer or negative ``?offset=``, else ``None``."""
+    raw = _parse_query(req.url).get("offset", [None])[-1]
+    if raw is None:
+        return None
+    try:
+        value = int(raw)
+    except ValueError:
+        return _json_response(
+            _parameter_invalid_envelope("offset", "Value must be an integer"),
+            status=400,
+        )
+    if value < 0:
+        return _json_response(
+            _parameter_invalid_envelope(
+                "offset", "Value must be an integer greater than or equal to 0"
+            ),
+            status=400,
+        )
+    return None
+
+
 def _parse_inline_limits(
     req: Request, rels: dict[str, _PaginationConfig]
 ) -> tuple[dict[str, int], Response | None]:
@@ -274,16 +297,21 @@ def _standalone_paginated_response(
     offset: int,
     limit: int,
     include_meta_total: bool = False,
+    language_tag: str | None = None,
 ) -> Response:
     """Wrap a standalone relationship-endpoint response.
 
-    Emits ``data`` plus optional ``next`` / ``meta.total``.
+    Emits ``data`` plus optional ``next`` / ``meta.total``. ``language_tag``
+    is carried into ``next`` as ``?l=`` ahead of the offset.
     """
     body: dict[str, _JSONValue] = {"data": items_data}
     if include_meta_total:
         body["meta"] = {"total": total}
     if offset + limit < total:
-        body["next"] = f"{href}?offset={offset + limit}"
+        query = f"offset={offset + limit}"
+        if language_tag is not None:
+            query = f"l={language_tag}&{query}"
+        body["next"] = f"{href}?{query}"
     return _json_response(body)
 
 

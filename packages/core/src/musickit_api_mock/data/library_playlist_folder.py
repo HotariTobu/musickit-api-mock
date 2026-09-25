@@ -43,12 +43,16 @@ class LibraryPlaylistFolder:
     Attributes:
         name: Display name of the folder.
         date_added: ISO-8601 timestamp the folder was added to the library.
+        last_modified_date: ISO-8601 timestamp of the last edit. Only the
+            library playlist paths emit it, since they also answer for a
+            folder id.
         children: Direct children in library order. ``None`` and an empty
             list both describe an empty folder.
     """
 
     name: str
     date_added: str | None = None
+    last_modified_date: str | None = None
     children: list[LibraryPlaylistFolderChild] | None = None
 
 
@@ -78,6 +82,16 @@ class _LibraryPlaylistFolderResolver:
         return _lookup_source(
             self._get_source(), "data.library_playlist_folders", context
         )
+
+    def find(self, context: LookupContext) -> LibraryPlaylistFolder | None:
+        """Return the folder for ``context.id``, reading an unset source as no folders.
+
+        Used where a folder is an optional alternative to another resource,
+        so an unset folder source never turns a lookup miss into an error.
+        """
+        if self._get_source() is None:
+            return None
+        return self.get(context)
 
     def list_ids(self) -> list[str]:
         """Return every folder id; requires a mapping source."""
