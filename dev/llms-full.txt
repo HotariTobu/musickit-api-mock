@@ -1,0 +1,3079 @@
+# musickit-api-mock
+
+> Apple Music API mock for MusicKit JS — runs as an in-process request interceptor inside browser-automation tests.
+
+The library intercepts Apple Music API requests in-process, so a page running
+MusicKit JS hits the mock instead of `api.music.apple.com`. A mock instance
+exposes three configuration surfaces — `mock.data` (resource sources),
+`mock.endpoints` (HTTP response overrides), and `mock.browser` (in-page shim
+state) — and is bound to a browser session by a host adapter.
+
+# Overview
+
+# musickit-api-mock
+
+Apple Music API mock for [MusicKit JS](https://developer.apple.com/musickit/). Runs as an **in-process request interceptor** inside browser-automation tests, so the page hits the mock instead of `api.music.apple.com`.
+
+Useful for testing web apps that embed MusicKit JS without depending on Apple's servers, a developer token, or a signed-in Apple Music subscription.
+
+## Where to start
+
+- :material-rocket-launch: **[Getting started](https://hotaritobu.github.io/musickit-api-mock/dev/guide/getting-started/index.md)** — install, minimum example, and how the pieces fit together.
+- :material-book-open-variant: **[Surfaces overview](https://hotaritobu.github.io/musickit-api-mock/dev/guide/surfaces/index.md)** — what `mock.data` / `mock.endpoints` / `mock.browser` are for.
+- :material-puzzle: **[Playwright integration](https://hotaritobu.github.io/musickit-api-mock/dev/guide/playwright/index.md)** — sync / async, page vs. context binding.
+- :material-api: **[Reference](https://hotaritobu.github.io/musickit-api-mock/dev/reference/index.md)** — auto-generated API documentation for every public class and function.
+- :material-chef-hat: **[Recipes](https://hotaritobu.github.io/musickit-api-mock/dev/recipes/index.md)** — task-oriented snippets ("simulate a subscription error", "trigger DRM failure", ...).
+
+## Packages
+
+- **`musickit-api-mock`** — transport-agnostic mock engine. Routes HTTP requests, composes Apple Music API response bodies, and ships the in-page JS shim that replaces MusicKit JS's browser integrations.
+- **`musickit-api-mock-playwright`** — Playwright host adapter. Bridges the engine to `page.route` for both sync and async Playwright APIs.
+
+## Scope
+
+- **Target audience**: third-party developers using the default MusicKit JS configuration, i.e. calling `MusicKit.configure(...)` without Apple-internal overrides.
+- **Intercepted host**: `api.music.apple.com`. Apple's own web-player override hosts (e.g. `amp-api.music.apple.com`) are out of scope.
+- **Intercepted paths**: every path the default-config host emits within MusicKit JS's resource set (songs, albums, artists, library-\*, me/\*, ...). Within an intercepted path, every form the path can accept is handled — not just the subset MusicKit JS happens to send.
+
+## Supported environments
+
+- Python ≥ 3.12
+- Playwright (sync and async) on Chromium, Firefox, and WebKit
+- Linux, macOS, Windows
+
+## License
+
+[CC0 1.0 Universal](https://github.com/HotariTobu/musickit-api-mock/blob/main/LICENSE.txt) — public domain dedication.
+# Guide
+
+# Guide
+
+Hand-written walkthrough of how to use the library. Start with **[Getting started](https://hotaritobu.github.io/musickit-api-mock/dev/guide/getting-started/index.md)** if this is your first time, then read **[Surfaces overview](https://hotaritobu.github.io/musickit-api-mock/dev/guide/surfaces/index.md)** to understand the three configuration surfaces, and **[Playwright integration](https://hotaritobu.github.io/musickit-api-mock/dev/guide/playwright/index.md)** for binding the mock to a browser-automation session.
+
+For the full API surface (every class, field, and method), see the [Reference](https://hotaritobu.github.io/musickit-api-mock/dev/reference/index.md).
+
+# Getting started
+
+## Install
+
+```bash
+pip install musickit-api-mock-playwright
+```
+
+The Playwright adapter pulls in the core package as a transitive dependency. Install only the core package if you write your own host adapter for a different browser-automation framework:
+
+```bash
+pip install musickit-api-mock
+```
+
+## Minimum example (sync Playwright)
+
+```python
+from musickit_api_mock import (
+    MusicKitApiMock,
+    CatalogSong,
+    Storefront,
+    StorefrontResponseSuccess,
+)
+from musickit_api_mock_playwright import intercept
+from playwright.sync_api import sync_playwright
+
+mock = MusicKitApiMock()
+
+# Shared resource data: songs keyed by catalog id.
+mock.data.songs = {
+    "1000000001": CatalogSong.from_file("path/to/song.m4a"),
+}
+
+# Endpoint-level response: storefront resolution.
+mock.endpoints.storefront = StorefrontResponseSuccess(
+    storefront=Storefront(
+        id="us",
+        name="United States",
+        default_language_tag="en-US",
+        supported_language_tags=["en-US"],
+        explicit_content_policy="allowed",
+    ),
+)
+
+with sync_playwright() as pw:
+    browser = pw.chromium.launch()
+    page = browser.new_page()
+    intercept(mock, page)
+    page.goto("https://your-app.example/")
+    # ... drive MusicKit JS through your app and assert ...
+    browser.close()
+```
+
+## Async Playwright
+
+The async API mirrors the sync one — only the adapter call changes:
+
+```python
+from musickit_api_mock_playwright import intercept_async
+
+await intercept_async(mock, page)
+```
+
+## What's happening?
+
+1. **`MusicKitApiMock()`** creates an in-memory mock with three configuration surfaces (`mock.data`, `mock.endpoints`, `mock.browser`) all unset.
+1. **Configure the surfaces** with the resources and responses your test needs. Anything you don't configure stays unset; the mock does not invent fallback values.
+1. **`intercept(mock, page)`** wires the mock into Playwright's `page.route` interceptor and injects the in-page JS shim that replaces MusicKit JS's browser integrations (EME, Media Source, authorize popup).
+1. When the page calls MusicKit JS APIs, the corresponding HTTP requests hit the mock instead of `api.music.apple.com`.
+
+Continue with [Surfaces overview](https://hotaritobu.github.io/musickit-api-mock/dev/guide/surfaces/index.md) to learn what each surface holds.
+
+# Surfaces overview
+
+A `MusicKitApiMock` instance exposes three configuration surfaces. The split is load-bearing — each surface has a distinct semantic role, and mixing them defeats the purpose.
+
+| Surface            | Holds                                                                                  | When to use                                                                                                                           |
+| ------------------ | -------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| `mock.data.*`      | Shared resource sources (songs, albums, playlists, artists, library items, ...)        | When multiple endpoints should read the same resource (e.g. `/songs/<id>` and `/me/library/songs` both serve the same `CatalogSong`). |
+| `mock.endpoints.*` | Per-endpoint HTTP response overrides (storefront, account, license, web playback, ...) | When you need to shape the HTTP response itself — status, error variants, success body.                                               |
+| `mock.browser.*`   | State consumed by the in-page JS shim (authorize response, EME key-system flavor)      | When you need to control what the page sees from MusicKit JS's browser integrations — not the network.                                |
+
+## `mock.data.*` — shared resource data
+
+Each field accepts:
+
+- a **`Mapping[str, T]` keyed by id** (a plain `dict`) — looked up on demand, or
+- a **`Callable[[LookupContext], T | None]`** — for dynamic resolution (e.g. load a `CatalogSong` for any id matching a pattern, or return `None` for not found).
+
+```python
+# mapping form
+mock.data.songs = {
+    "1000000001": CatalogSong.from_file("path/to/song.m4a"),
+}
+
+
+# callable form
+def resolve_song(ctx: LookupContext) -> CatalogSong | None:
+    if not ctx.id.startswith("test-"):
+        return None
+    return CatalogSong.from_file(f"path/to/songs/{ctx.id}.m4a")
+
+
+mock.data.songs = resolve_song
+```
+
+Endpoints that read the same resource compose their response from this shared source. Configure once, reach from multiple endpoints.
+
+## `mock.endpoints.*` — per-endpoint HTTP responses
+
+Accepted shapes vary by field — some accept only a response value or callable; others also accept a `Mapping` keyed by id (a plain `dict`). See each field's type in the [reference](https://hotaritobu.github.io/musickit-api-mock/dev/reference/endpoints/index.md) for the exact union.
+
+Use these to drive error scenarios (subscription expired, DRM failure, content unavailable, ...) or to override success-body details that aren't derivable from `mock.data`. Common forms:
+
+```python
+# success
+mock.endpoints.account = AccountResponseSuccess(account=Account(...))
+
+# error variant
+mock.endpoints.account = AccountResponseSessionExpired()
+
+# per-id variation
+mock.endpoints.web_playback = {
+    "1000000001": WebPlaybackResponseSuccess(...),
+    "1000000002": WebPlaybackResponseGeoBlock(),
+}
+```
+
+## `mock.browser.*` — in-page shim state
+
+The page-side shim replaces MusicKit JS's browser integrations:
+
+- `mock.browser.authorize_response` — what gets delivered when the page calls `music.authorize()` (success / decline / close / switch-user / unavailable variants).
+- `mock.browser.eme_flavor` — the EME key system flavor the shim exposes (FairPlay / Widevine / PlayReady).
+
+These are **not HTTP responses**. They configure how the shim behaves inside the page's JavaScript runtime.
+
+## Unset is not "default"
+
+All fields default to `None`. **Reading an unset field at request time raises `ValueError`** — the mock does not invent fallback values for fields you didn't configure. This is intentional: silent fallbacks make broken tests look healthy.
+
+# Playwright integration
+
+The Playwright adapter exposes two entry points — one for the sync API, one for the async API. Both accept either a `Page` or a `BrowserContext`.
+
+## Sync
+
+```python
+from musickit_api_mock_playwright import intercept
+from playwright.sync_api import sync_playwright
+
+with sync_playwright() as pw:
+    browser = pw.chromium.launch()
+    page = browser.new_page()
+    intercept(mock, page)
+    page.goto("https://your-app.example/")
+```
+
+## Async
+
+```python
+from musickit_api_mock_playwright import intercept_async
+from playwright.async_api import async_playwright
+
+async with async_playwright() as pw:
+    browser = await pw.chromium.launch()
+    page = await browser.new_page()
+    await intercept_async(mock, page)
+    await page.goto("https://your-app.example/")
+```
+
+## Page vs. BrowserContext
+
+| Target           | Effect                                                                                 |
+| ---------------- | -------------------------------------------------------------------------------------- |
+| `Page`           | Binds to that single page only. Popups and pages opened later are **not** intercepted. |
+| `BrowserContext` | Covers every page in the context, including popups and pages opened later.             |
+
+Use `BrowserContext` when:
+
+- Your test opens multiple pages.
+- Your app opens real popups via `window.open` for non-MusicKit URLs (e.g. external OAuth providers).
+- You want one configuration to apply to many pages in one test.
+
+Use `Page` when:
+
+- You're testing a single isolated page and want strict scoping.
+
+## What the adapter actually does
+
+`intercept` and `intercept_async` do two things:
+
+1. **Register HTTP interception** via `page.route` (or `context.route`) for hosts the mock claims as in-scope.
+1. **Inject the in-page JS shim** via `add_init_script`, which replaces MusicKit JS's browser integrations (EME, Media Source, authorize popup) so the page can run end-to-end without real Apple Music infrastructure.
+
+If you write your own adapter for a different framework (Selenium, Puppeteer, raw CDP, ...), use the core package directly — the engine itself is transport-agnostic.
+
+## Supported browsers
+
+All three Playwright browsers are supported: **Chromium, Firefox, WebKit**. The in-page shim accounts for the runtime differences between them (e.g. WebKit's FairPlay vs. other browsers' Widevine).
+# Reference
+
+# Reference
+
+Auto-generated API documentation for every public class and function exposed by `musickit-api-mock` and `musickit-api-mock-playwright`.
+
+| Page                                                                                                   | Covers                                                                                                            |
+| ------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------- |
+| [MusicKitApiMock](https://hotaritobu.github.io/musickit-api-mock/dev/reference/mock/index.md)          | The main mock class — entry point of the library.                                                                 |
+| [mock.data](https://hotaritobu.github.io/musickit-api-mock/dev/reference/data/index.md)                | Shared resource dataclasses (songs, albums, library items, personal recommendations, ...) and the lookup context. |
+| [mock.endpoints](https://hotaritobu.github.io/musickit-api-mock/dev/reference/endpoints/index.md)      | HTTP response variants for every intercepted endpoint (success / error variants, callback contexts).              |
+| [mock.browser](https://hotaritobu.github.io/musickit-api-mock/dev/reference/browser/index.md)          | In-page shim state (authorize response variants, key-system enum).                                                |
+| [Playwright adapter](https://hotaritobu.github.io/musickit-api-mock/dev/reference/playwright/index.md) | `intercept` / `intercept_async` entry points.                                                                     |
+
+For task-oriented snippets ("how do I simulate X?"), see [Recipes](https://hotaritobu.github.io/musickit-api-mock/dev/recipes/index.md). For first-time setup, see the [Guide](https://hotaritobu.github.io/musickit-api-mock/dev/guide/index.md).
+
+# MusicKitApiMock
+
+The library entry point. Instantiate once per test and configure the surfaces, then hand it to the host adapter.
+
+## MusicKitApiMock
+
+```python
+MusicKitApiMock()
+```
+
+In-process Apple Music API mock for MusicKit JS.
+
+Configuration is split into surfaces with distinct semantics, not just distinct fields. The split is load-bearing:
+
+- `mock.data` — shared resource sources read by multiple endpoints.
+- `mock.endpoints` — per-endpoint response overrides and endpoint-only state.
+- `mock.browser` — state consumed by the in-page shim.
+
+Field-level design axes for each surface live on the surface objects.
+
+Attributes:
+
+| Name        | Type                | Description                                                                                                                 |
+| ----------- | ------------------- | --------------------------------------------------------------------------------------------------------------------------- |
+| `data`      | `DataSources`       | Shared resource sources (catalog and library) read by multiple endpoints. Assign per-resource sources as mock.data.<field>. |
+| `endpoints` | `EndpointResponses` | Per-endpoint response overrides and endpoint-only state. Assign per-endpoint setters as mock.endpoints.<field>.             |
+| `browser`   | `BrowserBehavior`   | State consumed by the in-page shim. Assign per-field behavior as mock.browser.<field>.                                      |
+
+Initialize all three surfaces with empty defaults and build the URL map.
+
+### handle_request
+
+```python
+handle_request(req: Request) -> Response | None
+```
+
+Match a request against the mock and return a response, or pass through.
+
+Host adapters call this with each intercepted request. The mock matches on host, path, and method; for matched requests it produces a response, for unmatched requests it returns nothing so the adapter can let the request continue to the network.
+
+Parameters:
+
+| Name  | Type      | Description                   | Default    |
+| ----- | --------- | ----------------------------- | ---------- |
+| `req` | `Request` | The intercepted HTTP request. | *required* |
+
+Returns:
+
+| Type       | Description |
+| ---------- | ----------- |
+| \`Response | None\`      |
+| \`Response | None\`      |
+| \`Response | None\`      |
+
+### is_musickit_related
+
+```python
+is_musickit_related(req: Request) -> bool
+```
+
+Report whether a request looks MusicKit-related.
+
+Used by host adapters to decide which requests to log or surface as "possibly should have been mocked" when no handler matched.
+
+Parameters:
+
+| Name  | Type      | Description              | Default    |
+| ----- | --------- | ------------------------ | ---------- |
+| `req` | `Request` | The request to classify. | *required* |
+
+Returns:
+
+| Type   | Description                                                 |
+| ------ | ----------------------------------------------------------- |
+| `bool` | True if the request targets a MusicKit-recognized host or   |
+| `bool` | carries the MusicKit authorization header, False otherwise. |
+
+### get_shim_script
+
+```python
+get_shim_script() -> str
+```
+
+Return the JS init script the host adapter must inject into the page.
+
+Prepends a synchronous snapshot of any browser-state field whose current value is static (non-callable). Sync legacy paths in the shim install before the async fetch resolves when a snapshot is present; callable forms are evaluated per-probe via the internal endpoint and are not snapshotted.
+
+Returns:
+
+| Type  | Description                                                     |
+| ----- | --------------------------------------------------------------- |
+| `str` | JavaScript source ready to be added as a page init script (e.g. |
+| `str` | via Playwright's add_init_script).                              |
+
+## HTTP transport types
+
+## Request
+
+```python
+Request(method: str, url: str, headers: dict[str, str], body: bytes | None)
+```
+
+HTTP request the host adapter forwards into the mock.
+
+Attributes:
+
+| Name      | Type             | Description                                                   |
+| --------- | ---------------- | ------------------------------------------------------------- |
+| `method`  | `str`            | HTTP method (e.g. GET, POST, OPTIONS).                        |
+| `url`     | `str`            | Absolute request URL including scheme, host, path, and query. |
+| `headers` | `dict[str, str]` | Request headers as a flat name/value mapping.                 |
+| `body`    | \`bytes          | None\`                                                        |
+
+## Response
+
+```python
+Response(status: int, headers: dict[str, str], body: bytes)
+```
+
+HTTP response the mock asks the host adapter to fulfill.
+
+Attributes:
+
+| Name      | Type             | Description                                    |
+| --------- | ---------------- | ---------------------------------------------- |
+| `status`  | `int`            | HTTP status code.                              |
+| `headers` | `dict[str, str]` | Response headers as a flat name/value mapping. |
+| `body`    | `bytes`          | Raw response body bytes.                       |
+
+# `mock.data` — resource data
+
+Shared resource sources and dataclasses used by the data configuration surface.
+
+## Configuration surface
+
+## DataSources
+
+```python
+DataSources(songs: SongsSource = None, albums: AlbumsSource = None, playlists: PlaylistsSource = None, artists: ArtistsSource = None, music_videos: MusicVideosSource = None, stations: StationsSource = None, curators: CuratorsSource = None, genres: GenresSource = None, record_labels: RecordLabelsSource = None, groupings: GroupingsSource = None, personal_recommendations: PersonalRecommendationsSource = None, library_songs: LibrarySongsSource = None, library_albums: LibraryAlbumsSource = None, library_playlists: LibraryPlaylistsSource = None, library_playlist_folders: LibraryPlaylistFoldersSource = None, library_playlist_root_children: LibraryPlaylistRootChildrenSource = None, library_artists: LibraryArtistsSource = None, library_music_videos: LibraryMusicVideosSource = None)
+```
+
+Shared resource sources read by multiple endpoints.
+
+Each field except `library_playlist_root_children` accepts an id-keyed mapping. Callable lookups are also accepted where per-id resolution is sufficient; `genres`, `record_labels`, and `personal_recommendations` require the mapping form because their endpoints enumerate ids. `library_playlist_folders` accepts a callable for per-id lookups, but listing all folders and looking up the parent of anything other than a direct child of the root require the mapping form. `library_playlist_root_children` takes a list. Fields default to `None`; reading an unset source raises `ValueError`.
+
+Attributes:
+
+| Name                             | Type                                | Description                                                    |
+| -------------------------------- | ----------------------------------- | -------------------------------------------------------------- |
+| `songs`                          | `SongsSource`                       | Catalog song source.                                           |
+| `albums`                         | `AlbumsSource`                      | Catalog album source.                                          |
+| `playlists`                      | `PlaylistsSource`                   | Catalog playlist source.                                       |
+| `artists`                        | `ArtistsSource`                     | Catalog artist source.                                         |
+| `music_videos`                   | `MusicVideosSource`                 | Catalog music-video source.                                    |
+| `stations`                       | `StationsSource`                    | Catalog radio-station source.                                  |
+| `curators`                       | `CuratorsSource`                    | Catalog curator source (apple-curators and curators).          |
+| `genres`                         | `GenresSource`                      | Catalog genre source.                                          |
+| `record_labels`                  | `RecordLabelsSource`                | Catalog record-label source.                                   |
+| `groupings`                      | `GroupingsSource`                   | Catalog grouping source (editorial categories).                |
+| `personal_recommendations`       | `PersonalRecommendationsSource`     | User recommendation row source.                                |
+| `library_songs`                  | `LibrarySongsSource`                | User-library song source.                                      |
+| `library_albums`                 | `LibraryAlbumsSource`               | User-library album source.                                     |
+| `library_playlists`              | `LibraryPlaylistsSource`            | User-library playlist source.                                  |
+| `library_playlist_folders`       | `LibraryPlaylistFoldersSource`      | User-library playlist folder source.                           |
+| `library_playlist_root_children` | `LibraryPlaylistRootChildrenSource` | Children of the playlist folder tree's root, in library order. |
+| `library_artists`                | `LibraryArtistsSource`              | User-library artist source.                                    |
+| `library_music_videos`           | `LibraryMusicVideosSource`          | User-library music-video source.                               |
+
+## Catalog resources
+
+## CatalogSong
+
+```python
+CatalogSong(title: str, artist: str, album: str, duration_ms: int, artwork: Artwork, genres: list[str], isrc: str, track_number: int, disc_number: int, release_date: str, hls_layout: HlsLayout, hls_segment: bytes, preview_audio: bytes, bitrate: int, sample_rate: int, file_size: int, has_lyrics: bool | None = None, is_apple_digital_master: bool | None = None, url: str | None = None, composer: str | None = None, content_rating: str | None = None, play_assets: list[StationContextPlayAsset] | None = None, album_ids: list[str] | None = None, artist_ids: list[str] | None = None, composer_ids: list[str] | None = None, genre_ids: list[str] | None = None, music_video_ids: list[str] | None = None, station_id: str | None = None, library_song_id: str | None = None)
+```
+
+Apple Music catalog song.
+
+Holds the audio bytes the mock returns for HLS playback and preview, plus the layout the mock needs to compose the HLS manifest at serve time. The `from_file` constructor sources these from an audio file on disk, transcoding the audio to AAC as Apple does for its catalog.
+
+Attributes:
+
+| Name                      | Type                            | Description                                            |
+| ------------------------- | ------------------------------- | ------------------------------------------------------ |
+| `title`                   | `str`                           | Display title of the song.                             |
+| `artist`                  | `str`                           | Display name of the primary artist.                    |
+| `album`                   | `str`                           | Display name of the album the song belongs to.         |
+| `duration_ms`             | `int`                           | Duration in milliseconds.                              |
+| `artwork`                 | `Artwork`                       | Cover artwork.                                         |
+| `genres`                  | `list[str]`                     | Display names of the song's genres.                    |
+| `isrc`                    | `str`                           | International Standard Recording Code.                 |
+| `track_number`            | `int`                           | Track number within the album.                         |
+| `disc_number`             | `int`                           | Disc number within the album.                          |
+| `release_date`            | `str`                           | Original release date of the song as YYYY-MM-DD.       |
+| `hls_layout`              | `HlsLayout`                     | fMP4 segment layout for the HLS manifest.              |
+| `hls_segment`             | `bytes`                         | Raw bytes of the fMP4 segment served for HLS playback. |
+| `preview_audio`           | `bytes`                         | Raw bytes the mock serves as the preview asset.        |
+| `bitrate`                 | `int`                           | Bitrate in kilobits per second.                        |
+| `sample_rate`             | `int`                           | Sample rate in hertz.                                  |
+| `file_size`               | `int`                           | Source file size in bytes.                             |
+| `has_lyrics`              | \`bool                          | None\`                                                 |
+| `is_apple_digital_master` | \`bool                          | None\`                                                 |
+| `url`                     | \`str                           | None\`                                                 |
+| `composer`                | \`str                           | None\`                                                 |
+| `content_rating`          | \`str                           | None\`                                                 |
+| `play_assets`             | \`list[StationContextPlayAsset] | None\`                                                 |
+| `album_ids`               | \`list[str]                     | None\`                                                 |
+| `artist_ids`              | \`list[str]                     | None\`                                                 |
+| `composer_ids`            | \`list[str]                     | None\`                                                 |
+| `genre_ids`               | \`list[str]                     | None\`                                                 |
+| `music_video_ids`         | \`list[str]                     | None\`                                                 |
+| `station_id`              | \`str                           | None\`                                                 |
+| `library_song_id`         | \`str                           | None\`                                                 |
+
+### from_file
+
+```python
+from_file(audio_path: str, fallback: SongMetadataFallback | None = None, *, preview: PreviewRange | bytes | None = None) -> CatalogSong
+```
+
+Build a song by reading metadata and audio bytes from a file on disk.
+
+Each metadata field is taken from the file's tags first and from `fallback` when the tag is absent; an empty tag counts as absent. A required field with neither raises; an optional one is left unset.
+
+Read from tags:
+
+- `title` / `artist` / `album` / `composer`: the tag of the same name.
+- `isrc`: the `ISRC` tag.
+- `track_number` / `disc_number`: the leading integer of the `track` / `disc` tag, so `"3/12"` gives `3`; a tag with no leading integer counts as absent.
+- `genres`: the `genre` tag split on commas.
+- `release_date`: the original-release tag (`TDOR` for ID3, `ORIGINALDATE` for Vorbis comments) when present, else the `date` tag; only a `YYYY-MM-DD` value is used, any other form counts as absent.
+- `artwork`: the first embedded picture as a data URL, at the picture's own size.
+
+Only from `fallback`, as no tag carries them: `has_lyrics`, `is_apple_digital_master`, `url`, `content_rating`.
+
+From the audio itself: `duration_ms`, `bitrate`, `sample_rate`, `file_size`, the HLS layout and segment (the audio transcoded to AAC), and `preview_audio`.
+
+Parameters:
+
+| Name         | Type                   | Description                               | Default                                                                                                                        |
+| ------------ | ---------------------- | ----------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
+| `audio_path` | `str`                  | Filesystem path to the source audio file. | *required*                                                                                                                     |
+| `fallback`   | \`SongMetadataFallback | None\`                                    | Metadata defaults applied when tags are missing the corresponding field. Leave unset to take every field from the file's tags. |
+| `preview`    | \`PreviewRange         | bytes                                     | None\`                                                                                                                         |
+
+Returns:
+
+| Type          | Description                                 |
+| ------------- | ------------------------------------------- |
+| `CatalogSong` | A fully-populated song built from the file. |
+
+Raises:
+
+| Type         | Description                                        |
+| ------------ | -------------------------------------------------- |
+| `ValueError` | A required field has neither a tag nor a fallback. |
+| `TypeError`  | A fallback field holds a value of the wrong type.  |
+
+## CatalogAlbum
+
+```python
+CatalogAlbum(name: str, artist_name: str, artwork: Artwork, genre_names: list[str], track_count: int, is_compilation: bool, is_complete: bool, is_mastered_for_itunes: bool, is_single: bool, is_prerelease: bool, audio_traits: list[str], url: str, release_date: str | None = None, copyright: str | None = None, record_label: str | None = None, upc: str | None = None, track_ids: list[str] | None = None, artist_ids: list[str] | None = None, content_rating: str | None = None, editorial_notes: EditorialNotes | None = None, editorial_artwork: dict[str, Artwork] | None = None, genre_ids: list[str] | None = None, record_label_ids: list[str] | None = None, library_album_id: str | None = None)
+```
+
+Apple Music catalog album.
+
+Attributes:
+
+| Name                     | Type                 | Description                                          |
+| ------------------------ | -------------------- | ---------------------------------------------------- |
+| `name`                   | `str`                | Display title of the album.                          |
+| `artist_name`            | `str`                | Display name of the primary artist.                  |
+| `artwork`                | `Artwork`            | Cover artwork.                                       |
+| `genre_names`            | `list[str]`          | Display names of the album's genres.                 |
+| `track_count`            | `int`                | Number of tracks on the album.                       |
+| `is_compilation`         | `bool`               | Whether the album is a compilation.                  |
+| `is_complete`            | `bool`               | Whether the album release is complete (vs. partial). |
+| `is_mastered_for_itunes` | `bool`               | Apple's "Mastered for iTunes" badge.                 |
+| `is_single`              | `bool`               | Whether the release is a single.                     |
+| `is_prerelease`          | `bool`               | Whether the release is a pre-release.                |
+| `audio_traits`           | `list[str]`          | Audio capability tags (lossless, dolby-atmos, etc.). |
+| `url`                    | `str`                | Album landing-page URL on Apple Music.               |
+| `release_date`           | \`str                | None\`                                               |
+| `copyright`              | \`str                | None\`                                               |
+| `record_label`           | \`str                | None\`                                               |
+| `upc`                    | \`str                | None\`                                               |
+| `track_ids`              | \`list[str]          | None\`                                               |
+| `artist_ids`             | \`list[str]          | None\`                                               |
+| `content_rating`         | \`str                | None\`                                               |
+| `editorial_notes`        | \`EditorialNotes     | None\`                                               |
+| `editorial_artwork`      | \`dict[str, Artwork] | None\`                                               |
+| `genre_ids`              | \`list[str]          | None\`                                               |
+| `record_label_ids`       | \`list[str]          | None\`                                               |
+| `library_album_id`       | \`str                | None\`                                               |
+
+## CatalogArtist
+
+```python
+CatalogArtist(name: str, genre_names: list[str], url: str, artwork: Artwork | None = None, album_ids: list[str] | None = None, genre_ids: list[str] | None = None, music_video_ids: list[str] | None = None, playlist_ids: list[str] | None = None, station_id: str | None = None)
+```
+
+Apple Music catalog artist.
+
+Attributes:
+
+| Name              | Type        | Description                             |
+| ----------------- | ----------- | --------------------------------------- |
+| `name`            | `str`       | Display name of the artist.             |
+| `genre_names`     | `list[str]` | Display names of the artist's genres.   |
+| `url`             | `str`       | Artist landing-page URL on Apple Music. |
+| `artwork`         | \`Artwork   | None\`                                  |
+| `album_ids`       | \`list[str] | None\`                                  |
+| `genre_ids`       | \`list[str] | None\`                                  |
+| `music_video_ids` | \`list[str] | None\`                                  |
+| `playlist_ids`    | \`list[str] | None\`                                  |
+| `station_id`      | \`str       | None\`                                  |
+
+## Playlist
+
+```python
+Playlist(name: str, playlist_type: Literal['user-shared', 'editorial', 'external', 'personal-mix'], curator_name: str, has_collaboration: bool, is_chart: bool, audio_traits: list[str], supports_sing: bool, url: str, artwork: Artwork | None = None, last_modified: str | None = None, track_ids: list[str] | None = None, description: Description | None = None, editorial_notes: EditorialNotes | None = None, curator_id: str | None = None, library_playlist_id: str | None = None)
+```
+
+Apple Music catalog playlist.
+
+Catalog playlists curated by Apple Music's editorial team carry the `apple-curators` curator type — that distinction lives on the curator resource, not here.
+
+Attributes:
+
+| Name                  | Type                                                              | Description                                                                   |
+| --------------------- | ----------------------------------------------------------------- | ----------------------------------------------------------------------------- |
+| `name`                | `str`                                                             | Display name of the playlist.                                                 |
+| `playlist_type`       | `Literal['user-shared', 'editorial', 'external', 'personal-mix']` | Playlist category — one of user-shared, editorial, external, or personal-mix. |
+| `curator_name`        | `str`                                                             | Display name of the curator.                                                  |
+| `has_collaboration`   | `bool`                                                            | Whether collaborative editing is enabled.                                     |
+| `is_chart`            | `bool`                                                            | Whether the playlist is a chart playlist.                                     |
+| `audio_traits`        | `list[str]`                                                       | Audio capability tags (lossless, dolby-atmos, etc.).                          |
+| `supports_sing`       | `bool`                                                            | Whether the playlist supports Apple Music Sing.                               |
+| `url`                 | `str`                                                             | Playlist landing-page URL on Apple Music.                                     |
+| `artwork`             | \`Artwork                                                         | None\`                                                                        |
+| `last_modified`       | \`str                                                             | None\`                                                                        |
+| `track_ids`           | \`list[str]                                                       | None\`                                                                        |
+| `description`         | \`Description                                                     | None\`                                                                        |
+| `editorial_notes`     | \`EditorialNotes                                                  | None\`                                                                        |
+| `curator_id`          | \`str                                                             | None\`                                                                        |
+| `library_playlist_id` | \`str                                                             | None\`                                                                        |
+
+## MusicVideo
+
+```python
+MusicVideo(name: str, artist_name: str, artwork: Artwork, duration_ms: int, genre_names: list[str], has_4k: bool, has_hdr: bool, url: str, previews: list[Preview], video_traits: list[str], isrc: str | None = None, release_date: str | None = None, album_name: str | None = None, content_rating: str | None = None, disc_number: int | None = None, track_number: int | None = None, album_ids: list[str] | None = None, artist_ids: list[str] | None = None, genre_ids: list[str] | None = None, song_ids: list[str] | None = None, library_music_video_id: str | None = None)
+```
+
+Apple Music catalog music video.
+
+Attributes:
+
+| Name                     | Type            | Description                                   |
+| ------------------------ | --------------- | --------------------------------------------- |
+| `name`                   | `str`           | Display title of the music video.             |
+| `artist_name`            | `str`           | Display name of the primary artist.           |
+| `artwork`                | `Artwork`       | Cover artwork.                                |
+| `duration_ms`            | `int`           | Duration in milliseconds.                     |
+| `genre_names`            | `list[str]`     | Display names of the video's genres.          |
+| `has_4k`                 | `bool`          | Whether a 4K rendition is available.          |
+| `has_hdr`                | `bool`          | Whether an HDR rendition is available.        |
+| `url`                    | `str`           | Music-video landing-page URL on Apple Music.  |
+| `previews`               | `list[Preview]` | Preview clip references.                      |
+| `video_traits`           | `list[str]`     | Video capability tags (e.g. atmos, lossless). |
+| `isrc`                   | \`str           | None\`                                        |
+| `release_date`           | \`str           | None\`                                        |
+| `album_name`             | \`str           | None\`                                        |
+| `content_rating`         | \`str           | None\`                                        |
+| `disc_number`            | \`int           | None\`                                        |
+| `track_number`           | \`int           | None\`                                        |
+| `album_ids`              | \`list[str]     | None\`                                        |
+| `artist_ids`             | \`list[str]     | None\`                                        |
+| `genre_ids`              | \`list[str]     | None\`                                        |
+| `song_ids`               | \`list[str]     | None\`                                        |
+| `library_music_video_id` | \`str           | None\`                                        |
+
+## Station
+
+```python
+Station(name: str, artwork: Artwork, is_live: bool, media_kind: Literal['audio', 'video'], url: str, is_tracks_station: bool, has_drm: bool, kind: str, radio_url: str, requires_subscription: bool, editorial_notes: EditorialNotes | None = None, streaming_radio_sub_type: Literal['Episode', 'Shoutcast'] | None = None, station_provider_name: str | None = None, radio_show_id: str | None = None)
+```
+
+Apple Music catalog radio station.
+
+Attributes:
+
+| Name                       | Type                              | Description                                            |
+| -------------------------- | --------------------------------- | ------------------------------------------------------ |
+| `name`                     | `str`                             | Display name of the station.                           |
+| `artwork`                  | `Artwork`                         | Hero artwork for the station.                          |
+| `is_live`                  | `bool`                            | Whether the station is a live broadcast.               |
+| `media_kind`               | `Literal['audio', 'video']`       | Media kind — audio or video.                           |
+| `url`                      | `str`                             | Station landing-page URL on Apple Music.               |
+| `is_tracks_station`        | `bool`                            | Whether the station plays a track-driven playlist.     |
+| `has_drm`                  | `bool`                            | Whether the station's playback is DRM-protected.       |
+| `kind`                     | `str`                             | Apple-specific station-kind tag.                       |
+| `radio_url`                | `str`                             | HLS URL the station streams from.                      |
+| `requires_subscription`    | `bool`                            | Whether playback requires an Apple Music subscription. |
+| `editorial_notes`          | \`EditorialNotes                  | None\`                                                 |
+| `streaming_radio_sub_type` | \`Literal['Episode', 'Shoutcast'] | None\`                                                 |
+| `station_provider_name`    | \`str                             | None\`                                                 |
+| `radio_show_id`            | \`str                             | None\`                                                 |
+
+## Curator
+
+```python
+Curator(name: str, type: Literal['apple-curators', 'curators'], url: str, artwork: Artwork, short_name: str | None = None, kind: str | None = None, playlist_ids: list[str] | None = None, grouping_id: str | None = None)
+```
+
+Apple Music catalog curator (apple-curators or curators type).
+
+Attributes:
+
+| Name           | Type                                    | Description                                                                                  |
+| -------------- | --------------------------------------- | -------------------------------------------------------------------------------------------- |
+| `name`         | `str`                                   | Display name of the curator.                                                                 |
+| `type`         | `Literal['apple-curators', 'curators']` | Curator type — apple-curators for Apple's editorial team, curators for third-party curators. |
+| `url`          | `str`                                   | Curator landing-page URL on Apple Music.                                                     |
+| `artwork`      | `Artwork`                               | Hero artwork for the curator.                                                                |
+| `short_name`   | \`str                                   | None\`                                                                                       |
+| `kind`         | \`str                                   | None\`                                                                                       |
+| `playlist_ids` | \`list[str]                             | None\`                                                                                       |
+| `grouping_id`  | \`str                                   | None\`                                                                                       |
+
+## Library resources
+
+## LibrarySong
+
+```python
+LibrarySong = CatalogLibrarySong | UploadedLibrarySong
+```
+
+## CatalogLibrarySong
+
+```python
+CatalogLibrarySong(name: str, artist_name: str, artwork: Artwork, duration_ms: int, genre_names: list[str], has_lyrics: bool, catalog_id: str, album_name: str | None = None, disc_number: int | None = None, track_number: int | None = None, release_date: str | None = None, album_ids: list[str] | None = None, artist_ids: list[str] | None = None)
+```
+
+User-library song linked to an Apple Music catalog song.
+
+Playback streams the linked catalog song, so this variant carries no audio of its own.
+
+Attributes:
+
+| Name           | Type        | Description                                                                                                                                |
+| -------------- | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| `name`         | `str`       | Display title of the song.                                                                                                                 |
+| `artist_name`  | `str`       | Display name of the primary artist.                                                                                                        |
+| `artwork`      | `Artwork`   | Cover artwork.                                                                                                                             |
+| `duration_ms`  | `int`       | Duration in milliseconds.                                                                                                                  |
+| `genre_names`  | `list[str]` | Display names of the song's genres.                                                                                                        |
+| `has_lyrics`   | `bool`      | Whether lyrics are available.                                                                                                              |
+| `catalog_id`   | `str`       | Catalog song id the library song is linked to. Emitted as playParams.catalogId / playParams.reportingId and resolved for ?include=catalog. |
+| `album_name`   | \`str       | None\`                                                                                                                                     |
+| `disc_number`  | \`int       | None\`                                                                                                                                     |
+| `track_number` | \`int       | None\`                                                                                                                                     |
+| `release_date` | \`str       | None\`                                                                                                                                     |
+| `album_ids`    | \`list[str] | None\`                                                                                                                                     |
+| `artist_ids`   | \`list[str] | None\`                                                                                                                                     |
+
+## UploadedLibrarySong
+
+```python
+UploadedLibrarySong(name: str, artist_name: str | None, artwork: Artwork | None, duration_ms: int, genre_names: list[str], has_lyrics: bool, audio: bytes, disc_number: int, track_number: int, album_name: str | None = None, album_ids: list[str] | None = None, artist_ids: list[str] | None = None)
+```
+
+User-library song uploaded by the user, with no catalog counterpart.
+
+Playback serves the song's own audio. The `from_file` constructor sources the audio and metadata from an audio file on disk the way a Music.app import does; assign to the fields afterwards to model edits made in Music.app.
+
+Attributes:
+
+| Name           | Type        | Description                                                 |
+| -------------- | ----------- | ----------------------------------------------------------- |
+| `name`         | `str`       | Display title of the song.                                  |
+| `artist_name`  | \`str       | None\`                                                      |
+| `artwork`      | \`Artwork   | None\`                                                      |
+| `duration_ms`  | `int`       | Duration in milliseconds.                                   |
+| `genre_names`  | `list[str]` | Display names of the song's genres.                         |
+| `has_lyrics`   | `bool`      | Whether lyrics are available.                               |
+| `audio`        | `bytes`     | AAC audio in an M4A container the mock serves for playback. |
+| `disc_number`  | `int`       | Disc number, 0 when unset.                                  |
+| `track_number` | `int`       | Track number, 0 when unset.                                 |
+| `album_name`   | \`str       | None\`                                                      |
+| `album_ids`    | \`list[str] | None\`                                                      |
+| `artist_ids`   | \`list[str] | None\`                                                      |
+
+### from_file
+
+```python
+from_file(audio_path: str) -> UploadedLibrarySong
+```
+
+Build an uploaded library song from an audio file.
+
+Reads the file the way a Music.app import does and transcodes the audio to AAC in an M4A container, as Apple does for uploads. No tag is required; an empty tag counts as absent.
+
+- `name`: the title tag, or the file name without its last extension when the tag is absent.
+- `artist_name` / `album_name`: the artist / album tag, or `None` when absent.
+- `genre_names`: the genre tag as a single element, verbatim, or `[""]` when absent.
+- `track_number` / `disc_number`: the tag parsed like C's `strtol` (leading ASCII whitespace, an optional sign, then ASCII digits up to the first other character, so `"3/12"` gives `3`), reduced modulo 65536; `0` when the tag is absent, has no leading integer, or exceeds 32767 after reduction.
+- `artwork`: the first embedded picture as a data URL, reported as 1200 by 1200 regardless of the picture's size, or `None` when the file has none.
+- `has_lyrics`: always `False`.
+
+Parameters:
+
+| Name         | Type  | Description             | Default    |
+| ------------ | ----- | ----------------------- | ---------- |
+| `audio_path` | `str` | Path to the audio file. | *required* |
+
+Returns:
+
+| Type                  | Description                |
+| --------------------- | -------------------------- |
+| `UploadedLibrarySong` | The uploaded library song. |
+
+## LibraryAlbum
+
+```python
+LibraryAlbum = CatalogLibraryAlbum | UploadedLibraryAlbum
+```
+
+## CatalogLibraryAlbum
+
+```python
+CatalogLibraryAlbum(name: str, artist_name: str, artwork: Artwork, genre_names: list[str], track_count: int, catalog_id: str, date_added: str | None = None, track_ids: list[str] | None = None, artist_ids: list[str] | None = None, release_date: str | None = None)
+```
+
+User-library album linked to an Apple Music catalog album.
+
+Attributes:
+
+| Name           | Type        | Description                                                                     |
+| -------------- | ----------- | ------------------------------------------------------------------------------- |
+| `name`         | `str`       | Display title of the album.                                                     |
+| `artist_name`  | `str`       | Display name of the primary artist.                                             |
+| `artwork`      | `Artwork`   | Cover artwork.                                                                  |
+| `genre_names`  | `list[str]` | Display names of the album's genres.                                            |
+| `track_count`  | `int`       | Number of tracks on the album.                                                  |
+| `catalog_id`   | `str`       | Catalog album id the library album is linked to, resolved for ?include=catalog. |
+| `date_added`   | \`str       | None\`                                                                          |
+| `track_ids`    | \`list[str] | None\`                                                                          |
+| `artist_ids`   | \`list[str] | None\`                                                                          |
+| `release_date` | \`str       | None\`                                                                          |
+
+## UploadedLibraryAlbum
+
+```python
+UploadedLibraryAlbum(name: str, artist_name: str, artwork: Artwork, genre_names: list[str], track_count: int, date_added: str | None = None, track_ids: list[str] | None = None, artist_ids: list[str] | None = None)
+```
+
+User-library album made of uploaded songs, with no catalog counterpart.
+
+Attributes:
+
+| Name          | Type        | Description                          |
+| ------------- | ----------- | ------------------------------------ |
+| `name`        | `str`       | Display title of the album.          |
+| `artist_name` | `str`       | Display name of the primary artist.  |
+| `artwork`     | `Artwork`   | Cover artwork.                       |
+| `genre_names` | `list[str]` | Display names of the album's genres. |
+| `track_count` | `int`       | Number of tracks on the album.       |
+| `date_added`  | \`str       | None\`                               |
+| `track_ids`   | \`list[str] | None\`                               |
+| `artist_ids`  | \`list[str] | None\`                               |
+
+## LibraryArtist
+
+```python
+LibraryArtist = CatalogLibraryArtist | UploadedLibraryArtist
+```
+
+## CatalogLibraryArtist
+
+```python
+CatalogLibraryArtist(name: str, catalog_id: str, album_ids: list[str] | None = None)
+```
+
+User-library artist linked to an Apple Music catalog artist.
+
+Attributes:
+
+| Name         | Type        | Description                                                                       |
+| ------------ | ----------- | --------------------------------------------------------------------------------- |
+| `name`       | `str`       | Display name of the artist.                                                       |
+| `catalog_id` | `str`       | Catalog artist id the library artist is linked to, resolved for ?include=catalog. |
+| `album_ids`  | \`list[str] | None\`                                                                            |
+
+## UploadedLibraryArtist
+
+```python
+UploadedLibraryArtist(name: str, album_ids: list[str] | None = None)
+```
+
+User-library artist known only from uploaded songs, with no catalog counterpart.
+
+Attributes:
+
+| Name        | Type        | Description                 |
+| ----------- | ----------- | --------------------------- |
+| `name`      | `str`       | Display name of the artist. |
+| `album_ids` | \`list[str] | None\`                      |
+
+## LibraryMusicVideo
+
+```python
+LibraryMusicVideo(name: str, artist_name: str, artwork: Artwork, duration_ms: int, genre_names: list[str], release_date: str | None = None, track_number: int | None = None, album_ids: list[str] | None = None, artist_ids: list[str] | None = None, content_rating: str | None = None, album_name: str | None = None, catalog_id: str | None = None)
+```
+
+User-library music video.
+
+Attributes:
+
+| Name             | Type        | Description                         |
+| ---------------- | ----------- | ----------------------------------- |
+| `name`           | `str`       | Display title of the music video.   |
+| `artist_name`    | `str`       | Display name of the primary artist. |
+| `artwork`        | `Artwork`   | Cover artwork.                      |
+| `duration_ms`    | `int`       | Duration in milliseconds.           |
+| `genre_names`    | `list[str]` | Display names of the genres.        |
+| `release_date`   | \`str       | None\`                              |
+| `track_number`   | \`int       | None\`                              |
+| `album_ids`      | \`list[str] | None\`                              |
+| `artist_ids`     | \`list[str] | None\`                              |
+| `content_rating` | \`str       | None\`                              |
+| `album_name`     | \`str       | None\`                              |
+| `catalog_id`     | \`str       | None\`                              |
+
+## LibraryPlaylist
+
+```python
+LibraryPlaylist(name: str, can_delete: bool, can_edit: bool, is_public: bool, has_catalog: bool, has_collaboration: bool, date_added: str | None = None, last_modified_date: str | None = None, track_ids: list[str] | None = None, artwork: Artwork | None = None, catalog_id: str | None = None)
+```
+
+User-library playlist.
+
+Attributes:
+
+| Name                 | Type        | Description                                      |
+| -------------------- | ----------- | ------------------------------------------------ |
+| `name`               | `str`       | Display name of the playlist.                    |
+| `can_delete`         | `bool`      | Whether the user can delete the playlist.        |
+| `can_edit`           | `bool`      | Whether the user can edit the playlist's tracks. |
+| `is_public`          | `bool`      | Whether the playlist is shared publicly.         |
+| `has_catalog`        | `bool`      | Whether a corresponding catalog playlist exists. |
+| `has_collaboration`  | `bool`      | Whether collaborative editing is enabled.        |
+| `date_added`         | \`str       | None\`                                           |
+| `last_modified_date` | \`str       | None\`                                           |
+| `track_ids`          | \`list[str] | None\`                                           |
+| `artwork`            | \`Artwork   | None\`                                           |
+| `catalog_id`         | \`str       | None\`                                           |
+
+## LibraryPlaylistFolder
+
+```python
+LibraryPlaylistFolder(name: str, date_added: str | None = None, children: list[LibraryPlaylistFolderChild] | None = None)
+```
+
+User-library playlist folder.
+
+Attributes:
+
+| Name         | Type                               | Description                 |
+| ------------ | ---------------------------------- | --------------------------- |
+| `name`       | `str`                              | Display name of the folder. |
+| `date_added` | \`str                              | None\`                      |
+| `children`   | \`list[LibraryPlaylistFolderChild] | None\`                      |
+
+## LibraryPlaylistFolderChild
+
+```python
+LibraryPlaylistFolderChild(type: LibraryPlaylistFolderChildKind, id: str)
+```
+
+A single child reference within a playlist folder.
+
+Attributes:
+
+| Name   | Type                             | Description                                 |
+| ------ | -------------------------------- | ------------------------------------------- |
+| `type` | `LibraryPlaylistFolderChildKind` | Resource type of the child.                 |
+| `id`   | `str`                            | Library id of the child folder or playlist. |
+
+## Personal recommendations
+
+## PersonalRecommendation
+
+```python
+PersonalRecommendation(title: str, is_group_recommendation: bool, kind: PersonalRecommendationKind, next_update_date: str | None = None, reason: str | None = None, resource_types: list[str] | None = None, contents: list[PersonalRecommendationContent] | None = None, display: PersonalRecommendationDisplay | None = None, has_see_all: bool | None = None, version: int | None = None)
+```
+
+A single user-recommendation row.
+
+Attributes:
+
+| Name                      | Type                                  | Description                                                                                                                |
+| ------------------------- | ------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
+| `title`                   | `str`                                 | Editorial display name shown above the row in the UI.                                                                      |
+| `is_group_recommendation` | `bool`                                | Whether the row is a group recommendation.                                                                                 |
+| `kind`                    | `PersonalRecommendationKind`          | Editorial category of the row (generic music recommendation, playlist-specific recommendation, recently-played row, etc.). |
+| `next_update_date`        | \`str                                 | None\`                                                                                                                     |
+| `reason`                  | \`str                                 | None\`                                                                                                                     |
+| `resource_types`          | \`list[str]                           | None\`                                                                                                                     |
+| `contents`                | \`list[PersonalRecommendationContent] | None\`                                                                                                                     |
+| `display`                 | \`PersonalRecommendationDisplay       | None\`                                                                                                                     |
+| `has_see_all`             | \`bool                                | None\`                                                                                                                     |
+| `version`                 | \`int                                 | None\`                                                                                                                     |
+
+## PersonalRecommendationContent
+
+```python
+PersonalRecommendationContent(type: PersonalRecommendationContentKind, id: str)
+```
+
+A single content reference within a recommendation row.
+
+A recommendation's contents can be heterogeneous (playlists, albums, stations, music videos mixed in one row), so each entry carries its own type alongside the catalog id.
+
+Attributes:
+
+| Name   | Type                                | Description                                   |
+| ------ | ----------------------------------- | --------------------------------------------- |
+| `type` | `PersonalRecommendationContentKind` | Resource type of the linked catalog resource. |
+| `id`   | `str`                               | Catalog id of the linked resource.            |
+
+## PersonalRecommendationDisplay
+
+```python
+PersonalRecommendationDisplay(kind: str, decorations: list[str] | None = None)
+```
+
+Editorial-shelf display hint for a recommendation row.
+
+Apple emits these values alongside the row attributes; user code can observe them via the response passthrough.
+
+Attributes:
+
+| Name          | Type        | Description                             |
+| ------------- | ----------- | --------------------------------------- |
+| `kind`        | `str`       | Apple-defined display style identifier. |
+| `decorations` | \`list[str] | None\`                                  |
+
+## Supporting types
+
+## Artwork
+
+```python
+Artwork(url: str, width: int, height: int, bg_color: str | None = None, text_color_1: str | None = None, text_color_2: str | None = None, text_color_3: str | None = None, text_color_4: str | None = None, has_p3: bool | None = None)
+```
+
+Image asset metadata attached to most catalog and library resources.
+
+Attributes:
+
+| Name           | Type   | Description                                                                                                                                       |
+| -------------- | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `url`          | `str`  | Image asset URL; the mock serves it verbatim. Apple's catalog format uses URL templates with {w}, {h}, {f} placeholders the consumer substitutes. |
+| `width`        | `int`  | Image width in pixels at the template's max size.                                                                                                 |
+| `height`       | `int`  | Image height in pixels at the template's max size.                                                                                                |
+| `bg_color`     | \`str  | None\`                                                                                                                                            |
+| `text_color_1` | \`str  | None\`                                                                                                                                            |
+| `text_color_2` | \`str  | None\`                                                                                                                                            |
+| `text_color_3` | \`str  | None\`                                                                                                                                            |
+| `text_color_4` | \`str  | None\`                                                                                                                                            |
+| `has_p3`       | \`bool | None\`                                                                                                                                            |
+
+## Description
+
+```python
+Description(standard: str, short: str | None = None)
+```
+
+Free-form long and short description text.
+
+Attributes:
+
+| Name       | Type  | Description            |
+| ---------- | ----- | ---------------------- |
+| `standard` | `str` | Long-form description. |
+| `short`    | \`str | None\`                 |
+
+## EditorialNotes
+
+```python
+EditorialNotes(name: str | None = None, short: str | None = None, standard: str | None = None, tagline: str | None = None)
+```
+
+Editorial copy shown next to a resource.
+
+Attributes:
+
+| Name       | Type  | Description |
+| ---------- | ----- | ----------- |
+| `name`     | \`str | None\`      |
+| `short`    | \`str | None\`      |
+| `standard` | \`str | None\`      |
+| `tagline`  | \`str | None\`      |
+
+## Genre
+
+```python
+Genre(name: str, url: str, parent_id: str | None = None, parent_name: str | None = None)
+```
+
+Apple Music catalog genre.
+
+Attributes:
+
+| Name          | Type  | Description                            |
+| ------------- | ----- | -------------------------------------- |
+| `name`        | `str` | Display name of the genre.             |
+| `url`         | `str` | Genre landing-page URL on Apple Music. |
+| `parent_id`   | \`str | None\`                                 |
+| `parent_name` | \`str | None\`                                 |
+
+## Grouping
+
+```python
+Grouping(name: str, url: str, artwork: Artwork | None = None)
+```
+
+Apple Music catalog grouping (editorial category for apple-curators).
+
+Attributes:
+
+| Name      | Type      | Description                               |
+| --------- | --------- | ----------------------------------------- |
+| `name`    | `str`     | Display name of the grouping.             |
+| `url`     | `str`     | Grouping landing-page URL on Apple Music. |
+| `artwork` | \`Artwork | None\`                                    |
+
+## Preview
+
+```python
+Preview(url: str, hls_url: str | None = None, artwork: Artwork | None = None)
+```
+
+Preview asset reference (audio or video).
+
+Attributes:
+
+| Name      | Type      | Description                                     |
+| --------- | --------- | ----------------------------------------------- |
+| `url`     | `str`     | Progressive download URL for the preview asset. |
+| `hls_url` | \`str     | None\`                                          |
+| `artwork` | \`Artwork | None\`                                          |
+
+## PreviewRange
+
+```python
+PreviewRange(start_sec: float, duration_sec: float)
+```
+
+Time window (in seconds) to extract from the source audio as the preview.
+
+Attributes:
+
+| Name           | Type    | Description                                               |
+| -------------- | ------- | --------------------------------------------------------- |
+| `start_sec`    | `float` | Start offset in seconds from the beginning of the source. |
+| `duration_sec` | `float` | Preview duration in seconds.                              |
+
+## RecordLabel
+
+```python
+RecordLabel(name: str, url: str, artwork: Artwork | None = None, description: Description | None = None)
+```
+
+Apple Music catalog record label.
+
+Attributes:
+
+| Name          | Type          | Description                                   |
+| ------------- | ------------- | --------------------------------------------- |
+| `name`        | `str`         | Display name of the record label.             |
+| `url`         | `str`         | Record-label landing-page URL on Apple Music. |
+| `artwork`     | \`Artwork     | None\`                                        |
+| `description` | \`Description | None\`                                        |
+
+## HlsChunk
+
+```python
+HlsChunk(duration_sec: float, byte_offset: int, byte_length: int)
+```
+
+Byte range of one media chunk inside an HLS fMP4 segment file.
+
+Attributes:
+
+| Name           | Type    | Description                                  |
+| -------------- | ------- | -------------------------------------------- |
+| `duration_sec` | `float` | Duration of this chunk in seconds.           |
+| `byte_offset`  | `int`   | Offset of the chunk within the segment file. |
+| `byte_length`  | `int`   | Length of the chunk in bytes.                |
+
+## HlsLayout
+
+```python
+HlsLayout(target_duration_sec: int, init_byte_offset: int, init_byte_length: int, chunks: tuple[HlsChunk, ...])
+```
+
+fMP4 segment layout describing what the HLS manifest must declare.
+
+The mock composes the wire-format manifest at serve time so the EXT-X-KEY directive can be selected from the active key system.
+
+Attributes:
+
+| Name                  | Type                   | Description                                                    |
+| --------------------- | ---------------------- | -------------------------------------------------------------- |
+| `target_duration_sec` | `int`                  | Target chunk duration declared in the manifest.                |
+| `init_byte_offset`    | `int`                  | Offset of the initialization fragment within the segment file. |
+| `init_byte_length`    | `int`                  | Length of the initialization fragment in bytes.                |
+| `chunks`              | `tuple[HlsChunk, ...]` | Per-chunk byte-range descriptors in playback order.            |
+
+## SongMetadataFallback
+
+```python
+SongMetadataFallback(title: str | None = None, artist: str | None = None, album: str | None = None, artwork: Artwork | None = None, genres: list[str] | None = None, release_date: str | None = None, track_number: int | None = None, disc_number: int | None = None, composer: str | None = None, has_lyrics: bool | None = None, isrc: str | None = None, content_rating: str | None = None, is_apple_digital_master: bool | None = None, url: str | None = None)
+```
+
+Metadata defaults applied when an audio file's tags are missing fields.
+
+Each field corresponds to the same-named attribute on the song dataclass and is used only when the source file's tags do not supply the value. Fields left unset (`None`) provide no fallback; the loader raises if the tag is also missing and the song requires the field, and leaves the field unset otherwise.
+
+Attributes:
+
+| Name                      | Type        | Description |
+| ------------------------- | ----------- | ----------- |
+| `title`                   | \`str       | None\`      |
+| `artist`                  | \`str       | None\`      |
+| `album`                   | \`str       | None\`      |
+| `artwork`                 | \`Artwork   | None\`      |
+| `genres`                  | \`list[str] | None\`      |
+| `release_date`            | \`str       | None\`      |
+| `track_number`            | \`int       | None\`      |
+| `disc_number`             | \`int       | None\`      |
+| `composer`                | \`str       | None\`      |
+| `has_lyrics`              | \`bool      | None\`      |
+| `isrc`                    | \`str       | None\`      |
+| `content_rating`          | \`str       | None\`      |
+| `is_apple_digital_master` | \`bool      | None\`      |
+| `url`                     | \`str       | None\`      |
+
+## Lookup callback context
+
+## LookupContext
+
+```python
+LookupContext(id: str, locale: str | None)
+```
+
+Per-request resource lookup input.
+
+Passed to callable data sources so user code can produce locale-aware responses. Mapping sources ignore the locale (id-only mapping is the simplest contract).
+
+Attributes:
+
+| Name     | Type  | Description                                            |
+| -------- | ----- | ------------------------------------------------------ |
+| `id`     | `str` | Catalog or library id of the resource being looked up. |
+| `locale` | \`str | None\`                                                 |
+
+# `mock.endpoints` — HTTP response overrides
+
+Response variants you assign to `mock.endpoints.<field>`. See each field's type for accepted shape.
+
+## Configuration surface
+
+## EndpointResponses
+
+```python
+EndpointResponses(storefront: StorefrontSetter = None, account: AccountSetter = None, station_next_tracks: StationNextTracksSetter = None, continuous_stations: ContinuousStationsSetter = None, license_catalog_song: LicenseCatalogSongSetter = None, license_hls_offers: LicenseHlsOffersSetter = None, license_live_radio: LicenseLiveRadioSetter = None, web_playback: WebPlaybackSetter = None, play_assets_catalog_song: PlayAssetsCatalogSongSetter = None, play_assets_live_audio: PlayAssetsLiveAudioSetter = None, play_assets_live_video: PlayAssetsLiveVideoSetter = None, play_assets_broadcast: PlayAssetsBroadcastSetter = None, widevine_cert: WidevineCertSetter = None, fairplay_cert: FairPlayCertSetter = None, webplayer_logout: LogoutSetter = None, play_activity: PlayActivitySetter = None, renew_music_token: RenewTokenSetter = None)
+```
+
+Per-endpoint response overrides and endpoint-only state.
+
+Each setter overrides or parametrizes one specific endpoint's response. Fields default to `None`; reading an unset setter raises `ValueError`. Each setter's accepted shape (static value, callable arity, mapping keying) is on its type alias.
+
+Attributes:
+
+| Name                       | Type                          | Description                                                                                                                                                                                                                                             |
+| -------------------------- | ----------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `storefront`               | `StorefrontSetter`            | Override for /v1/me/storefront.                                                                                                                                                                                                                         |
+| `account`                  | `AccountSetter`               | Override for /v1/me/account.                                                                                                                                                                                                                            |
+| `station_next_tracks`      | `StationNextTracksSetter`     | Override for the station next-tracks endpoint. Keyed by station id; value is the list of follow-up track ids.                                                                                                                                           |
+| `continuous_stations`      | `ContinuousStationsSetter`    | Override for the continuous-stations endpoint.                                                                                                                                                                                                          |
+| `license_catalog_song`     | `LicenseCatalogSongSetter`    | Override for the catalog-song license acquisition endpoint, keyed by adam id.                                                                                                                                                                           |
+| `license_hls_offers`       | `LicenseHlsOffersSetter`      | Override for the HLS-offers license acquisition endpoint, keyed by adam id.                                                                                                                                                                             |
+| `license_live_radio`       | `LicenseLiveRadioSetter`      | Override for the live-radio license acquisition endpoint, keyed by station id.                                                                                                                                                                          |
+| `web_playback`             | `WebPlaybackSetter`           | Override for the web-playback endpoint, keyed by the id MusicKit plays: the salable adam id of a catalog item, or the universal library id of a library item. The mapping form raises for a library item whose request carries no universal library id. |
+| `play_assets_catalog_song` | `PlayAssetsCatalogSongSetter` | Override for catalog-song play-assets, keyed by adam id.                                                                                                                                                                                                |
+| `play_assets_live_audio`   | `PlayAssetsLiveAudioSetter`   | Override for live-audio play-assets, keyed by station id.                                                                                                                                                                                               |
+| `play_assets_live_video`   | `PlayAssetsLiveVideoSetter`   | Override for live-video play-assets, keyed by station id.                                                                                                                                                                                               |
+| `play_assets_broadcast`    | `PlayAssetsBroadcastSetter`   | Override for broadcast play-assets, keyed by station id.                                                                                                                                                                                                |
+| `widevine_cert`            | `WidevineCertSetter`          | Override for the Widevine certificate fetch endpoint.                                                                                                                                                                                                   |
+| `fairplay_cert`            | `FairPlayCertSetter`          | Override for the FairPlay certificate fetch endpoint.                                                                                                                                                                                                   |
+| `webplayer_logout`         | `LogoutSetter`                | Override for the web-player logout endpoint.                                                                                                                                                                                                            |
+| `play_activity`            | `PlayActivitySetter`          | Override for the play-activity reporting endpoint.                                                                                                                                                                                                      |
+| `renew_music_token`        | `RenewTokenSetter`            | Override for the music-token renewal endpoint.                                                                                                                                                                                                          |
+
+## Account
+
+## Account
+
+```python
+Account(subscription_active: bool, subscription_storefront: str)
+```
+
+Apple Music subscriber account state.
+
+Attributes:
+
+| Name                      | Type   | Description                                                 |
+| ------------------------- | ------ | ----------------------------------------------------------- |
+| `subscription_active`     | `bool` | Whether the account has an active Apple Music subscription. |
+| `subscription_storefront` | `str`  | Storefront identifier the subscription is scoped to.        |
+
+## AccountResponse
+
+```python
+AccountResponse = AccountResponseSuccess | AccountResponseSessionExpired | AccountResponseFailure
+```
+
+## AccountResponseSuccess
+
+```python
+AccountResponseSuccess(account: Account)
+```
+
+200 success carrying the active account.
+
+Attributes:
+
+| Name      | Type      | Description                                |
+| --------- | --------- | ------------------------------------------ |
+| `account` | `Account` | The active account returned to the caller. |
+
+## AccountResponseFailure
+
+```python
+AccountResponseFailure()
+```
+
+Generic non-2xx failure that MusicKit rejects without state change.
+
+## AccountResponseSessionExpired
+
+```python
+AccountResponseSessionExpired()
+```
+
+Auth-rejected response that triggers MusicKit's session reset.
+
+## Storefront
+
+## Storefront
+
+```python
+Storefront(id: str, name: str, default_language_tag: str, supported_language_tags: list[str], explicit_content_policy: Literal['allowed', 'opt-in', 'opt-out'])
+```
+
+One Apple Music storefront's identity and language config.
+
+Attributes:
+
+| Name                      | Type                                      | Description                                                                    |
+| ------------------------- | ----------------------------------------- | ------------------------------------------------------------------------------ |
+| `id`                      | `str`                                     | Storefront identifier (typically a two-letter country code).                   |
+| `name`                    | `str`                                     | Display name of the storefront.                                                |
+| `default_language_tag`    | `str`                                     | BCP-47 default language for the storefront.                                    |
+| `supported_language_tags` | `list[str]`                               | BCP-47 language tags the storefront serves.                                    |
+| `explicit_content_policy` | `Literal['allowed', 'opt-in', 'opt-out']` | Storefront-level explicit-content policy — one of allowed, opt-in, or opt-out. |
+
+## StorefrontResponse
+
+```python
+StorefrontResponse = StorefrontResponseSuccess | StorefrontResponseSessionExpired | StorefrontResponseFailure
+```
+
+## StorefrontResponseSuccess
+
+```python
+StorefrontResponseSuccess(storefront: Storefront)
+```
+
+200 success carrying the active storefront.
+
+Attributes:
+
+| Name         | Type         | Description                                   |
+| ------------ | ------------ | --------------------------------------------- |
+| `storefront` | `Storefront` | The active storefront returned to the caller. |
+
+## StorefrontResponseFailure
+
+```python
+StorefrontResponseFailure()
+```
+
+Generic non-2xx failure that MusicKit rejects without state change.
+
+## StorefrontResponseSessionExpired
+
+```python
+StorefrontResponseSessionExpired()
+```
+
+Auth-rejected response that triggers MusicKit's session reset.
+
+## Renew token
+
+## RenewTokenResponse
+
+```python
+RenewTokenResponse = RenewTokenResponseSuccess | RenewTokenResponseUnauthorized
+```
+
+## RenewTokenResponseSuccess
+
+```python
+RenewTokenResponseSuccess(music_token: str | None = None)
+```
+
+200 success carrying the renewed music token.
+
+Attributes:
+
+| Name          | Type  | Description |
+| ------------- | ----- | ----------- |
+| `music_token` | \`str | None\`      |
+
+## RenewTokenResponseUnauthorized
+
+```python
+RenewTokenResponseUnauthorized()
+```
+
+401 response that triggers MusicKit's user-token revoke.
+
+## Logout
+
+## LogoutResponse
+
+```python
+LogoutResponse = LogoutResponseSuccess
+```
+
+## LogoutResponseSuccess
+
+```python
+LogoutResponseSuccess()
+```
+
+200 success for the logout endpoint.
+
+The caller swallows the body, so the response carries no fields.
+
+## Play activity
+
+## PlayActivityResponse
+
+```python
+PlayActivityResponse = PlayActivityResponseSuccess
+```
+
+## PlayActivityResponseSuccess
+
+```python
+PlayActivityResponseSuccess()
+```
+
+200 success for the fire-and-forget play-activity endpoint.
+
+The endpoint is fire-and-forget, so the response carries no fields.
+
+## Web playback
+
+## WebPlaybackContext
+
+```python
+WebPlaybackContext = WebPlaybackCatalogItemContext | WebPlaybackLibraryItemContext
+```
+
+## WebPlaybackCatalogItemContext
+
+```python
+WebPlaybackCatalogItemContext(salable_adam_id: str)
+```
+
+Context for a web-playback request MusicKit makes for a catalog item.
+
+Attributes:
+
+| Name              | Type  | Description                                      |
+| ----------------- | ----- | ------------------------------------------------ |
+| `salable_adam_id` | `str` | Salable adam id the web-playback request is for. |
+
+## WebPlaybackLibraryItemContext
+
+```python
+WebPlaybackLibraryItemContext(subscription_adam_id: str | None, universal_library_id: str | None, purchase_adam_id: str | None)
+```
+
+Context for a web-playback request MusicKit makes for a library item.
+
+MusicKit omits each field from the request body when the library item has no value for it.
+
+Attributes:
+
+| Name                   | Type  | Description |
+| ---------------------- | ----- | ----------- |
+| `subscription_adam_id` | \`str | None\`      |
+| `universal_library_id` | \`str | None\`      |
+| `purchase_adam_id`     | \`str | None\`      |
+
+## WebPlaybackSong
+
+```python
+WebPlaybackSong = WebPlaybackCatalogSong | WebPlaybackCatalogLibrarySong | WebPlaybackUploadedLibrarySong
+```
+
+## WebPlaybackCatalogLibrarySong
+
+```python
+WebPlaybackCatalogLibrarySong(hls_key_cert_url: str, hls_key_server_url: str, widevine_cert_url: str, assets: list[WebPlaybackAsset], song_id: str, hls_playlist_url: str | None = None)
+```
+
+Web-playback payload for a library song that plays through its catalog song.
+
+Carries the catalog song's DRM URLs and assets; the mock marks the payload as needing playback reporting, as Apple does for library items.
+
+Attributes:
+
+| Name                 | Type                     | Description                                     |
+| -------------------- | ------------------------ | ----------------------------------------------- |
+| `hls_key_cert_url`   | `str`                    | FairPlay certificate endpoint for HLS playback. |
+| `hls_key_server_url` | `str`                    | License-acquisition endpoint for HLS playback.  |
+| `widevine_cert_url`  | `str`                    | Widevine certificate endpoint.                  |
+| `assets`             | `list[WebPlaybackAsset]` | Per-variant playback assets for the song.       |
+| `song_id`            | `str`                    | Catalog song id the library song plays through. |
+| `hls_playlist_url`   | \`str                    | None\`                                          |
+
+## WebPlaybackUploadedLibrarySong
+
+```python
+WebPlaybackUploadedLibrarySong(asset: WebPlaybackUploadedLibraryAsset, artwork_url: str | None = None)
+```
+
+Web-playback payload for an uploaded library song (raw file, no DRM).
+
+The mock emits `songId: -1` and marks the payload as not needing playback reporting, as Apple does for uploads.
+
+Attributes:
+
+| Name          | Type                              | Description                |
+| ------------- | --------------------------------- | -------------------------- |
+| `asset`       | `WebPlaybackUploadedLibraryAsset` | The song's raw-file asset. |
+| `artwork_url` | \`str                             | None\`                     |
+
+## WebPlaybackUploadedLibraryAsset
+
+```python
+WebPlaybackUploadedLibraryAsset(url: str, metadata: WebPlaybackUploadedLibraryAssetMetadata)
+```
+
+The single raw-file asset of an uploaded library song.
+
+Attributes:
+
+| Name       | Type                                      | Description                |
+| ---------- | ----------------------------------------- | -------------------------- |
+| `url`      | `str`                                     | URL of the audio file.     |
+| `metadata` | `WebPlaybackUploadedLibraryAssetMetadata` | Tag metadata for the file. |
+
+## WebPlaybackUploadedLibraryAssetMetadata
+
+```python
+WebPlaybackUploadedLibraryAssetMetadata(item_name: str, artist_name: str, playlist_name: str, duration: int, kind: str, track_number: int | None = None, disc_number: int | None = None, genre: str | None = None, composer_name: str | None = None, explicit: int | None = None, release_date: str | None = None, cloud_id: int | None = None, xid: str | None = None)
+```
+
+Tag metadata Apple attaches to an uploaded library song's asset.
+
+MusicKit copies these onto the playing media item.
+
+Attributes:
+
+| Name            | Type  | Description               |
+| --------------- | ----- | ------------------------- |
+| `item_name`     | `str` | Song title.               |
+| `artist_name`   | `str` | Primary artist name.      |
+| `playlist_name` | `str` | Album name.               |
+| `duration`      | `int` | Duration in milliseconds. |
+| `kind`          | `str` | Media kind (song).        |
+| `track_number`  | \`int | None\`                    |
+| `disc_number`   | \`int | None\`                    |
+| `genre`         | \`str | None\`                    |
+| `composer_name` | \`str | None\`                    |
+| `explicit`      | \`int | None\`                    |
+| `release_date`  | \`str | None\`                    |
+| `cloud_id`      | \`int | None\`                    |
+| `xid`           | \`str | None\`                    |
+
+## WebPlaybackCatalogSong
+
+```python
+WebPlaybackCatalogSong(hls_key_cert_url: str, hls_key_server_url: str, widevine_cert_url: str, assets: list[WebPlaybackAsset], song_id: str, hls_playlist_url: str | None = None)
+```
+
+Web-playback payload for a catalog song (DRM URLs, asset list, optional HLS).
+
+Attributes:
+
+| Name                 | Type                     | Description                                     |
+| -------------------- | ------------------------ | ----------------------------------------------- |
+| `hls_key_cert_url`   | `str`                    | FairPlay certificate endpoint for HLS playback. |
+| `hls_key_server_url` | `str`                    | License-acquisition endpoint for HLS playback.  |
+| `widevine_cert_url`  | `str`                    | Widevine certificate endpoint.                  |
+| `assets`             | `list[WebPlaybackAsset]` | Per-variant playback assets for the song.       |
+| `song_id`            | `str`                    | Catalog song id the payload is for.             |
+| `hls_playlist_url`   | \`str                    | None\`                                          |
+
+## WebPlaybackAsset
+
+```python
+WebPlaybackAsset(flavor: str, url: str, metadata: dict[str, _JSONValue] | None = None, artwork_url: str | None = None)
+```
+
+One playback asset variant (URL plus optional metadata).
+
+Attributes:
+
+| Name          | Type                     | Description                                                                       |
+| ------------- | ------------------------ | --------------------------------------------------------------------------------- |
+| `flavor`      | `str`                    | Apple-defined flavor tag describing the asset bitrate or codec (e.g. 28:ctrp256). |
+| `url`         | `str`                    | URL of the asset media.                                                           |
+| `metadata`    | \`dict[str, \_JSONValue] | None\`                                                                            |
+| `artwork_url` | \`str                    | None\`                                                                            |
+
+## WebPlaybackResponse
+
+```python
+WebPlaybackResponse = WebPlaybackResponseSuccess | WebPlaybackResponseUnsupportedError | WebPlaybackResponseMediaLicense | WebPlaybackResponseDeviceLimit | WebPlaybackResponseGeoBlock | WebPlaybackResponseNotFound | WebPlaybackResponseAuthorizationError | WebPlaybackResponseTokenExpired | WebPlaybackResponseSubscriptionError | WebPlaybackResponseContentUnavailable | WebPlaybackResponseContentRestricted | WebPlaybackResponseStreamUpsell | WebPlaybackResponseServerError | WebPlaybackResponsePlayReadyCbcEncryptionError | WebPlaybackResponseWidevineCdmExpired
+```
+
+## WebPlaybackResponseSuccess
+
+```python
+WebPlaybackResponseSuccess(song_list: list[WebPlaybackSong])
+```
+
+200 response carrying one or more song payloads.
+
+Attributes:
+
+| Name        | Type                    | Description                                            |
+| ----------- | ----------------------- | ------------------------------------------------------ |
+| `song_list` | `list[WebPlaybackSong]` | Per-song web-playback payloads returned to the caller. |
+
+## WebPlaybackResponseAuthorizationError
+
+```python
+WebPlaybackResponseAuthorizationError()
+```
+
+`failureType=2002` body that triggers AUTHORIZATION_ERROR (revoke).
+
+## WebPlaybackResponseContentRestricted
+
+```python
+WebPlaybackResponseContentRestricted()
+```
+
+`failureType=3082` body that triggers CONTENT_RESTRICTED.
+
+## WebPlaybackResponseContentUnavailable
+
+```python
+WebPlaybackResponseContentUnavailable()
+```
+
+`failureType=3076` body that triggers CONTENT_UNAVAILABLE.
+
+## WebPlaybackResponseDeviceLimit
+
+```python
+WebPlaybackResponseDeviceLimit()
+```
+
+`failureType` body that triggers DEVICE_LIMIT (mock emits the canonical code).
+
+## WebPlaybackResponseGeoBlock
+
+```python
+WebPlaybackResponseGeoBlock()
+```
+
+`failureType=-1017` body that triggers GEO_BLOCK.
+
+## WebPlaybackResponseMediaLicense
+
+```python
+WebPlaybackResponseMediaLicense()
+```
+
+`failureType=-1003` body that triggers MEDIA_LICENSE.
+
+## WebPlaybackResponseNotFound
+
+```python
+WebPlaybackResponseNotFound()
+```
+
+`failureType=1010` body that triggers NOT_FOUND.
+
+## WebPlaybackResponsePlayReadyCbcEncryptionError
+
+```python
+WebPlaybackResponsePlayReadyCbcEncryptionError()
+```
+
+`failureType=180202` body for PlayReady CBC encryption error.
+
+## WebPlaybackResponseServerError
+
+```python
+WebPlaybackResponseServerError()
+```
+
+`failureType=5002` body that triggers SERVER_ERROR.
+
+## WebPlaybackResponseStreamUpsell
+
+```python
+WebPlaybackResponseStreamUpsell()
+```
+
+`failureType=3084` body that triggers STREAM_UPSELL.
+
+## WebPlaybackResponseSubscriptionError
+
+```python
+WebPlaybackResponseSubscriptionError()
+```
+
+`failureType=3063` body that triggers SUBSCRIPTION_ERROR.
+
+## WebPlaybackResponseTokenExpired
+
+```python
+WebPlaybackResponseTokenExpired()
+```
+
+`failureType=2034` body that triggers TOKEN_EXPIRED (renew + retry).
+
+## WebPlaybackResponseUnsupportedError
+
+```python
+WebPlaybackResponseUnsupportedError()
+```
+
+Empty `songList` body that triggers UNSUPPORTED_ERROR.
+
+## WebPlaybackResponseWidevineCdmExpired
+
+```python
+WebPlaybackResponseWidevineCdmExpired()
+```
+
+`failureType=190121` body for Widevine CDM expired.
+
+## License (DRM)
+
+## LicenseCatalogSongContext
+
+```python
+LicenseCatalogSongContext(adam_id: str, key_system: KeySystem, is_library: bool)
+```
+
+Context for the catalog-song license setter.
+
+Attributes:
+
+| Name         | Type        | Description                                                                          |
+| ------------ | ----------- | ------------------------------------------------------------------------------------ |
+| `adam_id`    | `str`       | Catalog song id the license is being acquired for.                                   |
+| `key_system` | `KeySystem` | DRM key-system identifier of the requesting CDM.                                     |
+| `is_library` | `bool`      | Whether the licensed playback is for the library counterpart (vs. the catalog song). |
+
+## LicenseHlsOffersContext
+
+```python
+LicenseHlsOffersContext(adam_id: str, key_system: KeySystem)
+```
+
+Context for the HLS-offers license setter.
+
+Attributes:
+
+| Name         | Type        | Description                                      |
+| ------------ | ----------- | ------------------------------------------------ |
+| `adam_id`    | `str`       | Catalog song id the HLS-offers license is for.   |
+| `key_system` | `KeySystem` | DRM key-system identifier of the requesting CDM. |
+
+## LicenseLiveRadioContext
+
+```python
+LicenseLiveRadioContext(station_id: str, key_system: KeySystem)
+```
+
+Context for the live-radio license setter.
+
+Attributes:
+
+| Name         | Type        | Description                                       |
+| ------------ | ----------- | ------------------------------------------------- |
+| `station_id` | `str`       | Catalog station id the live-radio license is for. |
+| `key_system` | `KeySystem` | DRM key-system identifier of the requesting CDM.  |
+
+## LicenseResponse
+
+```python
+LicenseResponse = LicenseResponseSuccess | LicenseResponseMediaLicense | LicenseResponseDeviceLimit | LicenseResponseGeoBlock | LicenseResponseNotFound | LicenseResponseAuthorizationError | LicenseResponseTokenExpired | LicenseResponseSubscriptionError | LicenseResponseContentUnavailable | LicenseResponseContentRestricted | LicenseResponseStreamUpsell | LicenseResponseServerError | LicenseResponsePlayReadyCbcEncryptionError | LicenseResponseWidevineCdmExpired
+```
+
+## LicenseResponseSuccess
+
+```python
+LicenseResponseSuccess(license: bytes, renew_after: int | None = None, stkn: str | None = None)
+```
+
+200 success carrying the license blob and optional renewal/session token.
+
+Attributes:
+
+| Name          | Type    | Description                             |
+| ------------- | ------- | --------------------------------------- |
+| `license`     | `bytes` | License blob bytes returned to the CDM. |
+| `renew_after` | \`int   | None\`                                  |
+| `stkn`        | \`str   | None\`                                  |
+
+## LicenseResponseAuthorizationError
+
+```python
+LicenseResponseAuthorizationError()
+```
+
+Body `status=2002` that triggers AUTHORIZATION_ERROR (user-token revoke).
+
+## LicenseResponseContentRestricted
+
+```python
+LicenseResponseContentRestricted()
+```
+
+Body `status=3082` that triggers CONTENT_RESTRICTED.
+
+## LicenseResponseContentUnavailable
+
+```python
+LicenseResponseContentUnavailable()
+```
+
+Body `status=3076` that triggers CONTENT_UNAVAILABLE.
+
+## LicenseResponseDeviceLimit
+
+```python
+LicenseResponseDeviceLimit()
+```
+
+Body status that triggers DEVICE_LIMIT (mock emits the canonical code).
+
+## LicenseResponseGeoBlock
+
+```python
+LicenseResponseGeoBlock()
+```
+
+Body `status=-1017` that triggers GEO_BLOCK.
+
+## LicenseResponseMediaLicense
+
+```python
+LicenseResponseMediaLicense()
+```
+
+Body `status=-1003` that triggers MEDIA_LICENSE.
+
+## LicenseResponseNotFound
+
+```python
+LicenseResponseNotFound()
+```
+
+Body `status=1010` that triggers NOT_FOUND.
+
+## LicenseResponsePlayReadyCbcEncryptionError
+
+```python
+LicenseResponsePlayReadyCbcEncryptionError()
+```
+
+Body `status=180202` that triggers PLAYREADY_CBC_ENCRYPTION_ERROR.
+
+## LicenseResponseServerError
+
+```python
+LicenseResponseServerError()
+```
+
+Body `status=5002` that triggers SERVER_ERROR.
+
+## LicenseResponseStreamUpsell
+
+```python
+LicenseResponseStreamUpsell()
+```
+
+Body `status=3084` that triggers STREAM_UPSELL.
+
+## LicenseResponseSubscriptionError
+
+```python
+LicenseResponseSubscriptionError()
+```
+
+Body `status=3063` that triggers SUBSCRIPTION_ERROR.
+
+## LicenseResponseTokenExpired
+
+```python
+LicenseResponseTokenExpired()
+```
+
+Body `status=2034` that triggers TOKEN_EXPIRED (token renew + retry).
+
+## LicenseResponseWidevineCdmExpired
+
+```python
+LicenseResponseWidevineCdmExpired()
+```
+
+Body `status=190121` that triggers WIDEVINE_CDM_EXPIRED.
+
+MusicKit also rewrites body `status=-1021` to `190121` before dispatch; the mock emits `190121` directly.
+
+## DRM certificates
+
+## FairPlayCertResponse
+
+```python
+FairPlayCertResponse = FairPlayCertResponseSuccess | FairPlayCertResponseFailure
+```
+
+## FairPlayCertResponseSuccess
+
+```python
+FairPlayCertResponseSuccess(cert: bytes)
+```
+
+Success carrying the FairPlay certificate bytes.
+
+Attributes:
+
+| Name   | Type    | Description                     |
+| ------ | ------- | ------------------------------- |
+| `cert` | `bytes` | Raw FairPlay certificate bytes. |
+
+## FairPlayCertResponseFailure
+
+```python
+FairPlayCertResponseFailure()
+```
+
+Cert fetch failure.
+
+MusicKit reads the body bytes only; an HTTP non-OK status is enough to signal failure.
+
+## WidevineCertResponse
+
+```python
+WidevineCertResponse = WidevineCertResponseSuccess | WidevineCertResponseFailure
+```
+
+## WidevineCertResponseSuccess
+
+```python
+WidevineCertResponseSuccess(cert: bytes)
+```
+
+Success carrying the Widevine certificate bytes.
+
+Attributes:
+
+| Name   | Type    | Description                     |
+| ------ | ------- | ------------------------------- |
+| `cert` | `bytes` | Raw Widevine certificate bytes. |
+
+## WidevineCertResponseFailure
+
+```python
+WidevineCertResponseFailure()
+```
+
+Cert fetch failure.
+
+MusicKit reads the body bytes only; an HTTP non-OK status is enough to signal failure.
+
+## Play assets — catalog song
+
+## PlayAssetsCatalogSongContext
+
+```python
+PlayAssetsCatalogSongContext(adam_id: str)
+```
+
+Context for the catalog-song play-assets setter.
+
+Attributes:
+
+| Name      | Type  | Description                            |
+| --------- | ----- | -------------------------------------- |
+| `adam_id` | `str` | Catalog song id the play-asset is for. |
+
+## PlayAssetsCatalogSongAsset
+
+```python
+PlayAssetsCatalogSongAsset(url: str, fair_play_key_certificate_url: str, key_server_url: str, widevine_key_certificate_url: str)
+```
+
+One catalog-song play-asset (URL plus DRM endpoints).
+
+Attributes:
+
+| Name                            | Type  | Description                    |
+| ------------------------------- | ----- | ------------------------------ |
+| `url`                           | `str` | URL of the catalog-song media. |
+| `fair_play_key_certificate_url` | `str` | FairPlay certificate endpoint. |
+| `key_server_url`                | `str` | License-acquisition endpoint.  |
+| `widevine_key_certificate_url`  | `str` | Widevine certificate endpoint. |
+
+## PlayAssetsCatalogSongResponse
+
+```python
+PlayAssetsCatalogSongResponse = PlayAssetsCatalogSongResponseSuccess | PlayAssetsCatalogSongResponseContentUnavailable
+```
+
+## PlayAssetsCatalogSongResponseSuccess
+
+```python
+PlayAssetsCatalogSongResponseSuccess(assets: list[PlayAssetsCatalogSongAsset])
+```
+
+200 response carrying catalog-song assets.
+
+Attributes:
+
+| Name     | Type                               | Description                                      |
+| -------- | ---------------------------------- | ------------------------------------------------ |
+| `assets` | `list[PlayAssetsCatalogSongAsset]` | Catalog-song play-assets returned to the caller. |
+
+## PlayAssetsCatalogSongResponseContentUnavailable
+
+```python
+PlayAssetsCatalogSongResponseContentUnavailable()
+```
+
+Any outcome MusicKit lumps into CONTENT_UNAVAILABLE.
+
+For the catalog-song path MusicKit does not branch on HTTP status: empty assets, missing `results`, or any non-2xx body that parses as JSON all surface as CONTENT_UNAVAILABLE. The mock emits an empty assets body.
+
+## Play assets — live audio
+
+## PlayAssetsLiveAudioContext
+
+```python
+PlayAssetsLiveAudioContext(station_id: str)
+```
+
+Context for the live-audio play-assets setter.
+
+Attributes:
+
+| Name         | Type  | Description                                          |
+| ------------ | ----- | ---------------------------------------------------- |
+| `station_id` | `str` | Catalog station id the live-audio play-asset is for. |
+
+## PlayAssetsLiveAudioAsset
+
+```python
+PlayAssetsLiveAudioAsset(url: str, fair_play_key_certificate_url: str, key_server_url: str, widevine_key_certificate_url: str)
+```
+
+One live-audio play-asset (URL plus DRM endpoints).
+
+Attributes:
+
+| Name                            | Type  | Description                    |
+| ------------------------------- | ----- | ------------------------------ |
+| `url`                           | `str` | URL of the live-audio media.   |
+| `fair_play_key_certificate_url` | `str` | FairPlay certificate endpoint. |
+| `key_server_url`                | `str` | License-acquisition endpoint.  |
+| `widevine_key_certificate_url`  | `str` | Widevine certificate endpoint. |
+
+## PlayAssetsLiveAudioResponse
+
+```python
+PlayAssetsLiveAudioResponse = PlayAssetsLiveAudioResponseSuccess | PlayAssetsLiveAudioResponseEmptyAssets | PlayAssetsLiveAudioResponseServerError | PlayAssetsLiveAudioResponseSubscriptionError | PlayAssetsLiveAudioResponseAccessDenied | PlayAssetsLiveAudioResponseContentUnavailable
+```
+
+## PlayAssetsLiveAudioResponseSuccess
+
+```python
+PlayAssetsLiveAudioResponseSuccess(assets: list[PlayAssetsLiveAudioAsset])
+```
+
+200 response carrying live-audio assets.
+
+Attributes:
+
+| Name     | Type                             | Description                                    |
+| -------- | -------------------------------- | ---------------------------------------------- |
+| `assets` | `list[PlayAssetsLiveAudioAsset]` | Live-audio play-assets returned to the caller. |
+
+## PlayAssetsLiveAudioResponseAccessDenied
+
+```python
+PlayAssetsLiveAudioResponseAccessDenied()
+```
+
+403 with body `errors[0].code != "40303"` that triggers ACCESS_DENIED.
+
+## PlayAssetsLiveAudioResponseContentUnavailable
+
+```python
+PlayAssetsLiveAudioResponseContentUnavailable()
+```
+
+Other non-2xx response, lumped by MusicKit as CONTENT_UNAVAILABLE.
+
+## PlayAssetsLiveAudioResponseEmptyAssets
+
+```python
+PlayAssetsLiveAudioResponseEmptyAssets()
+```
+
+200 with an empty asset list that triggers CONTENT_UNAVAILABLE.
+
+## PlayAssetsLiveAudioResponseServerError
+
+```python
+PlayAssetsLiveAudioResponseServerError()
+```
+
+500 response that triggers SERVER_ERROR.
+
+## PlayAssetsLiveAudioResponseSubscriptionError
+
+```python
+PlayAssetsLiveAudioResponseSubscriptionError()
+```
+
+403 with body `errors[0].code = "40303"` that triggers SUBSCRIPTION_ERROR.
+
+## Play assets — live video
+
+## PlayAssetsLiveVideoContext
+
+```python
+PlayAssetsLiveVideoContext(station_id: str)
+```
+
+Context for the live-video play-assets setter.
+
+Attributes:
+
+| Name         | Type  | Description                                          |
+| ------------ | ----- | ---------------------------------------------------- |
+| `station_id` | `str` | Catalog station id the live-video play-asset is for. |
+
+## PlayAssetsLiveVideoAsset
+
+```python
+PlayAssetsLiveVideoAsset(url: str, fair_play_key_certificate_url: str, key_server_url: str, widevine_key_certificate_url: str)
+```
+
+One live-video play-asset (URL plus DRM endpoints).
+
+Attributes:
+
+| Name                            | Type  | Description                    |
+| ------------------------------- | ----- | ------------------------------ |
+| `url`                           | `str` | URL of the live-video media.   |
+| `fair_play_key_certificate_url` | `str` | FairPlay certificate endpoint. |
+| `key_server_url`                | `str` | License-acquisition endpoint.  |
+| `widevine_key_certificate_url`  | `str` | Widevine certificate endpoint. |
+
+## PlayAssetsLiveVideoResponse
+
+```python
+PlayAssetsLiveVideoResponse = PlayAssetsLiveVideoResponseSuccess | PlayAssetsLiveVideoResponseEmptyAssets | PlayAssetsLiveVideoResponseServerError | PlayAssetsLiveVideoResponseSubscriptionError | PlayAssetsLiveVideoResponseAccessDenied | PlayAssetsLiveVideoResponseContentUnavailable
+```
+
+## PlayAssetsLiveVideoResponseSuccess
+
+```python
+PlayAssetsLiveVideoResponseSuccess(assets: list[PlayAssetsLiveVideoAsset])
+```
+
+200 response carrying live-video assets.
+
+Attributes:
+
+| Name     | Type                             | Description                                    |
+| -------- | -------------------------------- | ---------------------------------------------- |
+| `assets` | `list[PlayAssetsLiveVideoAsset]` | Live-video play-assets returned to the caller. |
+
+## PlayAssetsLiveVideoResponseAccessDenied
+
+```python
+PlayAssetsLiveVideoResponseAccessDenied()
+```
+
+403 with body `errors[0].code != "40303"` that triggers ACCESS_DENIED.
+
+## PlayAssetsLiveVideoResponseContentUnavailable
+
+```python
+PlayAssetsLiveVideoResponseContentUnavailable()
+```
+
+Other non-2xx response, lumped by MusicKit as CONTENT_UNAVAILABLE.
+
+## PlayAssetsLiveVideoResponseEmptyAssets
+
+```python
+PlayAssetsLiveVideoResponseEmptyAssets()
+```
+
+200 with an empty asset list that triggers CONTENT_UNAVAILABLE.
+
+## PlayAssetsLiveVideoResponseServerError
+
+```python
+PlayAssetsLiveVideoResponseServerError()
+```
+
+500 response that triggers SERVER_ERROR.
+
+## PlayAssetsLiveVideoResponseSubscriptionError
+
+```python
+PlayAssetsLiveVideoResponseSubscriptionError()
+```
+
+403 with body `errors[0].code = "40303"` that triggers SUBSCRIPTION_ERROR.
+
+## Play assets — broadcast
+
+## PlayAssetsBroadcastContext
+
+```python
+PlayAssetsBroadcastContext(station_id: str)
+```
+
+Context for the broadcast play-assets setter.
+
+Attributes:
+
+| Name         | Type  | Description                                         |
+| ------------ | ----- | --------------------------------------------------- |
+| `station_id` | `str` | Catalog station id the broadcast play-asset is for. |
+
+## PlayAssetsBroadcastAsset
+
+```python
+PlayAssetsBroadcastAsset(url: str)
+```
+
+One broadcast play-asset (URL only; broadcast plays unencrypted).
+
+Attributes:
+
+| Name  | Type  | Description                 |
+| ----- | ----- | --------------------------- |
+| `url` | `str` | URL of the broadcast media. |
+
+## PlayAssetsBroadcastResponse
+
+```python
+PlayAssetsBroadcastResponse = PlayAssetsBroadcastResponseSuccess | PlayAssetsBroadcastResponseEmptyAssets | PlayAssetsBroadcastResponseServerError | PlayAssetsBroadcastResponseSubscriptionError | PlayAssetsBroadcastResponseAccessDenied | PlayAssetsBroadcastResponseContentUnavailable
+```
+
+## PlayAssetsBroadcastResponseSuccess
+
+```python
+PlayAssetsBroadcastResponseSuccess(assets: list[PlayAssetsBroadcastAsset], track_info: dict[str, _JSONValue] | None = None)
+```
+
+200 response carrying broadcast assets and optional track-info payload.
+
+Attributes:
+
+| Name         | Type                             | Description                                   |
+| ------------ | -------------------------------- | --------------------------------------------- |
+| `assets`     | `list[PlayAssetsBroadcastAsset]` | Broadcast play-assets returned to the caller. |
+| `track_info` | \`dict[str, \_JSONValue]         | None\`                                        |
+
+## PlayAssetsBroadcastResponseAccessDenied
+
+```python
+PlayAssetsBroadcastResponseAccessDenied()
+```
+
+403 with body `errors[0].code != "40303"` that triggers ACCESS_DENIED.
+
+## PlayAssetsBroadcastResponseContentUnavailable
+
+```python
+PlayAssetsBroadcastResponseContentUnavailable()
+```
+
+Other non-2xx response, lumped by MusicKit as CONTENT_UNAVAILABLE.
+
+## PlayAssetsBroadcastResponseEmptyAssets
+
+```python
+PlayAssetsBroadcastResponseEmptyAssets()
+```
+
+200 with an empty asset list that triggers CONTENT_UNAVAILABLE.
+
+## PlayAssetsBroadcastResponseServerError
+
+```python
+PlayAssetsBroadcastResponseServerError()
+```
+
+500 response that triggers SERVER_ERROR.
+
+## PlayAssetsBroadcastResponseSubscriptionError
+
+```python
+PlayAssetsBroadcastResponseSubscriptionError()
+```
+
+403 with body `errors[0].code = "40303"` that triggers SUBSCRIPTION_ERROR.
+
+## Continuous stations
+
+## ContinuousStation
+
+```python
+ContinuousStation(station: Station, tracks: list[str] | None = None)
+```
+
+Result a continuous-stations setter returns.
+
+Attributes:
+
+| Name      | Type        | Description           |
+| --------- | ----------- | --------------------- |
+| `station` | `Station`   | The resolved station. |
+| `tracks`  | \`list[str] | None\`                |
+
+## ContinuousStationsContext
+
+```python
+ContinuousStationsContext(seeds: list[StationSeed] | None = None)
+```
+
+Context for the continuous-stations setter.
+
+Attributes:
+
+| Name    | Type                | Description |
+| ------- | ------------------- | ----------- |
+| `seeds` | \`list[StationSeed] | None\`      |
+
+## StationContextPlayAsset
+
+```python
+StationContextPlayAsset(bit_rate: int, url: str)
+```
+
+One bit-rate variant of a station's play asset.
+
+Attributes:
+
+| Name       | Type  | Description                                    |
+| ---------- | ----- | ---------------------------------------------- |
+| `bit_rate` | `int` | Bitrate of the variant in kilobits per second. |
+| `url`      | `str` | URL of the variant's media.                    |
+
+## StationNextTracksContext
+
+```python
+StationNextTracksContext(station_id: str, limit: int)
+```
+
+Context for the station next-tracks setter.
+
+Attributes:
+
+| Name         | Type  | Description                                               |
+| ------------ | ----- | --------------------------------------------------------- |
+| `station_id` | `str` | Catalog station id the next-tracks request is for.        |
+| `limit`      | `int` | Maximum number of follow-up tracks the request asked for. |
+
+## StationSeed
+
+```python
+StationSeed(id: str, type: Literal['songs', 'library-songs', 'music-videos'], container_id: str | None = None)
+```
+
+Seed item passed to the continuous-stations endpoint.
+
+Attributes:
+
+| Name           | Type                                                | Description                                                        |
+| -------------- | --------------------------------------------------- | ------------------------------------------------------------------ |
+| `id`           | `str`                                               | Catalog or library id of the seed resource.                        |
+| `type`         | `Literal['songs', 'library-songs', 'music-videos']` | Seed resource type — one of songs, library-songs, or music-videos. |
+| `container_id` | \`str                                               | None\`                                                             |
+
+## ContinuousStationsResponse
+
+```python
+ContinuousStationsResponse = ContinuousStationsResponseSuccess | ContinuousStationsResponseContentUnsupported | ContinuousStationsResponseNoStation
+```
+
+## ContinuousStationsResponseSuccess
+
+```python
+ContinuousStationsResponseSuccess(continuous_station: ContinuousStation)
+```
+
+200 response carrying the resolved continuous station.
+
+Attributes:
+
+| Name                 | Type                | Description                                   |
+| -------------------- | ------------------- | --------------------------------------------- |
+| `continuous_station` | `ContinuousStation` | The resolved station with optional track ids. |
+
+## ContinuousStationsResponseContentUnsupported
+
+```python
+ContinuousStationsResponseContentUnsupported(errors: list[ErrorEnvelope])
+```
+
+Non-empty `body.errors[]` that triggers CONTENT_UNSUPPORTED.
+
+Attributes:
+
+| Name     | Type                  | Description                                   |
+| -------- | --------------------- | --------------------------------------------- |
+| `errors` | `list[ErrorEnvelope]` | Error envelopes carried in the response body. |
+
+## ContinuousStationsResponseNoStation
+
+```python
+ContinuousStationsResponseNoStation()
+```
+
+`results.station` missing that triggers CONTENT_UNAVAILABLE.
+
+## Error envelope
+
+## ErrorEnvelope
+
+```python
+ErrorEnvelope(code: str, title: str, status: str, detail: str | None = None, source: dict[str, _JSONValue] | None = None)
+```
+
+One entry in the Apple errors envelope (`body.errors[]`).
+
+Attributes:
+
+| Name     | Type                     | Description                                           |
+| -------- | ------------------------ | ----------------------------------------------------- |
+| `code`   | `str`                    | Apple error code string.                              |
+| `title`  | `str`                    | Short error title.                                    |
+| `status` | `str`                    | HTTP status code carried in the envelope as a string. |
+| `detail` | \`str                    | None\`                                                |
+| `source` | \`dict[str, \_JSONValue] | None\`                                                |
+
+# `mock.browser` — in-page shim state
+
+State the in-page JS shim consumes inside the browser's JavaScript runtime. These are **not HTTP responses** — they configure what the page sees from MusicKit JS's browser integrations.
+
+## Configuration surface
+
+## BrowserBehavior
+
+```python
+BrowserBehavior(authorize_response: AuthorizeResponseSetter = None, eme_flavor: EmeFlavorSetter = None)
+```
+
+State that lives inside the page; the browser-side shim consumes it.
+
+Configures the in-page shim's runtime behavior, not HTTP responses. Fields default to `None`; reading an unset value raises `ValueError`.
+
+Attributes:
+
+| Name                 | Type                      | Description                                                                                                                                                                                                                                                              |
+| -------------------- | ------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `authorize_response` | `AuthorizeResponseSetter` | Response the shim returns from the authorize flow MusicKit JS opens on sign-in. Accepts either a static response variant or a zero-argument callable returning one (the callable is re-evaluated on each authorize attempt, so a fresh value can be returned per popup). |
+| `eme_flavor`         | `EmeFlavorSetter`         | DRM key system the shim reports as supported when MusicKit JS probes Encrypted Media Extensions. Use one of the three key-system identifier strings.                                                                                                                     |
+
+## Authorize popup
+
+## AuthorizeResponse
+
+```python
+AuthorizeResponse = AuthorizeSuccess | AuthorizeDecline | AuthorizeClose | AuthorizeSwitchUserId | AuthorizeUnavailable
+```
+
+## AuthorizeSuccess
+
+```python
+AuthorizeSuccess(user_token: str, cid: str, restricted: int | None = None)
+```
+
+User accepted the authorize prompt; carries the issued user token.
+
+Attributes:
+
+| Name         | Type  | Description                                                                                                |
+| ------------ | ----- | ---------------------------------------------------------------------------------------------------------- |
+| `user_token` | `str` | Apple Music user token MusicKit JS stores and sends as the music-user-token header on subsequent requests. |
+| `cid`        | `str` | The cid Apple's authorize service issues alongside the token.                                              |
+| `restricted` | \`int | None\`                                                                                                     |
+
+## AuthorizeDecline
+
+```python
+AuthorizeDecline()
+```
+
+User declined the authorize prompt.
+
+## AuthorizeClose
+
+```python
+AuthorizeClose()
+```
+
+User closed the authorize prompt without choosing.
+
+## AuthorizeSwitchUserId
+
+```python
+AuthorizeSwitchUserId()
+```
+
+User switched Apple ID mid-flow; MusicKit JS retries authorization.
+
+## AuthorizeUnavailable
+
+```python
+AuthorizeUnavailable()
+```
+
+Authorize flow is not available (e.g. service unavailable).
+
+## EME key system
+
+## KeySystem
+
+```python
+KeySystem = Literal['com.apple.fps', 'com.microsoft.playready', 'com.widevine.alpha']
+```
+
+# Playwright adapter
+
+Entry points for wiring the mock into a Playwright session.
+
+## Sync
+
+## intercept
+
+```python
+intercept(mock: MusicKitApiMock, target: Page | BrowserContext) -> None
+```
+
+Wire the mock into a sync Playwright page or browser context.
+
+Installs the in-page shim init script and routes every request through the mock. Unmatched requests fall through to the network; the mock handles MusicKit JS HTTP traffic and the browser-side shim covers in-page interactions (e.g. the authorize popup, EME flavor reporting). If the mock raises (e.g. an unset setter), the adapter logs the error and aborts the request at the network layer.
+
+Parameters:
+
+| Name     | Type              | Description                | Default                                                                                                                                               |
+| -------- | ----------------- | -------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `mock`   | `MusicKitApiMock` | The mock instance to bind. | *required*                                                                                                                                            |
+| `target` | \`Page            | BrowserContext\`           | Either a sync page (binds to that single page) or a sync browser context (covers every page in the context, including popups and pages opened later). |
+
+## Async
+
+## intercept_async
+
+```python
+intercept_async(mock: MusicKitApiMock, target: Page | BrowserContext) -> None
+```
+
+Wire the mock into an async Playwright page or browser context.
+
+Installs the in-page shim init script and routes every request through the mock. Unmatched requests fall through to the network; the mock handles MusicKit JS HTTP traffic and the browser-side shim covers in-page interactions (e.g. the authorize popup, EME flavor reporting). If the mock raises (e.g. an unset setter), the adapter logs the error and aborts the request at the network layer.
+
+Parameters:
+
+| Name     | Type              | Description                | Default                                                                                                                                                   |
+| -------- | ----------------- | -------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `mock`   | `MusicKitApiMock` | The mock instance to bind. | *required*                                                                                                                                                |
+| `target` | \`Page            | BrowserContext\`           | Either an async page (binds to that single page) or an async browser context (covers every page in the context, including popups and pages opened later). |
+# Recipes
+
+# Recipes
+
+Task-oriented snippets — pick the goal, read the snippet. For background on the surfaces these snippets configure, see [Surfaces overview](https://hotaritobu.github.io/musickit-api-mock/dev/guide/surfaces/index.md).
+
+## Recipe index
+
+| Goal                                                                    | Recipe                                                                                                                           |
+| ----------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
+| Stand up the "signed in, paid up" baseline before driving anything else | [Signed-in with subscription](https://hotaritobu.github.io/musickit-api-mock/dev/recipes/signed-in-with-subscription/index.md)   |
+| Trigger a subscription error from playback or license acquisition       | [Subscription expired mid-playback](https://hotaritobu.github.io/musickit-api-mock/dev/recipes/subscription-expired/index.md)    |
+| Force a DRM (FairPlay / Widevine / PlayReady) failure                   | [DRM license failure](https://hotaritobu.github.io/musickit-api-mock/dev/recipes/drm-license-failure/index.md)                   |
+| Serve different storefronts across tests reusing one mock               | [Multiple storefronts](https://hotaritobu.github.io/musickit-api-mock/dev/recipes/multi-storefront/index.md)                     |
+| Generate catalog resources on the fly instead of enumerating ids        | [Callable resolvers](https://hotaritobu.github.io/musickit-api-mock/dev/recipes/callable-resolvers/index.md)                     |
+| Play a song the user uploaded to their library (no catalog counterpart) | [Uploaded library song](https://hotaritobu.github.io/musickit-api-mock/dev/recipes/uploaded-library-song/index.md)               |
+| Cover popups and pages opened later in one binding                      | [Bind to a browser context](https://hotaritobu.github.io/musickit-api-mock/dev/recipes/bind-to-context/index.md)                 |
+| Vary the authorize result between tests without re-creating the page    | [Swap authorize between tests](https://hotaritobu.github.io/musickit-api-mock/dev/recipes/swap-authorize-between-tests/index.md) |
+
+Note
+
+Got a scenario that's not covered? Open an issue with the snippet that worked — recipes here track real usage rather than speculative coverage.
+
+# Bind one mock to many pages opened in a single browser context
+
+`intercept` / `intercept_async` accept either a `Page` or a `BrowserContext`. A page binding covers only that one page; a context binding covers every page in the context — existing ones and any opened later.
+
+## Sync
+
+```python
+from musickit_api_mock import MusicKitApiMock
+from musickit_api_mock_playwright import intercept
+from playwright.sync_api import sync_playwright
+
+mock = MusicKitApiMock()
+# ... configure the mock ...
+
+with sync_playwright() as pw:
+    browser = pw.chromium.launch()
+    context = browser.new_context()
+    intercept(mock, context)
+
+    page = context.new_page()
+    page.goto("https://your-app.example/")
+```
+
+## Async
+
+```python
+from musickit_api_mock_playwright import intercept_async
+
+context = await browser.new_context()
+await intercept_async(mock, context)
+page = await context.new_page()
+```
+
+## Page vs. BrowserContext
+
+`Page` binding is strict-scope: it intercepts only that one page. Choose it when your test drives a single page and you want strict isolation. The in-page shim handles MusicKit JS's authorize flow inside the page that injected it, so authorize works regardless of which binding you choose.
+
+Choose `BrowserContext` binding when your test opens multiple pages, or when your app opens real popups via `window.open` for non-MusicKit URLs (e.g. external OAuth providers) — the shim only stubs MusicKit's authorize URL, other popups become real new pages and need the context binding to be intercepted.
+
+## Sharing config vs. sharing state
+
+Re-using one `MusicKitApiMock` instance across multiple pages shares both the configuration *and* any per-request state the mock holds (e.g. counters inside callable setters). When two pages must run in isolation, build two `MusicKitApiMock()` instances and bind each to its own context.
+
+# Generate dynamic catalog responses from a pattern
+
+Every `mock.data.*` field accepts either a `Mapping[str, T]` keyed by id (a plain `dict`) or a `Callable[[LookupContext], T | None]`. The callable form lets you generate a resource on demand instead of enumerating every id up front — useful when the test sweeps over hundreds of ids or when ids carry pattern-encoded metadata.
+
+## Per-id factory
+
+```python
+from musickit_api_mock import (
+    Artwork,
+    HlsChunk,
+    HlsLayout,
+    LookupContext,
+    MusicKitApiMock,
+    CatalogSong,
+)
+
+mock = MusicKitApiMock()
+
+
+def make_song(song_id: str, *, title: str) -> CatalogSong:
+    media_segment = b"mock media segment"
+    return CatalogSong(
+        title=title,
+        artist="Test Artist",
+        album="Test Album",
+        duration_ms=180_000,
+        artwork=Artwork(
+            url="https://example.test/artwork/{w}x{h}.{f}",
+            width=1200,
+            height=1200,
+        ),
+        bitrate=256,
+        sample_rate=44_100,
+        file_size=0,
+        genres=[],
+        isrc="USABC1234567",
+        track_number=1,
+        disc_number=1,
+        release_date="2020-01-01",
+        has_lyrics=False,
+        is_apple_digital_master=False,
+        url=f"https://music.apple.com/us/song/{song_id}",
+        hls_layout=HlsLayout(
+            target_duration_sec=6,
+            init_byte_offset=0,
+            init_byte_length=0,
+            chunks=(
+                HlsChunk(
+                    duration_sec=6.0,
+                    byte_offset=0,
+                    byte_length=len(media_segment),
+                ),
+            ),
+        ),
+        hls_segment=media_segment,
+        preview_audio=media_segment,
+    )
+
+
+def resolve_song(ctx: LookupContext) -> CatalogSong | None:
+    if not ctx.id.startswith("test-"):
+        return None
+    return make_song(ctx.id, title=f"Track {ctx.id}")
+
+
+mock.data.songs = resolve_song
+```
+
+Returning `None` from the resolver signals "no such id" — the endpoint reading the source then produces the same not-found response it would for an unknown mapping key.
+
+## Locale-aware resolution
+
+The lookup context carries the request's `?l=` value when one was present in the URL. Use it when your test asserts locale-specific behavior:
+
+```python
+def resolve_song(ctx: LookupContext) -> CatalogSong | None:
+    title = f"Track {ctx.id}"
+    if ctx.locale == "ja":
+        title = f"トラック {ctx.id}"
+    return make_song(ctx.id, title=title)
+```
+
+The mock does not fabricate a locale from the storefront slug; `ctx.locale` is `None` when the URL did not include `?l=`. Dict sources ignore the locale entirely.
+
+## Don't reach across resources
+
+A callable for `mock.data.songs` should resolve only the song. If the song's album / artist / genre relationships matter, populate the matching `mock.data.albums` / `mock.data.artists` / `mock.data.genres` sources too — each resource has its own source, by design. Cross-resource synthesis inside one resolver is a sign the wrong source is being asked to do the work.
+
+## Batch endpoints need a mapping
+
+Some endpoints enumerate the full id set (e.g. the `/v1/catalog/<storefront>/genres` listing). Those require a `Mapping` source (a plain `dict`) — callable sources can't be enumerated by design. The mock raises a descriptive `ValueError` if a batch endpoint hits a callable source; switch that specific resource to a mapping.
+
+# Force a DRM license failure
+
+DRM failure has two dials. The **key system** decides which CDM the page negotiates with (FairPlay on WebKit, Widevine on Chromium / Firefox, PlayReady on some Windows builds). The **license response** decides what the license-acquisition endpoint returns once the CDM asks for a key. To produce a DRM failure end-to-end, control both.
+
+## Pick the key system
+
+```python
+from musickit_api_mock import MusicKitApiMock
+
+mock = MusicKitApiMock()
+
+mock.browser.eme_flavor = (
+    "com.widevine.alpha"  # or "com.apple.fps" / "com.microsoft.playready"
+)
+```
+
+The shim reports this value when MusicKit JS probes Encrypted Media Extensions, so the page proceeds down the matching DRM code path regardless of the host browser's native CDM.
+
+## Return a media-license failure
+
+```python
+from musickit_api_mock import LicenseResponseMediaLicense
+
+mock.endpoints.license_catalog_song = {
+    "1000000001": LicenseResponseMediaLicense(),
+}
+```
+
+The license endpoint emits HTTP 200 with the body status code MusicKit JS dispatches as `MKError.Reason.MEDIA_LICENSE`. The behavior is identical for FairPlay and Widevine — MusicKit's parser is body-driven and ignores HTTP status when an error code is present.
+
+## Other failure modes
+
+The license response union exposes every error reason MusicKit JS recognizes. Reach for the variant that matches the failure you want to test:
+
+- `LicenseResponseDeviceLimit` — "too many devices" prompt path.
+- `LicenseResponseGeoBlock` — region restriction.
+- `LicenseResponseSubscriptionError` — paid-up dropped between fetch and play.
+- `LicenseResponseTokenExpired` — triggers a token renewal + retry.
+- `LicenseResponseWidevineCdmExpired` — Widevine-specific "update your browser" path.
+- `LicenseResponsePlayReadyCbcEncryptionError` — PlayReady CBC bug path.
+
+The full set is in the [`mock.endpoints` reference](https://hotaritobu.github.io/musickit-api-mock/dev/reference/endpoints/#license-drm).
+
+## HLS-offers and live-radio
+
+Catalog-song license is one of three license endpoints. Use the matching surface for HLS-offers (per-song renewal handshake) and live-radio:
+
+```python
+mock.endpoints.license_hls_offers = {"1000000001": LicenseResponseMediaLicense()}
+mock.endpoints.license_live_radio = {"ra.1234567890": LicenseResponseGeoBlock()}
+```
+
+# Serve different storefronts per test
+
+`mock.endpoints.storefront` is a static setter you re-assign per test. The mock reads the field on every request, so re-assignment after `intercept(...)` takes effect immediately — no need to rebuild the mock or rebind the page.
+
+## One mock, multiple tests
+
+```python
+from musickit_api_mock import (
+    MusicKitApiMock,
+    Storefront,
+    StorefrontResponseSuccess,
+)
+
+
+def _storefront(code: str, name: str, language: str) -> StorefrontResponseSuccess:
+    return StorefrontResponseSuccess(
+        storefront=Storefront(
+            id=code,
+            name=name,
+            default_language_tag=language,
+            supported_language_tags=[language],
+            explicit_content_policy="allowed",
+        ),
+    )
+
+
+mock = MusicKitApiMock()
+
+
+def test_us_storefront(page):
+    mock.endpoints.storefront = _storefront("us", "United States", "en-US")
+    # ... drive the page ...
+
+
+def test_jp_storefront(page):
+    mock.endpoints.storefront = _storefront("jp", "Japan", "ja")
+    # ... drive the page ...
+```
+
+## Decide at request time
+
+When the storefront should depend on something the test computes lazily (e.g. a fixture parameter), pass a zero-argument callable instead of a value:
+
+```python
+mock.endpoints.storefront = lambda: _storefront(
+    current_country.id,
+    current_country.name,
+    current_country.language,
+)
+```
+
+`current_country` is your test's active country — a fixture parameter, dataclass instance, or shared state holding `id` / `name` / `language` attributes. The callable runs on every `/v1/me/storefront` request, so updating `current_country` between requests changes what the page sees on the next fetch.
+
+## Keep account and storefront aligned
+
+`Account.subscription_storefront` and `Storefront.id` are independent fields — the mock does not enforce a relationship. When your app reads both, set them to the same storefront identifier to avoid the page receiving a mismatched pair MusicKit's docs never describe.
+
+# Simulate a signed-in user with an active subscription
+
+The end-to-end "signed in, paid up" baseline used by almost every other recipe. Three surfaces participate:
+
+- `mock.browser.authorize_response` — what `music.authorize()` resolves to in the page.
+- `mock.endpoints.account` — what `/v1/me/account` reports about the user's subscription.
+- `mock.endpoints.storefront` — what `/v1/me/storefront` reports as the active storefront.
+
+```python
+from musickit_api_mock import (
+    Account,
+    AccountResponseSuccess,
+    AuthorizeSuccess,
+    MusicKitApiMock,
+    Storefront,
+    StorefrontResponseSuccess,
+)
+
+mock = MusicKitApiMock()
+
+mock.browser.authorize_response = AuthorizeSuccess(
+    user_token="test-user-token",
+    cid="test-cid",
+)
+
+mock.endpoints.account = AccountResponseSuccess(
+    account=Account(
+        subscription_active=True,
+        subscription_storefront="us",
+    ),
+)
+
+mock.endpoints.storefront = StorefrontResponseSuccess(
+    storefront=Storefront(
+        id="us",
+        name="United States",
+        default_language_tag="en-US",
+        supported_language_tags=["en-US"],
+        explicit_content_policy="allowed",
+    ),
+)
+```
+
+After `intercept(mock, page)`, the page sees a successful authorize flow, an active subscription, and a resolved storefront — the prerequisites MusicKit JS checks before exposing playback APIs.
+
+Tip
+
+Keep `subscription_storefront` and the `Storefront.id` in agreement when your app reads both. The mock does not cross-validate; mismatches surface in the page exactly as they would against Apple.
+
+# Trigger a subscription-expired error mid-playback
+
+MusicKit JS surfaces a subscription error from two body-driven endpoints — `web-playback` (the per-song playback payload) and the license-acquisition endpoints. Either path causes the page to see `MKError.Reason.SUBSCRIPTION_ERROR`; pick the one your code path actually exercises.
+
+## At the web-playback endpoint
+
+```python
+from musickit_api_mock import (
+    MusicKitApiMock,
+    WebPlaybackResponseSubscriptionError,
+)
+
+mock = MusicKitApiMock()
+
+mock.endpoints.web_playback = {
+    "1000000001": WebPlaybackResponseSubscriptionError(),
+}
+```
+
+The web-playback setter is keyed by the id MusicKit plays: the catalog song id (`salableAdamId`) for a catalog item, or the library id such as `i.abc123` (`universalLibraryId`) for a library item. Only the listed id triggers the error. Other ids resolve through whatever else is configured (or raise if unset).
+
+## At the license endpoint
+
+```python
+from musickit_api_mock import (
+    LicenseResponseSubscriptionError,
+    MusicKitApiMock,
+)
+
+mock = MusicKitApiMock()
+
+mock.endpoints.license_catalog_song = {
+    "1000000001": LicenseResponseSubscriptionError(),
+}
+```
+
+Use this when you want the playback metadata fetch to succeed and the failure to surface only when the CDM requests the license — closer to a "subscription lapsed between fetch and play" scenario.
+
+## Flip a healthy session into expired
+
+Both setters accept a callable. Use a closure to start with success and switch to the error after the first call:
+
+```python
+calls = {"count": 0}
+
+
+def web_playback_for(ctx):
+    calls["count"] += 1
+    if calls["count"] == 1:
+        return healthy_response(ctx)
+    return WebPlaybackResponseSubscriptionError()
+
+
+mock.endpoints.web_playback = web_playback_for
+```
+
+`healthy_response(ctx)` is your test's normal success path — the `WebPlaybackResponseSuccess` you would return when subscription is valid.
+
+This pattern works for every keyed endpoint, not just web-playback.
+
+# Switch the in-page authorize response between tests
+
+`mock.browser.authorize_response` accepts either a static response variant or a zero-argument callable. The shim re-reads the field every time the page opens an authorize popup, so re-assigning it between tests changes what the next popup resolves to — no need to re-create the page or rerun `intercept(...)`.
+
+## Static swap
+
+```python
+from musickit_api_mock import (
+    AuthorizeClose,
+    AuthorizeDecline,
+    AuthorizeSuccess,
+    MusicKitApiMock,
+)
+
+mock = MusicKitApiMock()
+
+
+def test_accepts(page):
+    mock.browser.authorize_response = AuthorizeSuccess(
+        user_token="t",
+        cid="c",
+    )
+    page.goto(...)
+    # Authorize popup resolves to success.
+
+
+def test_declines(page):
+    mock.browser.authorize_response = AuthorizeDecline()
+    page.goto(...)
+    # Authorize popup resolves to a user-declined result.
+```
+
+## Per-popup variation with a callable
+
+When one test opens the popup multiple times, set a callable so each open can return a different result:
+
+```python
+results = iter(
+    [
+        AuthorizeClose(),  # user dismisses the first prompt
+        AuthorizeSuccess(user_token="t", cid="c"),  # accepts on retry
+    ]
+)
+
+mock.browser.authorize_response = lambda: next(results)
+```
+
+The callable is invoked once per authorize popup. Raising aborts the request rather than producing a failed authorize; return a failure variant to make the page see failure.
+
+## Variant menu
+
+The authorize response union mirrors every result Apple's authorize service can deliver:
+
+- `AuthorizeSuccess(user_token, cid, restricted=None)` — accepted, with the token MusicKit JS stores.
+- `AuthorizeDecline` — user declined.
+- `AuthorizeClose` — user closed the prompt without choosing.
+- `AuthorizeSwitchUserId` — user switched Apple ID mid-flow; MusicKit JS retries.
+- `AuthorizeUnavailable` — the authorize flow is not available.
+
+Pick the variant that drives the page-side code path under test.
+
+# Play an uploaded library song
+
+A song the user uploaded to their library has no Apple Music catalog counterpart. Apple returns it as a `library-songs` resource without `playParams.catalogId`, and MusicKit plays it from a raw audio file instead of a DRM stream. The mock models it as `UploadedLibrarySong` in `mock.data.library_songs` and `WebPlaybackUploadedLibrarySong` in `mock.endpoints.web_playback`.
+
+## Register the song and its audio
+
+```python
+from musickit_api_mock import MusicKitApiMock, UploadedLibrarySong
+
+mock = MusicKitApiMock()
+
+song = UploadedLibrarySong.from_file("path/to/upload.m4a")
+song.artist_name = "Me"
+
+mock.data.library_songs = {"i.abc123": song}
+```
+
+`from_file` reads the file the way a Music.app import does — title, artist, album, genre, track / disc numbers, duration, and embedded artwork — and transcodes the audio to AAC in an M4A container, as Apple does for uploads. A file with missing tags yields the same attributes Apple emits for such an upload. To model edits made in Music.app after the import, assign to the returned song's fields.
+
+## Answer the web-playback request
+
+When MusicKit plays the song it posts `{"universalLibraryId": "i.abc123"}` to the web-playback endpoint, so key the setter by the library id and point the asset at a `blobstore.apple.com` URL whose second path segment is the library id:
+
+```python
+from musickit_api_mock import (
+    WebPlaybackResponseSuccess,
+    WebPlaybackUploadedLibraryAsset,
+    WebPlaybackUploadedLibraryAssetMetadata,
+    WebPlaybackUploadedLibrarySong,
+)
+
+mock.endpoints.web_playback = {
+    "i.abc123": WebPlaybackResponseSuccess(
+        song_list=[
+            WebPlaybackUploadedLibrarySong(
+                asset=WebPlaybackUploadedLibraryAsset(
+                    url="https://store-001.blobstore.apple.com/uploads/i.abc123/audio",
+                    metadata=WebPlaybackUploadedLibraryAssetMetadata(
+                        item_name="Home Recording",
+                        artist_name="Me",
+                        playlist_name="Demos",
+                        duration=128_373,
+                        kind="song",
+                    ),
+                ),
+            )
+        ]
+    ),
+}
+```
+
+The mock serves `https://<store>.blobstore.apple.com/<bucket>/<library song id>/audio` from the registered song's audio with `Content-Type: audio/x-m4a`; the store label and bucket segment are free-form, and a signing query string is ignored.

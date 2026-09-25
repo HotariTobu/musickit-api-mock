@@ -1,0 +1,42 @@
+# musickit-api-mock
+
+> Apple Music API mock for MusicKit JS — runs as an in-process request interceptor inside browser-automation tests.
+
+The library intercepts Apple Music API requests in-process, so a page running
+MusicKit JS hits the mock instead of `api.music.apple.com`. A mock instance
+exposes three configuration surfaces — `mock.data` (resource sources),
+`mock.endpoints` (HTTP response overrides), and `mock.browser` (in-page shim
+state) — and is bound to a browser session by a host adapter.
+
+## Overview
+
+- [Home](https://hotaritobu.github.io/musickit-api-mock/dev/index.md): What the library is, what it intercepts, and a minimal end-to-end example.
+
+## Guide
+
+- [Guide](https://hotaritobu.github.io/musickit-api-mock/dev/guide/index.md): Map of the hand-written walkthroughs.
+- [Getting started](https://hotaritobu.github.io/musickit-api-mock/dev/guide/getting-started/index.md): Install, build a mock, bind it to a page, drive MusicKit JS.
+- [Surfaces overview](https://hotaritobu.github.io/musickit-api-mock/dev/guide/surfaces/index.md): The three configuration surfaces and which one a given scenario belongs to.
+- [Playwright integration](https://hotaritobu.github.io/musickit-api-mock/dev/guide/playwright/index.md): Binding the mock to a Playwright page or browser context, sync and async.
+
+## Reference
+
+- [Reference](https://hotaritobu.github.io/musickit-api-mock/dev/reference/index.md): Map of the generated API reference pages.
+- [MusicKitApiMock](https://hotaritobu.github.io/musickit-api-mock/dev/reference/mock/index.md): The mock class — the library entry point.
+- [mock.data](https://hotaritobu.github.io/musickit-api-mock/dev/reference/data/index.md): Resource dataclasses and the lookup context behind `mock.data`.
+- [mock.endpoints](https://hotaritobu.github.io/musickit-api-mock/dev/reference/endpoints/index.md): Response variants and callback contexts behind `mock.endpoints`.
+- [mock.browser](https://hotaritobu.github.io/musickit-api-mock/dev/reference/browser/index.md): In-page shim state behind `mock.browser`.
+- [Playwright adapter](https://hotaritobu.github.io/musickit-api-mock/dev/reference/playwright/index.md): The Playwright adapter entry points.
+
+## Recipes
+
+- [Recipes](https://hotaritobu.github.io/musickit-api-mock/dev/recipes/index.md): Index of the task-oriented snippets.
+- [Bind to a browser context](https://hotaritobu.github.io/musickit-api-mock/dev/recipes/bind-to-context/index.md)
+- [Callable resolvers](https://hotaritobu.github.io/musickit-api-mock/dev/recipes/callable-resolvers/index.md)
+- [DRM license failure](https://hotaritobu.github.io/musickit-api-mock/dev/recipes/drm-license-failure/index.md)
+- [Multiple storefronts](https://hotaritobu.github.io/musickit-api-mock/dev/recipes/multi-storefront/index.md)
+- [Signed-in with subscription](https://hotaritobu.github.io/musickit-api-mock/dev/recipes/signed-in-with-subscription/index.md)
+- [Subscription expired mid-playback](https://hotaritobu.github.io/musickit-api-mock/dev/recipes/subscription-expired/index.md)
+- [Swap authorize between tests](https://hotaritobu.github.io/musickit-api-mock/dev/recipes/swap-authorize-between-tests/index.md)
+- [Uploaded library song](https://hotaritobu.github.io/musickit-api-mock/dev/recipes/uploaded-library-song/index.md)
+
