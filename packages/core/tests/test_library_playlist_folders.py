@@ -504,6 +504,163 @@ def test_folder_ids_empty_400(mock: MusicKitApiMock) -> None:
     assert body == _param_error("ids", "No id(s) supplied in the 'ids' query parameter")
 
 
+def _folder_parent(folder_id: str, parent: Mapping[str, object]) -> dict[str, object]:
+    return {
+        "parent": {
+            "href": f"{_FOLDERS}/{folder_id}/parent",
+            "data": [parent],
+            "meta": {"total": 1},
+        }
+    }
+
+
+def test_folder_list_include_parent(mock: MusicKitApiMock) -> None:
+    status, body = _get(mock, f"{_FOLDERS}?include=parent")
+    assert status == 200
+    assert body == {
+        "data": [
+            _folder(*_F1, _folder_parent("p.f1", _ROOT_REF)),
+            _folder(*_F2, _folder_parent("p.f2", _folder(*_F1))),
+            _folder(*_F3, _folder_parent("p.f3", _ROOT_REF)),
+        ],
+        "meta": {"total": 3},
+    }
+
+
+def test_folder_list_next_keeps_only_language_tag(mock: MusicKitApiMock) -> None:
+    status, body = _get(mock, f"{_FOLDERS}?l=en-US&include=parent&limit=1")
+    assert status == 200
+    assert body == {
+        "data": [_folder(*_F1, _folder_parent("p.f1", _ROOT_REF))],
+        "meta": {"total": 3},
+        "next": f"{_FOLDERS}?l=en-US&offset=1",
+    }
+
+
+def test_folder_list_include_children_single_resource(mock: MusicKitApiMock) -> None:
+    status, body = _get(mock, f"{_FOLDERS}?include=children&limit=1&offset=1")
+    assert status == 200
+    assert body == {
+        "data": [
+            _folder(
+                *_F2,
+                {
+                    "children": {
+                        "href": f"{_FOLDERS}/p.f2/children",
+                        "data": [_playlist("p.pl3", "Deep")],
+                        "meta": {"total": 1},
+                    }
+                },
+            )
+        ],
+        "meta": {"total": 3},
+        "next": f"{_FOLDERS}?offset=2",
+    }
+
+
+@pytest.mark.parametrize(
+    "query",
+    [
+        "include=children&limit=2",
+        "include=parent,children",
+        "ids=p.f1,p.f2&include=children",
+    ],
+)
+def test_folder_list_include_children_multiple_resources_400(
+    mock: MusicKitApiMock, query: str
+) -> None:
+    status, body = _get(mock, f"{_FOLDERS}?{query}")
+    assert status == 400
+    assert body == _param_error(
+        "include",
+        "The 'children' relationship may only be activated with a single resource"
+        " fetch",
+    )
+
+
+def test_folder_ids_include_parent(mock: MusicKitApiMock) -> None:
+    status, body = _get(mock, f"{_FOLDERS}?ids=p.f2,p.f1,p.pl2&include=parent")
+    assert status == 200
+    assert body == {
+        "data": [
+            _folder(*_F2, _folder_parent("p.f2", _folder(*_F1))),
+            _folder(*_F1, _folder_parent("p.f1", _ROOT_REF)),
+            _folder(
+                "p.pl2",
+                "Inner",
+                "2024-01-01T00:00:00Z",
+                _folder_parent("p.pl2", _folder(*_F1)),
+            ),
+        ]
+    }
+
+
+def test_folder_ids_include_children(mock: MusicKitApiMock) -> None:
+    status, body = _get(mock, f"{_FOLDERS}?ids=p.f2&include=children")
+    assert status == 200
+    assert body == {
+        "data": [
+            _folder(
+                *_F2,
+                {
+                    "children": {
+                        "href": f"{_FOLDERS}/p.f2/children",
+                        "data": [_playlist("p.pl3", "Deep")],
+                        "meta": {"total": 1},
+                    }
+                },
+            )
+        ]
+    }
+
+
+def test_folder_ids_root_without_include(mock: MusicKitApiMock) -> None:
+    status, body = _get(mock, f"{_FOLDERS}?ids=p.playlistsroot")
+    assert status == 200
+    assert body == {"data": []}
+
+
+def test_folder_ids_root_include_parent(mock: MusicKitApiMock) -> None:
+    status, body = _get(mock, f"{_FOLDERS}?ids=p.playlistsroot&include=parent")
+    assert status == 200
+    assert body == {
+        "data": [
+            {
+                **_ROOT_REF,
+                "relationships": {
+                    "parent": {
+                        "href": f"{_FOLDERS}/p.playlistsroot/parent",
+                        "data": [],
+                        "meta": {"total": 0},
+                    }
+                },
+            }
+        ]
+    }
+
+
+def test_folder_ids_root_include_children(mock: MusicKitApiMock) -> None:
+    status, body = _get(
+        mock, f"{_FOLDERS}?ids=p.playlistsroot&include=children&limit[children]=1"
+    )
+    assert status == 200
+    assert body == {
+        "data": [
+            {
+                **_ROOT_REF,
+                "relationships": {
+                    "children": {
+                        "href": f"{_FOLDERS}/p.playlistsroot/children",
+                        "next": f"{_FOLDERS}/p.playlistsroot/children?offset=1",
+                        "data": [_folder(*_F1)],
+                        "meta": {"total": 3},
+                    }
+                },
+            }
+        ]
+    }
+
+
 def test_folder_parent_nested(mock: MusicKitApiMock) -> None:
     status, body = _get(mock, f"{_FOLDERS}/p.f2/parent")
     assert status == 200
