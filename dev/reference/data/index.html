@@ -2202,14 +2202,19 @@
 
 
         <p>Shared resource sources read by multiple endpoints.</p>
-<p>Each field except <code>library_playlist_root_children</code> accepts an
-id-keyed mapping. Callable lookups are also accepted where per-id
-resolution is sufficient; <code>genres</code>, <code>record_labels</code>, and
+<p>Each field except <code>library_playlist_root_children</code> accepts an id-keyed
+mapping. Callable lookups are also accepted where per-id resolution is
+sufficient; <code>genres</code>, <code>record_labels</code>, and
 <code>personal_recommendations</code> require the mapping form because their
-endpoints enumerate ids. <code>library_playlist_folders</code> accepts a
-callable for per-id lookups, but listing all folders and looking up
-the parent of anything other than a direct child of the root require
-the mapping form. <code>library_playlist_root_children</code> takes a list.
+endpoints enumerate ids. <code>library_playlists</code> accepts a callable for
+per-id lookups, but listing all library playlists requires the mapping
+form. The library playlist paths also answer for a folder id, so an id
+missing from <code>library_playlists</code> is looked up in
+<code>library_playlist_folders</code> when that source is set.
+<code>library_playlist_folders</code> accepts a callable for per-id lookups, but
+listing all folders and looking up the parent of anything other than a
+direct child of the root require the mapping form.
+<code>library_playlist_root_children</code> takes a list.
 Fields default to <code>None</code>; reading an unset source raises
 <code>ValueError</code>.</p>
 
@@ -5867,7 +5872,7 @@ counterpart, used to resolve <code>?include=catalog</code>.</p>
   </span>
 
 <a href="#musickit_api_mock.LibraryPlaylist" class="headerlink" title="Permanent link">&para;</a></h2>
-<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">LibraryPlaylist</span><span class="p">(</span><span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">can_delete</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span> <span class="n">can_edit</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span> <span class="n">is_public</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span> <span class="n">has_catalog</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span> <span class="n">has_collaboration</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span> <span class="n">date_added</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">last_modified_date</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">track_ids</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">artwork</span><span class="p">:</span> <span class="n">Artwork</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">catalog_id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span>
+<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">LibraryPlaylist</span><span class="p">(</span><span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">can_edit</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span> <span class="n">is_public</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span> <span class="n">has_catalog</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span> <span class="n">date_added</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">last_modified_date</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">track_ids</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">artwork</span><span class="p">:</span> <span class="n">Artwork</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">description</span><span class="p">:</span> <span class="n">Description</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">catalog_id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span>
 </span></code></pre></div>
 
     <div class="doc doc-contents first">
@@ -5895,17 +5900,6 @@ counterpart, used to resolve <code>?include=catalog</code>.</p>
             <td>
               <div class="doc-md-description">
                 <p>Display name of the playlist.</p>
-              </div>
-            </td>
-          </tr>
-          <tr class="doc-section-item">
-            <td><code><span title="musickit_api_mock.LibraryPlaylist.can_delete">can_delete</span></code></td>
-            <td>
-                  <code><span title="bool">bool</span></code>
-            </td>
-            <td>
-              <div class="doc-md-description">
-                <p>Whether the user can delete the playlist.</p>
               </div>
             </td>
           </tr>
@@ -5943,17 +5937,6 @@ counterpart, used to resolve <code>?include=catalog</code>.</p>
             </td>
           </tr>
           <tr class="doc-section-item">
-            <td><code><span title="musickit_api_mock.LibraryPlaylist.has_collaboration">has_collaboration</span></code></td>
-            <td>
-                  <code><span title="bool">bool</span></code>
-            </td>
-            <td>
-              <div class="doc-md-description">
-                <p>Whether collaborative editing is enabled.</p>
-              </div>
-            </td>
-          </tr>
-          <tr class="doc-section-item">
             <td><code><span title="musickit_api_mock.LibraryPlaylist.date_added">date_added</span></code></td>
             <td>
                   <code><span title="str">str</span> | None</code>
@@ -5982,7 +5965,8 @@ counterpart, used to resolve <code>?include=catalog</code>.</p>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>Library song ids in the playlist's track order.</p>
+                <p>Library song ids in the playlist's track order. <code>None</code>
+and an empty list both describe an empty playlist.</p>
               </div>
             </td>
           </tr>
@@ -6003,6 +5987,22 @@ counterpart, used to resolve <code>?include=catalog</code>.</p>
             </td>
           </tr>
           <tr class="doc-section-item">
+            <td><code><span title="musickit_api_mock.LibraryPlaylist.description">description</span></code></td>
+            <td>
+                  <code><a class="autorefs autorefs-internal" title="            Description
+
+
+  
+      dataclass
+   (musickit_api_mock.data.primitives.description.Description)" href="#musickit_api_mock.Description">Description</a> | None</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Playlist description.</p>
+              </div>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
             <td><code><span title="musickit_api_mock.LibraryPlaylist.catalog_id">catalog_id</span></code></td>
             <td>
                   <code><span title="str">str</span> | None</code>
@@ -6010,7 +6010,8 @@ counterpart, used to resolve <code>?include=catalog</code>.</p>
             <td>
               <div class="doc-md-description">
                 <p>Catalog playlist id linking back to the catalog
-counterpart, used to resolve <code>?include=catalog</code>.</p>
+counterpart, used to resolve <code>?include=catalog</code> and emitted
+as <code>playParams.globalId</code>.</p>
               </div>
             </td>
           </tr>
@@ -6059,7 +6060,7 @@ counterpart, used to resolve <code>?include=catalog</code>.</p>
   </span>
 
 <a href="#musickit_api_mock.LibraryPlaylistFolder" class="headerlink" title="Permanent link">&para;</a></h2>
-<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">LibraryPlaylistFolder</span><span class="p">(</span><span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">date_added</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">children</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">LibraryPlaylistFolderChild</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span>
+<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">LibraryPlaylistFolder</span><span class="p">(</span><span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">date_added</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">last_modified_date</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">children</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">LibraryPlaylistFolderChild</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span>
 </span></code></pre></div>
 
     <div class="doc doc-contents first">
@@ -6098,6 +6099,19 @@ counterpart, used to resolve <code>?include=catalog</code>.</p>
             <td>
               <div class="doc-md-description">
                 <p>ISO-8601 timestamp the folder was added to the library.</p>
+              </div>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code><span title="musickit_api_mock.LibraryPlaylistFolder.last_modified_date">last_modified_date</span></code></td>
+            <td>
+                  <code><span title="str">str</span> | None</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>ISO-8601 timestamp of the last edit. Only the
+library playlist paths emit it, since they also answer for a
+folder id.</p>
               </div>
             </td>
           </tr>

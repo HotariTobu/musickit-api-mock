@@ -411,7 +411,7 @@ DataSources(songs: SongsSource = None, albums: AlbumsSource = None, playlists: P
 
 Shared resource sources read by multiple endpoints.
 
-Each field except `library_playlist_root_children` accepts an id-keyed mapping. Callable lookups are also accepted where per-id resolution is sufficient; `genres`, `record_labels`, and `personal_recommendations` require the mapping form because their endpoints enumerate ids. `library_playlist_folders` accepts a callable for per-id lookups, but listing all folders and looking up the parent of anything other than a direct child of the root require the mapping form. `library_playlist_root_children` takes a list. Fields default to `None`; reading an unset source raises `ValueError`.
+Each field except `library_playlist_root_children` accepts an id-keyed mapping. Callable lookups are also accepted where per-id resolution is sufficient; `genres`, `record_labels`, and `personal_recommendations` require the mapping form because their endpoints enumerate ids. `library_playlists` accepts a callable for per-id lookups, but listing all library playlists requires the mapping form. The library playlist paths also answer for a folder id, so an id missing from `library_playlists` is looked up in `library_playlist_folders` when that source is set. `library_playlist_folders` accepts a callable for per-id lookups, but listing all folders and looking up the parent of anything other than a direct child of the root require the mapping form. `library_playlist_root_children` takes a list. Fields default to `None`; reading an unset source raises `ValueError`.
 
 Attributes:
 
@@ -904,42 +904,42 @@ Attributes:
 ## LibraryPlaylist
 
 ```python
-LibraryPlaylist(name: str, can_delete: bool, can_edit: bool, is_public: bool, has_catalog: bool, has_collaboration: bool, date_added: str | None = None, last_modified_date: str | None = None, track_ids: list[str] | None = None, artwork: Artwork | None = None, catalog_id: str | None = None)
+LibraryPlaylist(name: str, can_edit: bool, is_public: bool, has_catalog: bool, date_added: str | None = None, last_modified_date: str | None = None, track_ids: list[str] | None = None, artwork: Artwork | None = None, description: Description | None = None, catalog_id: str | None = None)
 ```
 
 User-library playlist.
 
 Attributes:
 
-| Name                 | Type        | Description                                      |
-| -------------------- | ----------- | ------------------------------------------------ |
-| `name`               | `str`       | Display name of the playlist.                    |
-| `can_delete`         | `bool`      | Whether the user can delete the playlist.        |
-| `can_edit`           | `bool`      | Whether the user can edit the playlist's tracks. |
-| `is_public`          | `bool`      | Whether the playlist is shared publicly.         |
-| `has_catalog`        | `bool`      | Whether a corresponding catalog playlist exists. |
-| `has_collaboration`  | `bool`      | Whether collaborative editing is enabled.        |
-| `date_added`         | \`str       | None\`                                           |
-| `last_modified_date` | \`str       | None\`                                           |
-| `track_ids`          | \`list[str] | None\`                                           |
-| `artwork`            | \`Artwork   | None\`                                           |
-| `catalog_id`         | \`str       | None\`                                           |
+| Name                 | Type          | Description                                      |
+| -------------------- | ------------- | ------------------------------------------------ |
+| `name`               | `str`         | Display name of the playlist.                    |
+| `can_edit`           | `bool`        | Whether the user can edit the playlist's tracks. |
+| `is_public`          | `bool`        | Whether the playlist is shared publicly.         |
+| `has_catalog`        | `bool`        | Whether a corresponding catalog playlist exists. |
+| `date_added`         | \`str         | None\`                                           |
+| `last_modified_date` | \`str         | None\`                                           |
+| `track_ids`          | \`list[str]   | None\`                                           |
+| `artwork`            | \`Artwork     | None\`                                           |
+| `description`        | \`Description | None\`                                           |
+| `catalog_id`         | \`str         | None\`                                           |
 
 ## LibraryPlaylistFolder
 
 ```python
-LibraryPlaylistFolder(name: str, date_added: str | None = None, children: list[LibraryPlaylistFolderChild] | None = None)
+LibraryPlaylistFolder(name: str, date_added: str | None = None, last_modified_date: str | None = None, children: list[LibraryPlaylistFolderChild] | None = None)
 ```
 
 User-library playlist folder.
 
 Attributes:
 
-| Name         | Type                               | Description                 |
-| ------------ | ---------------------------------- | --------------------------- |
-| `name`       | `str`                              | Display name of the folder. |
-| `date_added` | \`str                              | None\`                      |
-| `children`   | \`list[LibraryPlaylistFolderChild] | None\`                      |
+| Name                 | Type                               | Description                 |
+| -------------------- | ---------------------------------- | --------------------------- |
+| `name`               | `str`                              | Display name of the folder. |
+| `date_added`         | \`str                              | None\`                      |
+| `last_modified_date` | \`str                              | None\`                      |
+| `children`           | \`list[LibraryPlaylistFolderChild] | None\`                      |
 
 ## LibraryPlaylistFolderChild
 
