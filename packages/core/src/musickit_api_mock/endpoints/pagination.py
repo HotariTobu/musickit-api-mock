@@ -61,6 +61,10 @@ _LIBRARY_MUSIC_VIDEO_ARTISTS = _PaginationConfig(page_size=10, max_limit=10)
 _LIBRARY_SONG_ALBUMS = _PaginationConfig(page_size=10, max_limit=10)
 _LIBRARY_SONG_ARTISTS = _PaginationConfig(page_size=10, max_limit=10)
 _LIBRARY_ARTIST_ALBUMS = _PaginationConfig(page_size=25, max_limit=100)
+_LIBRARY_PLAYLIST_FOLDERS = _PaginationConfig(page_size=25, max_limit=100)
+# Default page size unconfirmed against Apple; mirrors the folder list endpoint.
+_LIBRARY_PLAYLIST_FOLDER_CHILDREN = _PaginationConfig(page_size=25, max_limit=100)
+_LIBRARY_PLAYLIST_FOLDER_PARENT = _PaginationConfig(page_size=1, max_limit=1)
 
 _CATALOG_SONG_GENRES = _PaginationConfig(page_size=10, max_limit=10)
 _CATALOG_SONG_MUSIC_VIDEOS = _PaginationConfig(page_size=10, max_limit=10)
@@ -128,6 +132,42 @@ def _parse_standalone_pagination(
             _json_response(_limit_exceeded_envelope(cfg.max_limit, limit), status=400),
         )
     return limit, offset, None
+
+
+def _parse_validated_standalone_pagination(
+    req: Request, cfg: _PaginationConfig
+) -> tuple[int, int, Response | None]:
+    """Parse ``?limit=N&offset=N``, rejecting a non-integer or sub-1 limit.
+
+    Same contract as the unvalidated parser, plus Apple's 400 for
+    ``?limit=abc`` and ``?limit=0`` with ``source.parameter = "limit"``.
+    """
+    q = _parse_query(req.url)
+    raw_limit = q.get("limit", [None])[-1]
+    if raw_limit is not None:
+        try:
+            value = int(raw_limit)
+        except ValueError:
+            return (
+                0,
+                0,
+                _json_response(
+                    _parameter_invalid_envelope("limit", "Value must be an integer"),
+                    status=400,
+                ),
+            )
+        if value < 1:
+            return (
+                0,
+                0,
+                _json_response(
+                    _parameter_invalid_envelope(
+                        "limit", "Value must be an integer greater than or equal to 1"
+                    ),
+                    status=400,
+                ),
+            )
+    return _parse_standalone_pagination(req, cfg)
 
 
 def _parse_inline_limits(

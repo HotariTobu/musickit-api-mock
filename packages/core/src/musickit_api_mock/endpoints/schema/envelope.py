@@ -82,6 +82,20 @@ def _resource_not_found_404_envelope() -> dict[str, _JSONValue]:
     }
 
 
+def _no_related_resources_404_envelope(relationship: str) -> dict[str, _JSONValue]:
+    return {
+        "errors": [
+            {
+                "id": uuid.uuid4().hex.upper(),
+                "title": "No related resources",
+                "detail": f"No related resources found for {relationship}",
+                "status": "404",
+                "code": "40403",
+            }
+        ]
+    }
+
+
 def _session_expired_403_envelope() -> dict[str, _JSONValue]:
     return {
         "errors": [

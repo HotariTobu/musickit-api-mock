@@ -29,6 +29,8 @@ Shared resource sources and dataclasses used by the data configuration surface.
 ::: musickit_api_mock.UploadedLibraryArtist
 ::: musickit_api_mock.LibraryMusicVideo
 ::: musickit_api_mock.LibraryPlaylist
+::: musickit_api_mock.LibraryPlaylistFolder
+::: musickit_api_mock.LibraryPlaylistFolderChild
 
 ## Personal recommendations
 
