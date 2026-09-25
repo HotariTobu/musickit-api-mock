@@ -17,7 +17,12 @@ from musickit_api_mock.endpoints.pagination import (
     _parse_validated_standalone_pagination,
     _standalone_paginated_response,
 )
-from musickit_api_mock.endpoints.query import _dedupe, _parse_csv_param, _parse_ids
+from musickit_api_mock.endpoints.query import (
+    _dedupe,
+    _parse_csv_param,
+    _parse_ids,
+    _parse_query,
+)
 from musickit_api_mock.endpoints.request_locale import _check_and_resolve_locale
 from musickit_api_mock.endpoints.schema import (
     _batch_envelope,
@@ -30,6 +35,7 @@ from musickit_api_mock.endpoints.schema import (
     _library_playlist_resource,
     _no_related_resources_404_envelope,
     _resource_not_found_404_envelope,
+    _single_resource_include_400_envelope,
 )
 from musickit_api_mock.transport.response_builders import _json_response
 
@@ -180,60 +186,21 @@ def _encode_children(
     return out
 
 
-def _handle_library_playlist_folders(mock: MusicKitApiMock, req: Request) -> Response:
-    locale, err = _check_and_resolve_locale(req, storefront_slug=None, mock=mock)
-    if err is not None:
-        return err
-    has_param, ids = _parse_ids(req.url)
-    if has_param:
-        if not ids:
-            return _json_response(_empty_ids_400_envelope(), status=400)
-        resources: list[dict[str, _JSONValue]] = []
-        for folder_id in _dedupe(ids):
-            folder = _resolve_folder_or_playlist(mock, folder_id, locale)
-            if folder is not None:
-                resources.append(_library_playlist_folder_resource(folder_id, folder))
-        return _json_response(_batch_envelope(resources))
-    limit, offset, err = _parse_validated_standalone_pagination(
-        req, _LIBRARY_PLAYLIST_FOLDERS
-    )
-    if err is not None:
-        return err
-    resolver = mock._data_resolver.library_playlist_folder
-    folder_ids = resolver.list_ids()
-    data: list[dict[str, _JSONValue]] = []
-    for folder_id in folder_ids[offset : offset + limit]:
-        folder = resolver.get(LookupContext(folder_id, locale))
-        if folder is not None:
-            data.append(_library_playlist_folder_resource(folder_id, folder))
-    return _standalone_paginated_response(
-        "/v1/me/library/playlist-folders",
-        data,
-        len(folder_ids),
-        offset=offset,
-        limit=limit,
-        include_meta_total=True,
-    )
+def _encode_folder(
+    mock: MusicKitApiMock,
+    folder_id: str,
+    folder: LibraryPlaylistFolder | None,
+    locale: str | None,
+    *,
+    includes: set[str],
+    sizes: dict[str, int],
+) -> dict[str, _JSONValue] | None:
+    """Encode a folder resource, or the root when ``folder`` is ``None``.
 
-
-def _handle_library_playlist_folder(
-    mock: MusicKitApiMock, req: Request, folder_id: str
-) -> Response:
-    locale, err = _check_and_resolve_locale(req, storefront_slug=None, mock=mock)
-    if err is not None:
-        return err
-    includes = _parse_csv_param(req.url, "include")
-    sizes, err = _parse_inline_limits(
-        req, {"children": _LIBRARY_PLAYLIST_FOLDER_CHILDREN}
-    )
-    if err is not None:
-        return err
+    Apple answers the root only when a relationship is requested, so the
+    root without one encodes to ``None``.
+    """
     href = _library_playlist_folder_href(folder_id)
-    folder: LibraryPlaylistFolder | None = None
-    if folder_id != _ROOT_ID:
-        folder = _resolve_folder_or_playlist(mock, folder_id, locale)
-        if folder is None:
-            return _json_response(_resource_not_found_404_envelope(), status=404)
     rels: dict[str, _JSONValue] = {}
     if "children" in includes:
         children = _children_of(mock, folder_id, locale) or []
@@ -249,21 +216,99 @@ def _handle_library_playlist_folder(
             mock, folder_id, f"{href}/parent", locale, recursive=False
         )
     if folder is None:
-        # Apple answers the root only when a relationship is requested.
         if not rels:
-            return _json_response(_resource_not_found_404_envelope(), status=404)
-        return _json_response(
-            _batch_envelope([_library_playlist_folder_root_resource(rels)])
-        )
-    return _json_response(
-        _batch_envelope(
-            [
-                _library_playlist_folder_resource(
-                    folder_id, folder, relationships=rels or None
-                )
-            ]
-        )
+            return None
+        return _library_playlist_folder_root_resource(rels)
+    return _library_playlist_folder_resource(
+        folder_id, folder, relationships=rels or None
     )
+
+
+def _handle_library_playlist_folders(mock: MusicKitApiMock, req: Request) -> Response:
+    locale, err = _check_and_resolve_locale(req, storefront_slug=None, mock=mock)
+    if err is not None:
+        return err
+    includes = _parse_csv_param(req.url, "include")
+    sizes, err = _parse_inline_limits(
+        req, {"children": _LIBRARY_PLAYLIST_FOLDER_CHILDREN}
+    )
+    if err is not None:
+        return err
+    has_param, ids = _parse_ids(req.url)
+    page: list[tuple[str, LibraryPlaylistFolder | None]] = []
+    total = 0
+    limit = 0
+    offset = 0
+    if has_param:
+        if not ids:
+            return _json_response(_empty_ids_400_envelope(), status=400)
+        for folder_id in _dedupe(ids):
+            if folder_id == _ROOT_ID:
+                page.append((folder_id, None))
+                continue
+            folder = _resolve_folder_or_playlist(mock, folder_id, locale)
+            if folder is not None:
+                page.append((folder_id, folder))
+    else:
+        limit, offset, err = _parse_validated_standalone_pagination(
+            req, _LIBRARY_PLAYLIST_FOLDERS
+        )
+        if err is not None:
+            return err
+        resolver = mock._data_resolver.library_playlist_folder
+        folder_ids = resolver.list_ids()
+        total = len(folder_ids)
+        for folder_id in folder_ids[offset : offset + limit]:
+            folder = resolver.get(LookupContext(folder_id, locale))
+            if folder is not None:
+                page.append((folder_id, folder))
+    if "children" in includes and len(page) > 1:
+        return _json_response(
+            _single_resource_include_400_envelope("children"), status=400
+        )
+    data: list[dict[str, _JSONValue]] = []
+    for folder_id, folder in page:
+        encoded = _encode_folder(
+            mock, folder_id, folder, locale, includes=includes, sizes=sizes
+        )
+        if encoded is not None:
+            data.append(encoded)
+    if has_param:
+        return _json_response(_batch_envelope(data))
+    return _standalone_paginated_response(
+        "/v1/me/library/playlist-folders",
+        data,
+        total,
+        offset=offset,
+        limit=limit,
+        include_meta_total=True,
+        language_tag=_parse_query(req.url).get("l", [None])[-1],
+    )
+
+
+def _handle_library_playlist_folder(
+    mock: MusicKitApiMock, req: Request, folder_id: str
+) -> Response:
+    locale, err = _check_and_resolve_locale(req, storefront_slug=None, mock=mock)
+    if err is not None:
+        return err
+    includes = _parse_csv_param(req.url, "include")
+    sizes, err = _parse_inline_limits(
+        req, {"children": _LIBRARY_PLAYLIST_FOLDER_CHILDREN}
+    )
+    if err is not None:
+        return err
+    folder: LibraryPlaylistFolder | None = None
+    if folder_id != _ROOT_ID:
+        folder = _resolve_folder_or_playlist(mock, folder_id, locale)
+        if folder is None:
+            return _json_response(_resource_not_found_404_envelope(), status=404)
+    encoded = _encode_folder(
+        mock, folder_id, folder, locale, includes=includes, sizes=sizes
+    )
+    if encoded is None:
+        return _json_response(_resource_not_found_404_envelope(), status=404)
+    return _json_response(_batch_envelope([encoded]))
 
 
 def _handle_library_playlist_folder_children(
