@@ -249,17 +249,24 @@ def test_data_library_playlists_callable() -> None:
             return None
         return LibraryPlaylist(
             name=f"LPL {ctx.id}",
-            can_delete=True,
             can_edit=True,
             is_public=False,
             has_catalog=False,
-            has_collaboration=False,
         )
 
     m.data.library_playlists = resolver
     status, body = _get(m, "https://api.music.apple.com/v1/me/library/playlists/p.pl-x")
     assert status == 200
     assert body["data"][0]["attributes"]["name"] == "LPL p.pl-x"
+    with pytest.raises(ValueError, match="require a mapping source"):
+        m.handle_request(
+            Request(
+                method="GET",
+                url="https://api.music.apple.com/v1/me/library/playlists",
+                headers={},
+                body=None,
+            )
+        )
 
 
 def _library_playlist_folders_callable_mock() -> MusicKitApiMock:

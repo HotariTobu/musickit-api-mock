@@ -448,6 +448,22 @@ def _build_url_map() -> Map:
     )
     m.add(
         Rule(
+            "/v1/me/library/playlists",
+            host=_HOST_API,
+            endpoint="library.playlists",
+            methods=["GET"],
+        )
+    )
+    m.add(
+        Rule(
+            "/v1/me/library/playlists/",
+            host=_HOST_API,
+            endpoint="library.playlists",
+            methods=["GET"],
+        )
+    )
+    m.add(
+        Rule(
             "/v1/me/library/playlists/<item_id>",
             host=_HOST_API,
             endpoint="library.playlist",

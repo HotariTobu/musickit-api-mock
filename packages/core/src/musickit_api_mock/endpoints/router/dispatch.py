@@ -13,6 +13,7 @@ from musickit_api_mock.endpoints import (
     hls,
     library,
     library_playlist_folders,
+    library_playlists,
     me,
     playback,
     preview,
@@ -119,8 +120,12 @@ def _dispatch(
             return library._handle_library_song(mock, req, kwargs["item_id"])
         case "library.album":
             return library._handle_library_album(mock, req, kwargs["item_id"])
+        case "library.playlists":
+            return library_playlists._handle_library_playlists(mock, req)
         case "library.playlist":
-            return library._handle_library_playlist(mock, req, kwargs["item_id"])
+            return library_playlists._handle_library_playlist(
+                mock, req, kwargs["item_id"]
+            )
         case "library.artist":
             return library._handle_library_artist(mock, req, kwargs["item_id"])
         case "library.music_video":

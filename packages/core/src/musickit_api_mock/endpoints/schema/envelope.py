@@ -68,6 +68,31 @@ def _missing_ids_param_400_envelope() -> dict[str, _JSONValue]:
     }
 
 
+def _limit_not_supplied_400_envelope() -> dict[str, _JSONValue]:
+    """400 envelope returned when ``?limit=`` accompanies an ``?ids=`` fetch."""
+    return {
+        "errors": [
+            {
+                "id": uuid.uuid4().hex.upper(),
+                "title": "Invalid Parameter",
+                "detail": "Limit may not be supplied on this request",
+                "status": "400",
+                "code": "40004",
+                "source": {"parameter": "limit"},
+            }
+        ]
+    }
+
+
+def _single_resource_include_400_envelope(relationship: str) -> dict[str, _JSONValue]:
+    """400 envelope for an include that Apple allows only when one resource is returned."""
+    return _parameter_invalid_envelope(
+        "include",
+        f"The '{relationship}' relationship may only be activated with a single"
+        " resource fetch",
+    )
+
+
 def _resource_not_found_404_envelope() -> dict[str, _JSONValue]:
     return {
         "errors": [

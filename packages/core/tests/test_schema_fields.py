@@ -211,13 +211,11 @@ def test_library_playlist_attributes_emit_configured_fields(
     )
     attrs = _attrs(body)
     assert attrs["name"] == library_playlist.name
-    assert attrs["canDelete"] == library_playlist.can_delete
     assert attrs["canEdit"] == library_playlist.can_edit
     assert attrs["isPublic"] == library_playlist.is_public
     assert attrs["dateAdded"] == library_playlist.date_added
     assert attrs["lastModifiedDate"] == library_playlist.last_modified_date
     assert attrs["hasCatalog"] == library_playlist.has_catalog
-    assert attrs["hasCollaboration"] == library_playlist.has_collaboration
 
 
 def test_library_music_video_attributes_emit_configured_fields(

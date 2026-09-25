@@ -43,12 +43,16 @@ class LibraryPlaylistFolder:
     Attributes:
         name: Display name of the folder.
         date_added: ISO-8601 timestamp the folder was added to the library.
+        last_modified_date: ISO-8601 timestamp of the last edit. Only the
+            library playlist paths emit it, since they also answer for a
+            folder id.
         children: Direct children in library order. ``None`` and an empty
             list both describe an empty folder.
     """
 
     name: str
     date_added: str | None = None
+    last_modified_date: str | None = None
     children: list[LibraryPlaylistFolderChild] | None = None
 
 

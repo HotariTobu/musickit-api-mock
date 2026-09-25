@@ -61,14 +61,18 @@ from musickit_api_mock.data.station import StationsSource, _StationResolver
 class DataSources:
     """Shared resource sources read by multiple endpoints.
 
-    Each field except ``library_playlist_root_children`` accepts an
-    id-keyed mapping. Callable lookups are also accepted where per-id
-    resolution is sufficient; ``genres``, ``record_labels``, and
+    Each field except ``library_playlist_root_children`` accepts an id-keyed
+    mapping. Callable lookups are also accepted where per-id resolution is
+    sufficient; ``genres``, ``record_labels``, and
     ``personal_recommendations`` require the mapping form because their
-    endpoints enumerate ids. ``library_playlist_folders`` accepts a
-    callable for per-id lookups, but listing all folders and looking up
-    the parent of anything other than a direct child of the root require
-    the mapping form. ``library_playlist_root_children`` takes a list.
+    endpoints enumerate ids. ``library_playlists`` accepts a callable for
+    per-id lookups, but listing all library playlists requires the mapping
+    form. The library playlist paths also answer for a folder id, so an id
+    missing from ``library_playlists`` is looked up in
+    ``library_playlist_folders``. ``library_playlist_folders`` accepts a
+    callable for per-id lookups, but listing all folders and looking up the
+    parent of anything other than a direct child of the root require the
+    mapping form. ``library_playlist_root_children`` takes a list.
     Fields default to ``None``; reading an unset source raises
     ``ValueError``.
 

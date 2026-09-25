@@ -72,14 +72,17 @@ def _play_params_library_album(album_id: str) -> dict[str, _JSONValue]:
     }
 
 
-def _play_params_library_playlist(playlist_id: str) -> dict[str, _JSONValue]:
-    return {
+def _play_params_library_playlist(
+    playlist_id: str, catalog_id: str | None
+) -> dict[str, _JSONValue]:
+    out: dict[str, _JSONValue] = {
         "id": playlist_id,
         "kind": "playlist",
         "isLibrary": True,
-        "reporting": False,
-        "reportingId": _stable_hash(playlist_id),
     }
+    if catalog_id is not None:
+        out["globalId"] = catalog_id
+    return out
 
 
 def _play_params_library_music_video(
