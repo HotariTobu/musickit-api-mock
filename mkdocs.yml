@@ -59,6 +59,32 @@ plugins:
             show_symbol_type_toc: true
             docstring_section_style: table
             heading_level: 2
+  - llmstxt:
+      full_output: llms-full.txt
+      markdown_description: |-
+        The library intercepts Apple Music API requests in-process, so a page running
+        MusicKit JS hits the mock instead of `api.music.apple.com`. A mock instance
+        exposes three configuration surfaces — `mock.data` (resource sources),
+        `mock.endpoints` (HTTP response overrides), and `mock.browser` (in-page shim
+        state) — and is bound to a browser session by a host adapter.
+      sections:
+        Overview:
+          - index.md: What the library is, what it intercepts, and a minimal end-to-end example.
+        Guide:
+          - guide/index.md: Map of the hand-written walkthroughs.
+          - guide/getting-started.md: Install, build a mock, bind it to a page, drive MusicKit JS.
+          - guide/surfaces.md: The three configuration surfaces and which one a given scenario belongs to.
+          - guide/playwright.md: Binding the mock to a Playwright page or browser context, sync and async.
+        Reference:
+          - reference/index.md: Map of the generated API reference pages.
+          - reference/mock.md: The mock class — the library entry point.
+          - reference/data.md: Resource dataclasses and the lookup context behind `mock.data`.
+          - reference/endpoints.md: Response variants and callback contexts behind `mock.endpoints`.
+          - reference/browser.md: In-page shim state behind `mock.browser`.
+          - reference/playwright.md: The Playwright adapter entry points.
+        Recipes:
+          - recipes/*.md
+          - recipes/index.md: Index of the task-oriented snippets.
 
 markdown_extensions:
   - admonition

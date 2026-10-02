@@ -14,7 +14,6 @@ from musickit_api_mock.endpoints.pagination import (
     _LIBRARY_ARTIST_ALBUMS,
     _LIBRARY_MUSIC_VIDEO_ALBUMS,
     _LIBRARY_MUSIC_VIDEO_ARTISTS,
-    _LIBRARY_PLAYLIST_TRACKS,
     _LIBRARY_SONG_ALBUMS,
     _LIBRARY_SONG_ARTISTS,
     _paginated_relationship_block,
@@ -36,13 +35,11 @@ from musickit_api_mock.endpoints.schema import (
     _library_album_resource,
     _library_artist_resource,
     _library_music_video_resource,
-    _library_playlist_resource,
     _library_ref,
     _library_song_resource,
     _library_songs_dead_path_400_envelope,
     _missing_ids_param_400_envelope,
     _music_video_resource,
-    _playlist_resource,
     _song_resource,
 )
 from musickit_api_mock.transport.response_builders import _json_response
@@ -51,7 +48,6 @@ if TYPE_CHECKING:
     from musickit_api_mock.data.library_album import LibraryAlbum
     from musickit_api_mock.data.library_artist import LibraryArtist
     from musickit_api_mock.data.library_music_video import LibraryMusicVideo
-    from musickit_api_mock.data.library_playlist import LibraryPlaylist
     from musickit_api_mock.data.library_song import LibrarySong
     from musickit_api_mock.endpoints.schema import (
         AppleRelationshipBlock,

@@ -252,13 +252,11 @@ def test_library_playlist_optional_fields_absent_when_none(
     bare_mock.data.library_playlists = {
         "p.pl1": LibraryPlaylist(
             name="N",
-            can_delete=True,
             can_edit=True,
             is_public=False,
             date_added="2024-01-01",
             last_modified_date="2024-01-02",
             has_catalog=False,
-            has_collaboration=False,
         )
     }
     body = _get(bare_mock, "https://api.music.apple.com/v1/me/library/playlists/p.pl1")

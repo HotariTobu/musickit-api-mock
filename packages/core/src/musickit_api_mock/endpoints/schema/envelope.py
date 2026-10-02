@@ -74,6 +74,31 @@ def _empty_errors_404_envelope() -> AppleResponse:
     return {"errors": []}
 
 
+def _limit_not_supplied_400_envelope() -> dict[str, _JSONValue]:
+    """400 envelope returned when ``?limit=`` accompanies an ``?ids=`` fetch."""
+    return {
+        "errors": [
+            {
+                "id": uuid.uuid4().hex.upper(),
+                "title": "Invalid Parameter",
+                "detail": "Limit may not be supplied on this request",
+                "status": "400",
+                "code": "40004",
+                "source": {"parameter": "limit"},
+            }
+        ]
+    }
+
+
+def _single_resource_include_400_envelope(relationship: str) -> dict[str, _JSONValue]:
+    """400 envelope for an include that Apple allows only when one resource is returned."""
+    return _parameter_invalid_envelope(
+        "include",
+        f"The '{relationship}' relationship may only be activated with a single"
+        " resource fetch",
+    )
+
+
 def _resource_not_found_404_envelope() -> AppleResponse:
     return {
         "errors": [
@@ -83,6 +108,20 @@ def _resource_not_found_404_envelope() -> AppleResponse:
                 "detail": "Resource with requested id was not found",
                 "status": "404",
                 "code": "40400",
+            }
+        ]
+    }
+
+
+def _no_related_resources_404_envelope(relationship: str) -> dict[str, _JSONValue]:
+    return {
+        "errors": [
+            {
+                "id": uuid.uuid4().hex.upper(),
+                "title": "No related resources",
+                "detail": f"No related resources found for {relationship}",
+                "status": "404",
+                "code": "40403",
             }
         ]
     }
