@@ -66,11 +66,6 @@ def _library_playlist_resource(
             ),
         }
     )
-    out: AppleResource = {
-        "id": library_playlist_id,
-        "type": "library-playlists",
-        "href": f"/v1/me/library/playlists/{library_playlist_id}",
-        "attributes": attrs,
     return _wrap(library_playlist_id, attrs, relationships)
 
 
