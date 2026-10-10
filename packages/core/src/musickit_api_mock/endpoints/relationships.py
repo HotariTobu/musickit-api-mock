@@ -91,6 +91,14 @@ if TYPE_CHECKING:
     from musickit_api_mock.transport.http import Request, Response
 
 
+# Default inline slice for a nested library song's own relationships. Standalone
+# endpoints take no ``?limit[<rel>]=``, so the sizes are always the defaults.
+_LIBRARY_SONG_SUB_REL_SIZES = {
+    "albums": _LIBRARY_SONG_ALBUMS.page_size,
+    "artists": _LIBRARY_SONG_ARTISTS.page_size,
+}
+
+
 def _build_artist_sub_rels(
     sf: str,
     artist_id: str,
@@ -587,6 +595,8 @@ def _handle_song_composers(
 def _handle_library_album_tracks(
     mock: MusicKitApiMock, req: Request, library_album_id: str
 ) -> Response:
+    from musickit_api_mock.endpoints.library import _build_library_song_rels
+
     locale, err = _check_and_resolve_locale(req, storefront_slug=None, mock=mock)
     if err is not None:
         return err
@@ -599,13 +609,24 @@ def _handle_library_album_tracks(
     if library_album is None:
         return _json_response({"data": []})
     resolver = mock._data_resolver
+    includes = _parse_csv_param(req.url, "include")
     items = _slice_resolved(
         library_album.track_ids,
         offset,
         limit,
         lambda sid: resolver.library_song.get(LookupContext(sid, locale)),
     )
-    data = [_library_song_resource(sid, ls) for sid, ls in items]
+    data: list[dict[str, _JSONValue]] = []
+    for sid, ls in items:
+        sub_rels = _build_library_song_rels(
+            mock,
+            sid,
+            ls,
+            locale=locale,
+            includes=includes,
+            sizes=_LIBRARY_SONG_SUB_REL_SIZES,
+        )
+        data.append(_library_song_resource(sid, ls, relationships=sub_rels or None))
     total = 0 if library_album.track_ids is None else len(library_album.track_ids)
     return _standalone_paginated_response(
         f"/v1/me/library/albums/{library_album_id}/tracks",
@@ -652,6 +673,8 @@ def _handle_library_album_artists(
 def _handle_library_playlist_tracks(
     mock: MusicKitApiMock, req: Request, library_playlist_id: str
 ) -> Response:
+    from musickit_api_mock.endpoints.library import _build_library_song_rels
+
     locale, err = _check_and_resolve_locale(req, storefront_slug=None, mock=mock)
     if err is not None:
         return err
@@ -664,13 +687,24 @@ def _handle_library_playlist_tracks(
     if library_playlist is None:
         return _json_response({"data": []})
     resolver = mock._data_resolver
+    includes = _parse_csv_param(req.url, "include")
     items = _slice_resolved(
         library_playlist.track_ids,
         offset,
         limit,
         lambda sid: resolver.library_song.get(LookupContext(sid, locale)),
     )
-    data = [_library_song_resource(sid, ls) for sid, ls in items]
+    data: list[dict[str, _JSONValue]] = []
+    for sid, ls in items:
+        sub_rels = _build_library_song_rels(
+            mock,
+            sid,
+            ls,
+            locale=locale,
+            includes=includes,
+            sizes=_LIBRARY_SONG_SUB_REL_SIZES,
+        )
+        data.append(_library_song_resource(sid, ls, relationships=sub_rels or None))
     total = 0 if library_playlist.track_ids is None else len(library_playlist.track_ids)
     return _standalone_paginated_response(
         f"/v1/me/library/playlists/{library_playlist_id}/tracks",
