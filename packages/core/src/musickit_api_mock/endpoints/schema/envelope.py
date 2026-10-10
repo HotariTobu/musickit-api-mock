@@ -74,7 +74,7 @@ def _empty_errors_404_envelope() -> AppleResponse:
     return {"errors": []}
 
 
-def _limit_not_supplied_400_envelope() -> dict[str, _JSONValue]:
+def _limit_not_supplied_400_envelope() -> AppleResponse:
     """400 envelope returned when ``?limit=`` accompanies an ``?ids=`` fetch."""
     return {
         "errors": [
@@ -90,7 +90,7 @@ def _limit_not_supplied_400_envelope() -> dict[str, _JSONValue]:
     }
 
 
-def _single_resource_include_400_envelope(relationship: str) -> dict[str, _JSONValue]:
+def _single_resource_include_400_envelope(relationship: str) -> AppleResponse:
     """400 envelope for an include that Apple allows only when one resource is returned."""
     return _parameter_invalid_envelope(
         "include",
@@ -113,7 +113,7 @@ def _resource_not_found_404_envelope() -> AppleResponse:
     }
 
 
-def _no_related_resources_404_envelope(relationship: str) -> dict[str, _JSONValue]:
+def _no_related_resources_404_envelope(relationship: str) -> AppleResponse:
     return {
         "errors": [
             {
