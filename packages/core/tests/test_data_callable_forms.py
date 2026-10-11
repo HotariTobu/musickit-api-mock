@@ -11,7 +11,6 @@ fills in the remaining resources so every public id-keyed
 from __future__ import annotations
 
 import json
-from typing import TYPE_CHECKING
 
 import pytest
 from musickit_api_mock import (
@@ -40,11 +39,10 @@ from musickit_api_mock import (
     UploadedLibrarySong,
 )
 
-if TYPE_CHECKING:
-    from musickit_api_mock.endpoints.schema import AppleResponse
+_ARTWORK = {"url": "x", "width": 1, "height": 1}
 
 
-def _get(mock: MusicKitApiMock, url: str) -> tuple[int, AppleResponse]:
+def _get(mock: MusicKitApiMock, url: str) -> tuple[int, object]:
     resp = mock.handle_request(Request(method="GET", url=url, headers={}, body=None))
     assert resp is not None
     return resp.status, json.loads(resp.body)
@@ -95,7 +93,28 @@ def test_data_playlists_callable() -> None:
         m, "https://api.music.apple.com/v1/catalog/us/playlists?ids=pl-x"
     )
     assert status == 200
-    assert body["data"][0]["attributes"]["name"] == "PL pl-x"
+    assert body == {
+        "data": [
+            {
+                "id": "pl-x",
+                "type": "playlists",
+                "href": "/v1/catalog/us/playlists/pl-x",
+                "attributes": {
+                    "name": "PL pl-x",
+                    "artwork": _ARTWORK,
+                    "audioTraits": [],
+                    "curatorName": "C",
+                    "hasCollaboration": False,
+                    "isChart": False,
+                    "lastModifiedDate": "2024-01-01",
+                    "playParams": {"id": "pl-x", "kind": "playlist"},
+                    "playlistType": "user-shared",
+                    "supportsSing": False,
+                    "url": "x",
+                },
+            }
+        ]
+    }
 
 
 def test_data_music_videos_callable() -> None:
@@ -124,7 +143,30 @@ def test_data_music_videos_callable() -> None:
         m, "https://api.music.apple.com/v1/catalog/us/music-videos?ids=mv-x"
     )
     assert status == 200
-    assert body["data"][0]["attributes"]["name"] == "MV mv-x"
+    assert body == {
+        "data": [
+            {
+                "id": "mv-x",
+                "type": "music-videos",
+                "href": "/v1/catalog/us/music-videos/mv-x",
+                "attributes": {
+                    "name": "MV mv-x",
+                    "artistName": "A",
+                    "artwork": _ARTWORK,
+                    "videoTraits": [],
+                    "durationInMillis": 1,
+                    "genreNames": [],
+                    "has4K": False,
+                    "hasHDR": False,
+                    "isrc": "X",
+                    "playParams": {"id": "mv-x", "kind": "musicVideo"},
+                    "previews": [{"url": "x"}],
+                    "releaseDate": "2020-01-01",
+                    "url": "x",
+                },
+            }
+        ]
+    }
 
 
 def test_data_stations_callable() -> None:
@@ -151,7 +193,33 @@ def test_data_stations_callable() -> None:
         m, "https://api.music.apple.com/v1/catalog/us/stations?ids=ra.x"
     )
     assert status == 200
-    assert body["data"][0]["attributes"]["name"] == "S ra.x"
+    assert body == {
+        "data": [
+            {
+                "id": "ra.x",
+                "type": "stations",
+                "href": "/v1/catalog/us/stations/ra.x",
+                "attributes": {
+                    "name": "S ra.x",
+                    "artwork": _ARTWORK,
+                    "isLive": True,
+                    "kind": "radio",
+                    "mediaKind": "audio",
+                    "playParams": {
+                        "id": "ra.x",
+                        "kind": "radioStation",
+                        "hasDrm": True,
+                        "mediaType": "audio",
+                        "stationHash": "b3d67346c24e8556",
+                    },
+                    "radioUrl": "x",
+                    "requiresSubscription": True,
+                    "supportedDrms": ["fairplay", "playready", "widevine"],
+                    "url": "x",
+                },
+            }
+        ]
+    }
 
 
 def test_data_curators_callable() -> None:
@@ -191,10 +259,47 @@ def test_data_curators_callable() -> None:
         "https://api.music.apple.com/v1/catalog/us/playlists?ids=pl1&include=curator",
     )
     assert status == 200
-    rels = body["data"][0]["relationships"]
-    curator_data = rels["curator"]["data"][0]
-    assert curator_data["id"] == "cu-x"
-    assert curator_data["attributes"]["name"] == "Curator cu-x"
+    assert body == {
+        "data": [
+            {
+                "id": "pl1",
+                "type": "playlists",
+                "href": "/v1/catalog/us/playlists/pl1",
+                "attributes": {
+                    "name": "PL",
+                    "artwork": _ARTWORK,
+                    "audioTraits": [],
+                    "curatorName": "C",
+                    "hasCollaboration": False,
+                    "isChart": False,
+                    "lastModifiedDate": "2024-01-01",
+                    "playParams": {"id": "pl1", "kind": "playlist"},
+                    "playlistType": "editorial",
+                    "supportsSing": False,
+                    "url": "x",
+                },
+                "relationships": {
+                    "curator": {
+                        "href": "/v1/catalog/us/playlists/pl1/curator",
+                        "data": [
+                            {
+                                "id": "cu-x",
+                                "type": "apple-curators",
+                                "href": "/v1/catalog/us/apple-curators/cu-x",
+                                "attributes": {
+                                    "name": "Curator cu-x",
+                                    "artwork": _ARTWORK,
+                                    "kind": "Genre",
+                                    "shortName": "X",
+                                    "url": "x",
+                                },
+                            }
+                        ],
+                    },
+                },
+            }
+        ]
+    }
 
 
 def test_data_library_songs_callable() -> None:
@@ -218,7 +323,31 @@ def test_data_library_songs_callable() -> None:
     m.data.library_songs = resolver
     status, body = _get(m, "https://api.music.apple.com/v1/me/library/songs/i.s-x")
     assert status == 200
-    assert body["data"][0]["attributes"]["name"] == "LS i.s-x"
+    assert body == {
+        "data": [
+            {
+                "id": "i.s-x",
+                "type": "library-songs",
+                "href": "/v1/me/library/songs/i.s-x",
+                "attributes": {
+                    "name": "LS i.s-x",
+                    "artistName": "A",
+                    "artwork": _ARTWORK,
+                    "discNumber": 0,
+                    "durationInMillis": 1,
+                    "genreNames": [],
+                    "hasLyrics": False,
+                    "playParams": {
+                        "id": "i.s-x",
+                        "kind": "song",
+                        "isLibrary": True,
+                        "reporting": False,
+                    },
+                    "trackNumber": 0,
+                },
+            }
+        ]
+    }
 
 
 def test_data_library_albums_callable() -> None:
@@ -238,7 +367,29 @@ def test_data_library_albums_callable() -> None:
     m.data.library_albums = resolver
     status, body = _get(m, "https://api.music.apple.com/v1/me/library/albums/l.a-x")
     assert status == 200
-    assert body["data"][0]["attributes"]["name"] == "LA l.a-x"
+    assert body == {
+        "data": [
+            {
+                "id": "l.a-x",
+                "type": "library-albums",
+                "href": "/v1/me/library/albums/l.a-x",
+                "attributes": {
+                    "name": "LA l.a-x",
+                    "artistName": "A",
+                    "artwork": _ARTWORK,
+                    "genreNames": [],
+                    "playParams": {
+                        "id": "l.a-x",
+                        "kind": "album",
+                        "isLibrary": True,
+                        "reporting": False,
+                        "reportingId": "210be80504e8b265",
+                    },
+                    "trackCount": 0,
+                },
+            }
+        ]
+    }
 
 
 def test_data_library_playlists_callable() -> None:
@@ -257,7 +408,26 @@ def test_data_library_playlists_callable() -> None:
     m.data.library_playlists = resolver
     status, body = _get(m, "https://api.music.apple.com/v1/me/library/playlists/p.pl-x")
     assert status == 200
-    assert body["data"][0]["attributes"]["name"] == "LPL p.pl-x"
+    assert body == {
+        "data": [
+            {
+                "id": "p.pl-x",
+                "type": "library-playlists",
+                "href": "/v1/me/library/playlists/p.pl-x",
+                "attributes": {
+                    "name": "LPL p.pl-x",
+                    "canEdit": True,
+                    "isPublic": False,
+                    "hasCatalog": False,
+                    "playParams": {
+                        "id": "p.pl-x",
+                        "kind": "playlist",
+                        "isLibrary": True,
+                    },
+                },
+            }
+        ]
+    }
     with pytest.raises(ValueError, match="require a mapping source"):
         m.handle_request(
             Request(
@@ -362,7 +532,16 @@ def test_data_library_artists_callable() -> None:
     m.data.library_artists = resolver
     status, body = _get(m, "https://api.music.apple.com/v1/me/library/artists/r.ar-x")
     assert status == 200
-    assert body["data"][0]["attributes"]["name"] == "LAR r.ar-x"
+    assert body == {
+        "data": [
+            {
+                "id": "r.ar-x",
+                "type": "library-artists",
+                "href": "/v1/me/library/artists/r.ar-x",
+                "attributes": {"name": "LAR r.ar-x"},
+            }
+        ]
+    }
 
 
 def test_data_library_music_videos_callable() -> None:
@@ -384,4 +563,26 @@ def test_data_library_music_videos_callable() -> None:
         m, "https://api.music.apple.com/v1/me/library/music-videos/i.mv-x"
     )
     assert status == 200
-    assert body["data"][0]["attributes"]["name"] == "LMV i.mv-x"
+    assert body == {
+        "data": [
+            {
+                "id": "i.mv-x",
+                "type": "library-music-videos",
+                "href": "/v1/me/library/music-videos/i.mv-x",
+                "attributes": {
+                    "name": "LMV i.mv-x",
+                    "artistName": "A",
+                    "artwork": _ARTWORK,
+                    "durationInMillis": 1,
+                    "genreNames": [],
+                    "playParams": {
+                        "id": "i.mv-x",
+                        "kind": "musicVideo",
+                        "isLibrary": True,
+                        "reporting": False,
+                        "reportingId": "1483e6f1a61db183",
+                    },
+                },
+            }
+        ]
+    }

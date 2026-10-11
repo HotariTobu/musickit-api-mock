@@ -12,8 +12,6 @@ that preserve semantics don't break the assertions.
 
 from __future__ import annotations
 
-from typing import cast
-
 from musickit_api_mock import CatalogSong, MusicKitApiMock, Request
 
 
@@ -41,22 +39,20 @@ def test_manifest_emits_required_directives(mock: MusicKitApiMock) -> None:
 
 
 def test_manifest_target_duration_matches_layout(
-    mock: MusicKitApiMock,
+    mock: MusicKitApiMock, song: CatalogSong
 ) -> None:
     """Target duration in manifest equals ``CatalogSong.hls_layout.target_duration_sec``."""
     body = _fetch_manifest(mock, "1")
-    songs = cast("dict[str, CatalogSong]", mock.data.songs)
-    expected = songs["1"].hls_layout.target_duration_sec
+    expected = song.hls_layout.target_duration_sec
     assert f"#EXT-X-TARGETDURATION:{expected}" in body
 
 
 def test_manifest_emits_one_chunk_block_per_layout_chunk(
-    mock: MusicKitApiMock,
+    mock: MusicKitApiMock, song: CatalogSong
 ) -> None:
     """Each ``HlsChunk`` produces one ``EXTINF`` + one ``EXT-X-BYTERANGE``."""
     body = _fetch_manifest(mock, "1")
-    songs = cast("dict[str, CatalogSong]", mock.data.songs)
-    expected_chunks = len(songs["1"].hls_layout.chunks)
+    expected_chunks = len(song.hls_layout.chunks)
     assert body.count("#EXTINF:") == expected_chunks
     assert body.count("#EXT-X-BYTERANGE:") == expected_chunks
 
