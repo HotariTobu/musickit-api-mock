@@ -247,7 +247,9 @@ def test_q09_library_album_no_include_artists(mock: MusicKitApiMock) -> None:
     assert body == _LIBRARY_ALBUM_BODY
 
 
-def test_library_playlist_extends_has_collaboration(mock: MusicKitApiMock) -> None:
+def test_library_playlist_ignores_extend_has_collaboration(
+    mock: MusicKitApiMock,
+) -> None:
     status, body = _get(
         mock,
         "https://api.music.apple.com/v1/me/library/playlists/p.pl1?include=tracks&extend=hasCollaboration",
@@ -256,7 +258,9 @@ def test_library_playlist_extends_has_collaboration(mock: MusicKitApiMock) -> No
     assert body == _LIBRARY_PLAYLIST_BODY
 
 
-def test_library_playlist_has_collaboration_default(mock: MusicKitApiMock) -> None:
+def test_library_playlist_omits_has_collaboration_by_default(
+    mock: MusicKitApiMock,
+) -> None:
     status, body = _get(
         mock, "https://api.music.apple.com/v1/me/library/playlists/p.pl1?include=tracks"
     )

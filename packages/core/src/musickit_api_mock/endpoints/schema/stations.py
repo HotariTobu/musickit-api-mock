@@ -19,6 +19,12 @@ if TYPE_CHECKING:
     from musickit_api_mock.endpoints.responses.continuous_stations import (
         ContinuousStation,
     )
+    from musickit_api_mock.endpoints.schema.shapes import (
+        AppleRelationshipBlock,
+        AppleResource,
+        AppleResponse,
+        AppleResults,
+    )
     from musickit_api_mock.json_value import _JSONValue
 
 
@@ -27,8 +33,8 @@ def _station_resource(
     station_id: str,
     station: Station,
     *,
-    relationships: dict[str, _JSONValue] | None = None,
-) -> dict[str, _JSONValue]:
+    relationships: dict[str, AppleRelationshipBlock] | None = None,
+) -> AppleResource:
     attrs: dict[str, _JSONValue] = _strip_none(
         {
             "artwork": _artwork(station.artwork),
@@ -52,7 +58,7 @@ def _station_resource(
             "url": station.url,
         }
     )
-    out: dict[str, _JSONValue] = {
+    out: AppleResource = {
         "id": station_id,
         "type": "stations",
         "href": f"/v1/catalog/{sf}/stations/{station_id}",
@@ -68,9 +74,9 @@ def _continuous_station_envelope(
     sf: str,
     *,
     tracks: list[tuple[str, CatalogSong]] | None,
-) -> dict[str, _JSONValue]:
+) -> AppleResponse:
     station_id = _stable_hash("continuous", cs.station.name)
-    station_dict = {
+    station: AppleResource = {
         "id": station_id,
         "type": "stations",
         "href": f"/v1/catalog/{sf}/stations/{station_id}",
@@ -88,7 +94,7 @@ def _continuous_station_envelope(
             }
         ),
     }
-    results: dict[str, _JSONValue] = {"station": station_dict}
+    results: AppleResults = {"station": station}
     if tracks is not None:
         results["tracks"] = [
             _song_resource(sf, tid, song, include_play_assets=True)

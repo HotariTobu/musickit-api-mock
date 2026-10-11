@@ -649,11 +649,6 @@ def test_library_playlist_inline_include_catalog(mock: MusicKitApiMock) -> None:
                 **LIBRARY_PLAYLIST_REF,
                 "attributes": LIBRARY_PLAYLIST_ATTRIBUTES,
                 "relationships": {
-                    "tracks": {
-                        "href": "/v1/me/library/playlists/p.pl1/tracks",
-                        "data": [LIBRARY_SONG],
-                        "meta": {"total": 1},
-                    },
                     "catalog": {
                         "href": "/v1/me/library/playlists/p.pl1/catalog",
                         "data": [PLAYLIST],

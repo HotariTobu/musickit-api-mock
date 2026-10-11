@@ -26,7 +26,11 @@ from musickit_api_mock.transport.response_builders import _json_response
 if TYPE_CHECKING:
     from collections.abc import Callable
 
-    from musickit_api_mock.json_value import _JSONValue
+    from musickit_api_mock.endpoints.schema import (
+        AppleRelationshipBlock,
+        AppleResource,
+        AppleResponse,
+    )
     from musickit_api_mock.transport.http import Request, Response
 
 
@@ -56,11 +60,16 @@ _CATALOG_SONG_COMPOSERS = _PaginationConfig(page_size=10, max_limit=10)
 _LIBRARY_ALBUM_TRACKS = _PaginationConfig(page_size=300, max_limit=300)
 _LIBRARY_ALBUM_ARTISTS = _PaginationConfig(page_size=10, max_limit=10)
 _LIBRARY_PLAYLIST_TRACKS = _PaginationConfig(page_size=100, max_limit=100)
+_LIBRARY_PLAYLISTS = _PaginationConfig(page_size=25, max_limit=100)
 _LIBRARY_MUSIC_VIDEO_ALBUMS = _PaginationConfig(page_size=10, max_limit=10)
 _LIBRARY_MUSIC_VIDEO_ARTISTS = _PaginationConfig(page_size=10, max_limit=10)
 _LIBRARY_SONG_ALBUMS = _PaginationConfig(page_size=10, max_limit=10)
 _LIBRARY_SONG_ARTISTS = _PaginationConfig(page_size=10, max_limit=10)
 _LIBRARY_ARTIST_ALBUMS = _PaginationConfig(page_size=25, max_limit=100)
+_LIBRARY_PLAYLIST_FOLDERS = _PaginationConfig(page_size=25, max_limit=100)
+# Default page size unconfirmed against Apple; mirrors the folder list endpoint.
+_LIBRARY_PLAYLIST_FOLDER_CHILDREN = _PaginationConfig(page_size=25, max_limit=100)
+_LIBRARY_PLAYLIST_FOLDER_PARENT = _PaginationConfig(page_size=1, max_limit=1)
 
 _CATALOG_SONG_GENRES = _PaginationConfig(page_size=10, max_limit=10)
 _CATALOG_SONG_MUSIC_VIDEOS = _PaginationConfig(page_size=10, max_limit=10)
@@ -87,8 +96,8 @@ def _shallow_relationship_block(
     ids: list[str] | None,
     page_size: int,
     *,
-    ref: Callable[[str], dict[str, _JSONValue]],
-) -> dict[str, _JSONValue] | None:
+    ref: Callable[[str], AppleResource],
+) -> AppleRelationshipBlock | None:
     """Build a relationship block emitting shallow ``{id, type, href}`` refs only.
 
     Differs from the paginated relationship-block builder by skipping the
@@ -99,7 +108,7 @@ def _shallow_relationship_block(
     if ids is None:
         return None
     sliced = ids[:page_size]
-    out: dict[str, _JSONValue] = {
+    out: AppleRelationshipBlock = {
         "href": href,
         "data": [ref(item_id) for item_id in sliced],
     }
@@ -128,6 +137,64 @@ def _parse_standalone_pagination(
             _json_response(_limit_exceeded_envelope(cfg.max_limit, limit), status=400),
         )
     return limit, offset, None
+
+
+def _parse_validated_standalone_pagination(
+    req: Request, cfg: _PaginationConfig
+) -> tuple[int, int, Response | None]:
+    """Parse ``?limit=N&offset=N``, rejecting a non-integer or sub-1 limit.
+
+    Same contract as the unvalidated parser, plus Apple's 400 for
+    ``?limit=abc`` and ``?limit=0`` with ``source.parameter = "limit"``.
+    """
+    q = _parse_query(req.url)
+    raw_limit = q.get("limit", [None])[-1]
+    if raw_limit is not None:
+        try:
+            value = int(raw_limit)
+        except ValueError:
+            return (
+                0,
+                0,
+                _json_response(
+                    _parameter_invalid_envelope("limit", "Value must be an integer"),
+                    status=400,
+                ),
+            )
+        if value < 1:
+            return (
+                0,
+                0,
+                _json_response(
+                    _parameter_invalid_envelope(
+                        "limit", "Value must be an integer greater than or equal to 1"
+                    ),
+                    status=400,
+                ),
+            )
+    return _parse_standalone_pagination(req, cfg)
+
+
+def _validate_offset(req: Request) -> Response | None:
+    """Return Apple's 400 for a non-integer or negative ``?offset=``, else ``None``."""
+    raw = _parse_query(req.url).get("offset", [None])[-1]
+    if raw is None:
+        return None
+    try:
+        value = int(raw)
+    except ValueError:
+        return _json_response(
+            _parameter_invalid_envelope("offset", "Value must be an integer"),
+            status=400,
+        )
+    if value < 0:
+        return _json_response(
+            _parameter_invalid_envelope(
+                "offset", "Value must be an integer greater than or equal to 0"
+            ),
+            status=400,
+        )
+    return None
 
 
 def _parse_inline_limits(
@@ -177,8 +244,8 @@ def _parse_inline_limits(
 
 def _singleton_relationship_block(
     href: str,
-    data: list[dict[str, _JSONValue]],
-) -> dict[str, _JSONValue]:
+    data: list[AppleResource],
+) -> AppleRelationshipBlock:
     """Build a non-paginated relationship block with a single ``data`` slot.
 
     Used for relationships that don't paginate (e.g. ``playlist.curator``,
@@ -194,11 +261,11 @@ def _paginated_relationship_block[T](
     page_size: int,
     *,
     resolver: Callable[[str], T | None],
-    encode: Callable[[str, T], dict[str, _JSONValue]],
-    fallback_ref: Callable[[str], dict[str, _JSONValue]],
+    encode: Callable[[str, T], AppleResource],
+    fallback_ref: Callable[[str], AppleResource],
     include_full: bool = False,
     include_meta_total: bool = False,
-) -> dict[str, _JSONValue] | None:
+) -> AppleRelationshipBlock | None:
     """Build an inline relationship block.
 
     Emits ``href`` / ``data`` / optional ``next`` / ``meta.total``. Slice
@@ -210,7 +277,7 @@ def _paginated_relationship_block[T](
     if ids is None:
         return None
     sliced = ids[:page_size]
-    data: list[dict[str, _JSONValue]] = []
+    data: list[AppleResource] = []
     for item_id in sliced:
         if include_full:
             item = resolver(item_id)
@@ -218,7 +285,7 @@ def _paginated_relationship_block[T](
                 data.append(encode(item_id, item))
                 continue
         data.append(fallback_ref(item_id))
-    out: dict[str, _JSONValue] = {"href": href, "data": data}
+    out: AppleRelationshipBlock = {"href": href, "data": data}
     if include_meta_total:
         out["meta"] = {"total": len(ids)}
     if len(ids) > page_size:
@@ -228,22 +295,27 @@ def _paginated_relationship_block[T](
 
 def _standalone_paginated_response(
     href: str,
-    items_data: list[dict[str, _JSONValue]],
+    items_data: list[AppleResource],
     total: int,
     *,
     offset: int,
     limit: int,
     include_meta_total: bool = False,
+    language_tag: str | None = None,
 ) -> Response:
     """Wrap a standalone relationship-endpoint response.
 
-    Emits ``data`` plus optional ``next`` / ``meta.total``.
+    Emits ``data`` plus optional ``next`` / ``meta.total``. ``language_tag``
+    is carried into ``next`` as ``?l=`` ahead of the offset.
     """
-    body: dict[str, _JSONValue] = {"data": items_data}
+    body: AppleResponse = {"data": items_data}
     if include_meta_total:
         body["meta"] = {"total": total}
     if offset + limit < total:
-        body["next"] = f"{href}?offset={offset + limit}"
+        query = f"offset={offset + limit}"
+        if language_tag is not None:
+            query = f"l={language_tag}&{query}"
+        body["next"] = f"{href}?{query}"
     return _json_response(body)
 
 

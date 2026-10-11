@@ -8,7 +8,10 @@ from musickit_api_mock.endpoints.schema.builders import _artwork, _strip_none
 
 if TYPE_CHECKING:
     from musickit_api_mock.data.curator import Curator
-    from musickit_api_mock.json_value import _JSONValue
+    from musickit_api_mock.endpoints.schema.shapes import (
+        AppleRelationshipBlock,
+        AppleResource,
+    )
 
 
 def _curator_resource(
@@ -16,14 +19,14 @@ def _curator_resource(
     curator_id: str,
     curator: Curator,
     *,
-    relationships: dict[str, _JSONValue] | None = None,
-) -> dict[str, _JSONValue]:
+    relationships: dict[str, AppleRelationshipBlock] | None = None,
+) -> AppleResource:
     """Branch the emitted ``type`` and ``href`` prefix on the curator kind.
 
     ``apple-curators`` is Apple-editorial, ``curators`` is third-party;
     the curator's kind selects both the emitted ``type`` and the URL segment.
     """
-    out: dict[str, _JSONValue] = {
+    out: AppleResource = {
         "id": curator_id,
         "type": curator.type,
         "href": f"/v1/catalog/{sf}/{curator.type}/{curator_id}",

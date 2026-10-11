@@ -4,15 +4,19 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from musickit_api_mock.endpoints.schema.builders import _strip_none
-
 if TYPE_CHECKING:
-    from musickit_api_mock.json_value import _JSONValue
+    from musickit_api_mock.endpoints.schema.shapes import (
+        LogoutBody,
+        RenewTokenBody,
+    )
 
 
-def _webplayer_logout_success_body() -> dict[str, _JSONValue]:
+def _webplayer_logout_success_body() -> LogoutBody:
     return {"status": 0}
 
 
-def _renew_music_token_success_body(music_token: str | None) -> dict[str, _JSONValue]:
-    return _strip_none({"music-token": music_token})
+def _renew_music_token_success_body(music_token: str | None) -> RenewTokenBody:
+    out: RenewTokenBody = {}
+    if music_token is not None:
+        out["music-token"] = music_token
+    return out

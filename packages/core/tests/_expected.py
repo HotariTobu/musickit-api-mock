@@ -329,19 +329,16 @@ LIBRARY_PLAYLIST_REF = {
 
 LIBRARY_PLAYLIST_ATTRIBUTES = {
     "name": "Lib Playlist",
-    "canDelete": True,
     "canEdit": True,
     "dateAdded": "2024-01-01",
     "hasCatalog": False,
-    "hasCollaboration": False,
     "isPublic": False,
     "lastModifiedDate": "2024-01-02",
     "playParams": {
         "id": "p.pl1",
         "kind": "playlist",
         "isLibrary": True,
-        "reporting": False,
-        "reportingId": "9e55d62727073344",
+        "globalId": "pl1",
     },
 }
 
