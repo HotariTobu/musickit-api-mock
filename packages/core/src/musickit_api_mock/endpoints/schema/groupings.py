@@ -8,12 +8,10 @@ from musickit_api_mock.endpoints.schema.builders import _artwork, _strip_none
 
 if TYPE_CHECKING:
     from musickit_api_mock.data.grouping import Grouping
-    from musickit_api_mock.json_value import _JSONValue
+    from musickit_api_mock.endpoints.schema.shapes import AppleResource
 
 
-def _grouping_resource(
-    sf: str, grouping_id: str, grouping: Grouping
-) -> dict[str, _JSONValue]:
+def _grouping_resource(sf: str, grouping_id: str, grouping: Grouping) -> AppleResource:
     return {
         "id": grouping_id,
         "type": "groupings",

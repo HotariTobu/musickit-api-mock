@@ -49,7 +49,7 @@ from musickit_api_mock.transport.response_builders import _json_response
 
 if TYPE_CHECKING:
     from musickit_api_mock.data.library_playlist_folder import LibraryPlaylistFolder
-    from musickit_api_mock.json_value import _JSONValue
+    from musickit_api_mock.endpoints.schema import AppleRelationshipBlock, AppleResource
     from musickit_api_mock.mock import MusicKitApiMock
     from musickit_api_mock.transport.http import Request, Response
 
@@ -76,10 +76,10 @@ def _encode(
     locale: str | None,
     includes: set[str],
     sizes: dict[str, int],
-) -> dict[str, _JSONValue]:
+) -> AppleResource:
     resolver = mock._data_resolver
     href = f"{_HREF}/{item_id}"
-    rels: dict[str, _JSONValue] = {}
+    rels: dict[str, AppleRelationshipBlock] = {}
     if "tracks" in includes:
         track_ids = item.track_ids if isinstance(item, LibraryPlaylist) else None
         tracks_block = _paginated_relationship_block(
@@ -95,7 +95,7 @@ def _encode(
         if tracks_block is not None:
             rels["tracks"] = tracks_block
     if "catalog" in includes:
-        catalog_data: list[dict[str, _JSONValue]] = []
+        catalog_data: list[AppleResource] = []
         if isinstance(item, LibraryPlaylist) and item.catalog_id is not None:
             catalog_playlist = resolver.playlist.get(
                 LookupContext(item.catalog_id, locale)

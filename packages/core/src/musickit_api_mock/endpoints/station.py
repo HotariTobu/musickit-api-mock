@@ -33,7 +33,9 @@ from musickit_api_mock.transport.response_builders import _json_response
 
 if TYPE_CHECKING:
     from musickit_api_mock.data.song import CatalogSong
-    from musickit_api_mock.json_value import _JSONValue
+    from musickit_api_mock.endpoints.schema import (
+        AppleResource,
+    )
     from musickit_api_mock.mock import MusicKitApiMock
     from musickit_api_mock.transport.http import Request, Response
 
@@ -136,7 +138,7 @@ def _handle_next_tracks(
     )
     song_ids = song_ids[:limit]
     sf = _account_storefront(mock)
-    data: list[dict[str, _JSONValue]] = []
+    data: list[AppleResource] = []
     for sid in song_ids:
         song = mock._data_resolver.song.get(LookupContext(sid, None))
         if song is None:

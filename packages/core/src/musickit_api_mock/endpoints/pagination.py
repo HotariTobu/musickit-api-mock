@@ -26,7 +26,11 @@ from musickit_api_mock.transport.response_builders import _json_response
 if TYPE_CHECKING:
     from collections.abc import Callable
 
-    from musickit_api_mock.json_value import _JSONValue
+    from musickit_api_mock.endpoints.schema import (
+        AppleRelationshipBlock,
+        AppleResource,
+        AppleResponse,
+    )
     from musickit_api_mock.transport.http import Request, Response
 
 
@@ -92,8 +96,8 @@ def _shallow_relationship_block(
     ids: list[str] | None,
     page_size: int,
     *,
-    ref: Callable[[str], dict[str, _JSONValue]],
-) -> dict[str, _JSONValue] | None:
+    ref: Callable[[str], AppleResource],
+) -> AppleRelationshipBlock | None:
     """Build a relationship block emitting shallow ``{id, type, href}`` refs only.
 
     Differs from the paginated relationship-block builder by skipping the
@@ -104,7 +108,7 @@ def _shallow_relationship_block(
     if ids is None:
         return None
     sliced = ids[:page_size]
-    out: dict[str, _JSONValue] = {
+    out: AppleRelationshipBlock = {
         "href": href,
         "data": [ref(item_id) for item_id in sliced],
     }
@@ -240,8 +244,8 @@ def _parse_inline_limits(
 
 def _singleton_relationship_block(
     href: str,
-    data: list[dict[str, _JSONValue]],
-) -> dict[str, _JSONValue]:
+    data: list[AppleResource],
+) -> AppleRelationshipBlock:
     """Build a non-paginated relationship block with a single ``data`` slot.
 
     Used for relationships that don't paginate (e.g. ``playlist.curator``,
@@ -257,11 +261,11 @@ def _paginated_relationship_block[T](
     page_size: int,
     *,
     resolver: Callable[[str], T | None],
-    encode: Callable[[str, T], dict[str, _JSONValue]],
-    fallback_ref: Callable[[str], dict[str, _JSONValue]],
+    encode: Callable[[str, T], AppleResource],
+    fallback_ref: Callable[[str], AppleResource],
     include_full: bool = False,
     include_meta_total: bool = False,
-) -> dict[str, _JSONValue] | None:
+) -> AppleRelationshipBlock | None:
     """Build an inline relationship block.
 
     Emits ``href`` / ``data`` / optional ``next`` / ``meta.total``. Slice
@@ -273,7 +277,7 @@ def _paginated_relationship_block[T](
     if ids is None:
         return None
     sliced = ids[:page_size]
-    data: list[dict[str, _JSONValue]] = []
+    data: list[AppleResource] = []
     for item_id in sliced:
         if include_full:
             item = resolver(item_id)
@@ -281,7 +285,7 @@ def _paginated_relationship_block[T](
                 data.append(encode(item_id, item))
                 continue
         data.append(fallback_ref(item_id))
-    out: dict[str, _JSONValue] = {"href": href, "data": data}
+    out: AppleRelationshipBlock = {"href": href, "data": data}
     if include_meta_total:
         out["meta"] = {"total": len(ids)}
     if len(ids) > page_size:
@@ -291,7 +295,7 @@ def _paginated_relationship_block[T](
 
 def _standalone_paginated_response(
     href: str,
-    items_data: list[dict[str, _JSONValue]],
+    items_data: list[AppleResource],
     total: int,
     *,
     offset: int,
@@ -304,7 +308,7 @@ def _standalone_paginated_response(
     Emits ``data`` plus optional ``next`` / ``meta.total``. ``language_tag``
     is carried into ``next`` as ``?l=`` ahead of the offset.
     """
-    body: dict[str, _JSONValue] = {"data": items_data}
+    body: AppleResponse = {"data": items_data}
     if include_meta_total:
         body["meta"] = {"total": total}
     if offset + limit < total:

@@ -36,9 +36,12 @@ from musickit_api_mock import (
 )
 
 if TYPE_CHECKING:
+    from musickit_api_mock.endpoints.schema import (
+        AppleArtwork,
+        ApplePreview,
+        AppleResponse,
+    )
     from musickit_api_mock.json_value import _JSONValue
-
-    from tests._apple_response import AppleArtwork, ApplePreview, AppleResponse
 
 
 def _get(mock: MusicKitApiMock, url: str) -> AppleResponse:

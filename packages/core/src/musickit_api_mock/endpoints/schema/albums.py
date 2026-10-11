@@ -13,6 +13,10 @@ from musickit_api_mock.endpoints.schema.play_params import _play_params_album
 
 if TYPE_CHECKING:
     from musickit_api_mock.data.album import CatalogAlbum
+    from musickit_api_mock.endpoints.schema.shapes import (
+        AppleRelationshipBlock,
+        AppleResource,
+    )
     from musickit_api_mock.json_value import _JSONValue
 
 
@@ -21,9 +25,9 @@ def _album_resource(
     album_id: str,
     album: CatalogAlbum,
     *,
-    relationships: dict[str, _JSONValue] | None = None,
+    relationships: dict[str, AppleRelationshipBlock] | None = None,
     extend_editorial_artwork: bool = False,
-) -> dict[str, _JSONValue]:
+) -> AppleResource:
     """Emit ``editorialArtwork`` on ``?extend=editorialArtwork``.
 
     Apple emits this attribute only on demand; pass
@@ -60,7 +64,7 @@ def _album_resource(
         attrs["editorialArtwork"] = {
             key: _artwork(art) for key, art in album.editorial_artwork.items()
         }
-    out: dict[str, _JSONValue] = {
+    out: AppleResource = {
         "id": album_id,
         "type": "albums",
         "href": f"/v1/catalog/{sf}/albums/{album_id}",

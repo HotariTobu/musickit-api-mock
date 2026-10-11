@@ -36,9 +36,8 @@ from musickit_api_mock import (
 )
 
 if TYPE_CHECKING:
+    from musickit_api_mock.endpoints.schema import AppleResponse
     from musickit_api_mock.json_value import _JSONValue
-
-    from tests._apple_response import AppleResponse
 
 
 def _get(mock: MusicKitApiMock, url: str) -> tuple[int, AppleResponse]:
@@ -922,18 +921,18 @@ def test_recommendations_batch_empty_ids_returns_400(
 ) -> None:
     status, body = _get(mock, "https://api.music.apple.com/v1/me/recommendations?ids=")
     assert status == 400
-    err = cast("dict[str, _JSONValue]", body["errors"][0])
+    err = body["errors"][0]
     assert err["code"] == "40005"
-    source = cast("dict[str, _JSONValue]", err["source"])
+    source = err["source"]
     assert source["parameter"] == "ids"
 
 
 def test_genres_batch_empty_ids_returns_400(mock: MusicKitApiMock) -> None:
     status, body = _get(mock, "https://api.music.apple.com/v1/catalog/us/genres?ids=")
     assert status == 400
-    err = cast("dict[str, _JSONValue]", body["errors"][0])
+    err = body["errors"][0]
     assert err["code"] == "40005"
-    source = cast("dict[str, _JSONValue]", err["source"])
+    source = err["source"]
     assert source["parameter"] == "ids"
 
 
@@ -942,9 +941,9 @@ def test_record_labels_batch_empty_ids_returns_400(mock: MusicKitApiMock) -> Non
         mock, "https://api.music.apple.com/v1/catalog/us/record-labels?ids="
     )
     assert status == 400
-    err = cast("dict[str, _JSONValue]", body["errors"][0])
+    err = body["errors"][0]
     assert err["code"] == "40005"
-    source = cast("dict[str, _JSONValue]", err["source"])
+    source = err["source"]
     assert source["parameter"] == "ids"
 
 
@@ -955,7 +954,7 @@ def test_apple_curator_singular_type_mismatch_returns_404(
         mock, "https://api.music.apple.com/v1/catalog/us/apple-curators/cu2"
     )
     assert status == 404
-    err = cast("dict[str, _JSONValue]", body["errors"][0])
+    err = body["errors"][0]
     assert err["code"] == "40400"
 
 
@@ -964,7 +963,7 @@ def test_curator_singular_type_mismatch_returns_404(
 ) -> None:
     status, body = _get(mock, "https://api.music.apple.com/v1/catalog/us/curators/cu1")
     assert status == 404
-    err = cast("dict[str, _JSONValue]", body["errors"][0])
+    err = body["errors"][0]
     assert err["code"] == "40400"
 
 
@@ -976,7 +975,7 @@ def test_apple_curator_singular_missing_id_returns_404(
         "https://api.music.apple.com/v1/catalog/us/apple-curators/nonexistent",
     )
     assert status == 404
-    err = cast("dict[str, _JSONValue]", body["errors"][0])
+    err = body["errors"][0]
     assert err["code"] == "40400"
 
 
@@ -987,7 +986,7 @@ def test_station_singular_bare_emits_no_relationships(
         mock, "https://api.music.apple.com/v1/catalog/us/stations/ra.978194965"
     )
     assert status == 200
-    resource = cast("dict[str, _JSONValue]", body["data"][0])
+    resource = body["data"][0]
     assert resource["type"] == "stations"
     assert resource["id"] == "ra.978194965"
     assert "relationships" not in resource
@@ -1001,14 +1000,11 @@ def test_station_singular_include_radio_show_emits_relationships_block(
         "https://api.music.apple.com/v1/catalog/us/stations/ra.978194965?include=radio-show",
     )
     assert status == 200
-    rels = cast(
-        "dict[str, _JSONValue]",
-        cast("dict[str, _JSONValue]", body["data"][0])["relationships"],
-    )
-    radio_show = cast("dict[str, _JSONValue]", rels["radio-show"])
+    rels = body["data"][0]["relationships"]
+    radio_show = rels["radio-show"]
     assert radio_show["href"] == "/v1/catalog/us/stations/ra.978194965/radio-show"
-    data = cast("list[_JSONValue]", radio_show["data"])
-    item = cast("dict[str, _JSONValue]", data[0])
+    data = radio_show["data"]
+    item = data[0]
     assert item["type"] == "apple-curators"
     assert item["id"] == "cu1"
 
@@ -1025,11 +1021,8 @@ def test_station_singular_include_radio_show_empty_when_show_missing(
         "https://api.music.apple.com/v1/catalog/us/stations/ra.978194965?include=radio-show",
     )
     assert status == 200
-    rels = cast(
-        "dict[str, _JSONValue]",
-        cast("dict[str, _JSONValue]", body["data"][0])["relationships"],
-    )
-    radio_show = cast("dict[str, _JSONValue]", rels["radio-show"])
+    rels = body["data"][0]["relationships"]
+    radio_show = rels["radio-show"]
     assert radio_show["data"] == []
 
 
@@ -1054,14 +1047,10 @@ def test_recommendation_contents_mix_types(mock: MusicKitApiMock) -> None:
     }
     status, body = _get(mock, "https://api.music.apple.com/v1/me/recommendations/mixed")
     assert status == 200
-    rels = cast(
-        "dict[str, _JSONValue]",
-        cast("dict[str, _JSONValue]", body["data"][0])["relationships"],
-    )
-    contents = cast("dict[str, _JSONValue]", rels["contents"])
-    items = cast("list[_JSONValue]", contents["data"])
-    types = [cast("dict[str, _JSONValue]", x)["type"] for x in items]
-    ids = [cast("dict[str, _JSONValue]", x)["id"] for x in items]
+    rels = body["data"][0]["relationships"]
+    items = rels["contents"]["data"]
+    types = [x["type"] for x in items]
+    ids = [x["id"] for x in items]
     assert types == ["playlists", "albums", "stations"]
     assert ids == ["pl1", "a1", "ra.978194965"]
 
@@ -1070,10 +1059,7 @@ def test_recommendation_emits_display_attrs(mock: MusicKitApiMock) -> None:
     """display / hasSeeAll / version surface in attributes when set."""
     status, body = _get(mock, "https://api.music.apple.com/v1/me/recommendations/rec1")
     assert status == 200
-    attrs = cast(
-        "dict[str, _JSONValue]",
-        cast("dict[str, _JSONValue]", body["data"][0])["attributes"],
-    )
+    attrs = body["data"][0]["attributes"]
     display = cast("dict[str, _JSONValue]", attrs["display"])
     assert display["kind"] == "MusicCoverShelf"
     assert display["decorations"] == []
@@ -1096,10 +1082,7 @@ def test_recommendation_kind_recently_played_accepted(
     }
     status, body = _get(mock, "https://api.music.apple.com/v1/me/recommendations/rec1")
     assert status == 200
-    attrs = cast(
-        "dict[str, _JSONValue]",
-        cast("dict[str, _JSONValue]", body["data"][0])["attributes"],
-    )
+    attrs = body["data"][0]["attributes"]
     assert attrs["kind"] == "recently-played"
 
 
@@ -1118,4 +1101,4 @@ def test_repeated_limit_param_uses_last_value(mock: MusicKitApiMock) -> None:
         "https://api.music.apple.com/v1/catalog/us/music-videos/mv1/songs?limit=1&limit=3",
     )
     assert status == 200
-    assert len(cast("list[_JSONValue]", body["data"])) == 3
+    assert len(body["data"]) == 3

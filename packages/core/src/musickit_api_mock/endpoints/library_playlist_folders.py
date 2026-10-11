@@ -43,7 +43,7 @@ if TYPE_CHECKING:
     from musickit_api_mock.data.library_playlist_folder import (
         LibraryPlaylistFolderChild,
     )
-    from musickit_api_mock.json_value import _JSONValue
+    from musickit_api_mock.endpoints.schema import AppleRelationshipBlock, AppleResource
     from musickit_api_mock.mock import MusicKitApiMock
     from musickit_api_mock.transport.http import Request, Response
 
@@ -82,8 +82,8 @@ def _children_of(
 
 def _parent_resource(
     mock: MusicKitApiMock, parent_id: str, locale: str | None, *, recursive: bool
-) -> dict[str, _JSONValue]:
-    rels: dict[str, _JSONValue] | None = None
+) -> AppleResource:
+    rels: dict[str, AppleRelationshipBlock] | None = None
     if recursive:
         rels = {
             "parent": _parent_block(
@@ -113,7 +113,7 @@ def _parent_block(
     locale: str | None,
     *,
     recursive: bool,
-) -> dict[str, _JSONValue]:
+) -> AppleRelationshipBlock:
     """Build ``relationships.parent`` for a folder or playlist.
 
     With ``recursive``, each emitted parent carries its own parent block up
@@ -133,9 +133,9 @@ def _encode_child(
     locale: str | None,
     *,
     includes: set[str],
-) -> dict[str, _JSONValue] | None:
+) -> AppleResource | None:
     resolver = mock._data_resolver
-    rels: dict[str, _JSONValue] = {}
+    rels: dict[str, AppleRelationshipBlock] = {}
     if child.type == "library-playlists":
         library_playlist = resolver.library_playlist.get(
             LookupContext(child.id, locale)
@@ -177,8 +177,8 @@ def _encode_children(
     locale: str | None,
     *,
     includes: set[str],
-) -> list[dict[str, _JSONValue]]:
-    out: list[dict[str, _JSONValue]] = []
+) -> list[AppleResource]:
+    out: list[AppleResource] = []
     for child in children:
         encoded = _encode_child(mock, child, locale, includes=includes)
         if encoded is not None:
@@ -194,14 +194,14 @@ def _encode_folder(
     *,
     includes: set[str],
     sizes: dict[str, int],
-) -> dict[str, _JSONValue] | None:
+) -> AppleResource | None:
     """Encode a folder resource, or the root when ``folder`` is ``None``.
 
     Apple answers the root only when a relationship is requested, so the
     root without one encodes to ``None``.
     """
     href = _library_playlist_folder_href(folder_id)
-    rels: dict[str, _JSONValue] = {}
+    rels: dict[str, AppleRelationshipBlock] = {}
     if "children" in includes:
         children = _children_of(mock, folder_id, locale) or []
         size = sizes["children"]
@@ -266,7 +266,7 @@ def _handle_library_playlist_folders(mock: MusicKitApiMock, req: Request) -> Res
         return _json_response(
             _single_resource_include_400_envelope("children"), status=400
         )
-    data: list[dict[str, _JSONValue]] = []
+    data: list[AppleResource] = []
     for folder_id, folder in page:
         encoded = _encode_folder(
             mock, folder_id, folder, locale, includes=includes, sizes=sizes

@@ -48,11 +48,11 @@ from musickit_api_mock import (
 )
 
 if TYPE_CHECKING:
-    from tests._apple_response import (
+    from musickit_api_mock.endpoints.schema import (
         AccountMeta,
         AppleResponse,
-        LicenseResponseBody,
-        WebPlaybackResponseBody,
+        LicenseBody,
+        WebPlaybackBody,
     )
 
 
@@ -177,7 +177,7 @@ def test_web_playback_dict_form_dispatches_on_salable_adam_id(
         "https://play.itunes.apple.com/WebObjects/MZPlay.woa/wa/webPlayback",
         body,
     )
-    parsed = cast("WebPlaybackResponseBody", raw)
+    parsed = cast("WebPlaybackBody", raw)
     assert status == 200
     assert parsed["status"] == 0
     assert parsed["songList"][0]["songId"] == "s1"
@@ -211,7 +211,7 @@ def test_web_playback_mapping_form_dispatches_on_universal_library_id(
         "https://play.itunes.apple.com/WebObjects/MZPlay.woa/wa/webPlayback",
         body,
     )
-    parsed = cast("WebPlaybackResponseBody", raw)
+    parsed = cast("WebPlaybackBody", raw)
     assert status == 200
     assert parsed["status"] == 0
     assert parsed["songList"][0]["songId"] == "s1"
@@ -243,7 +243,7 @@ def test_web_playback_static_form_ignores_missing_universal_library_id(
         "https://play.itunes.apple.com/WebObjects/MZPlay.woa/wa/webPlayback",
         body,
     )
-    parsed = cast("WebPlaybackResponseBody", raw)
+    parsed = cast("WebPlaybackBody", raw)
     assert status == 200
     assert parsed["status"] == 0
 
@@ -390,8 +390,8 @@ def test_license_dict_form_keys_on_adam_id(mock: MusicKitApiMock) -> None:
         "https://play.itunes.apple.com/WebObjects/MZPlay.woa/wa/acquireWebPlaybackLicense",
         b,
     )
-    body_a = cast("LicenseResponseBody", raw_a)
-    body_b = cast("LicenseResponseBody", raw_b)
+    body_a = cast("LicenseBody", raw_a)
+    body_b = cast("LicenseBody", raw_b)
     assert s_a == s_b == 200
     assert body_a["status"] == 0
     assert body_b["status"] == -1017

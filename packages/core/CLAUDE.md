@@ -6,6 +6,14 @@ Guidance for the `musickit_api_mock` core package.
 
 Handlers must build response JSON via the schema layer, not inline.
 
+The schema layer also owns the emitted shapes. `endpoints/schema/shapes.py`
+holds the TypedDicts for the envelope, resource, relationship block, error
+entry, and each endpoint-specific body; builders and handlers annotate
+against those instead of `dict[str, _JSONValue]`. Resource `attributes`
+stay `_JSONValue` — they vary per resource type — so the leaf shapes an
+attribute slot can carry are named there too, for readers that narrow an
+attribute back to a concrete shape.
+
 ## Browser shim environment scope
 
 The shim must work across **all browser environments MusicKit JS targets**. Don't narrow to one runtime just because the test harness only installs one browser.

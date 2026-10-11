@@ -15,9 +15,8 @@ from typing import TYPE_CHECKING, cast
 from musickit_api_mock import MusicKitApiMock, Request
 
 if TYPE_CHECKING:
+    from musickit_api_mock.endpoints.schema import AppleResponse
     from musickit_api_mock.json_value import _JSONValue
-
-    from tests._apple_response import AppleResponse
 
 
 def _get(mock: MusicKitApiMock, url: str) -> tuple[int, AppleResponse]:
