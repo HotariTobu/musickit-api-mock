@@ -13,20 +13,20 @@ from musickit_api_mock.endpoints.schema.play_params import _play_params_library_
 
 if TYPE_CHECKING:
     from musickit_api_mock.data.library_playlist import LibraryPlaylist
+    from musickit_api_mock.data.library_playlist_folder import LibraryPlaylistFolder
     from musickit_api_mock.endpoints.schema.shapes import (
         AppleRelationshipBlock,
         AppleResource,
     )
-    from musickit_api_mock.data.library_playlist_folder import LibraryPlaylistFolder
     from musickit_api_mock.json_value import _JSONValue
 
 
 def _wrap(
     library_playlist_id: str,
     attrs: dict[str, _JSONValue],
-    relationships: dict[str, _JSONValue] | None,
-) -> dict[str, _JSONValue]:
-    out: dict[str, _JSONValue] = {
+    relationships: dict[str, AppleRelationshipBlock] | None,
+) -> AppleResource:
+    out: AppleResource = {
         "id": library_playlist_id,
         "type": "library-playlists",
         "href": f"/v1/me/library/playlists/{library_playlist_id}",
@@ -73,8 +73,8 @@ def _library_playlist_folder_as_playlist_resource(
     folder_id: str,
     folder: LibraryPlaylistFolder,
     *,
-    relationships: dict[str, _JSONValue] | None = None,
-) -> dict[str, _JSONValue]:
+    relationships: dict[str, AppleRelationshipBlock] | None = None,
+) -> AppleResource:
     """A folder answered on the library playlist paths, shaped as a playlist."""
     attrs: dict[str, _JSONValue] = _strip_none(
         {
@@ -93,8 +93,8 @@ def _library_playlist_folder_as_playlist_resource(
 def _library_playlist_placeholder_resource(
     library_playlist_id: str,
     *,
-    relationships: dict[str, _JSONValue] | None = None,
-) -> dict[str, _JSONValue]:
+    relationships: dict[str, AppleRelationshipBlock] | None = None,
+) -> AppleResource:
     """Apple's stand-in for an unknown ``p.`` id in an ``?ids=`` fetch."""
     attrs: dict[str, _JSONValue] = {
         "canEdit": False,
