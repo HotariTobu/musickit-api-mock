@@ -75,7 +75,6 @@ plugins:
           - guide/getting-started.md: Install, build a mock, bind it to a page, drive MusicKit JS.
           - guide/surfaces.md: The three configuration surfaces and which one a given scenario belongs to.
           - guide/playwright.md: Binding the mock to a Playwright page or browser context, sync and async.
-          - guide/response-language.md: Response-link propagation, storefront normalization evidence, and limitations.
         Reference:
           - reference/index.md: Map of the generated API reference pages.
           - reference/mock.md: The mock class — the library entry point.
@@ -119,7 +118,6 @@ nav:
       - Getting started: guide/getting-started.md
       - Surfaces overview: guide/surfaces.md
       - Playwright integration: guide/playwright.md
-      - Response-link languages: guide/response-language.md
   - Reference:
       - reference/index.md
       - MusicKitApiMock: reference/mock.md

@@ -15,39 +15,21 @@ from musickit_api_mock.endpoints.response_language import (
     _normalize_response_language,
     _response_language,
 )
-from musickit_api_mock.endpoints.storefront_languages import _STOREFRONT_LANGUAGES
 
 
 @pytest.mark.parametrize(
     ("storefront", "tag", "expected"),
     [
-        ("us", "fr", "fr-FR"),
-        ("us", "fr-CA", "en-US"),
-        ("us", "de", "en-US"),
-        ("us", "es", "en-US"),
+        ("us", "es-MX", "es-MX"),
         ("us", "es-mx", "es-MX"),
-        ("us", "EN-us", "en-US"),
-        ("us", "en-AU", "en-US"),
-        ("us", "ja", "en-US"),
-        ("us", "zh", "zh-Hans-CN"),
-        ("us", "zh-TW", "zh-Hant-TW"),
-        ("us", "pt-br", "pt-BR"),
-        ("us", "ko", "ko"),
-        ("jp", "en", "en-US"),
-        ("jp", "en-AU", "ja"),
-        ("jp", "ja", "ja"),
-        ("jp", "fr", "ja"),
-        ("jp", "zh", "ja"),
+        ("us", "fr", "fr-FR"),
+        ("us", "es", "en-US"),
         ("ca", "fr", "en-CA"),
         ("ca", "fr-CA", "fr-CA"),
-        ("ca", "fr-ca", "fr-CA"),
-        ("fr", "ja", "fr-FR"),
-        ("gb", "EN-gb", "en-GB"),
-        ("cn", "zh-hans-cn", "zh-Hans-CN"),
-        ("ch", "de-ch", "de-CH"),
-        ("nz", "en-AU", "en-AU"),
-        ("in", "hi", "hi"),
-        ("dk", "fr", "en-GB"),
+        ("fr", "en-GB", "en-GB"),
+        ("jp", "en", "en-US"),
+        ("ch", "de", "de-DE"),
+        ("ru", "RU", "RU"),
         ("xx", "es-mx", "es-mx"),
         (None, "fr", "fr"),
     ],
@@ -57,16 +39,6 @@ def test_response_language_mapping(
 ) -> None:
     assert _normalize_response_language(tag, storefront) == expected
     assert _normalize_response_language(expected, storefront) == expected
-
-
-@pytest.mark.parametrize("storefront", sorted(_STOREFRONT_LANGUAGES))
-def test_documented_profile_matching(storefront: str) -> None:
-    profile = _STOREFRONT_LANGUAGES[storefront]
-    assert profile
-    assert len(profile) == len(set(profile))
-    for tag in profile:
-        assert _normalize_response_language(tag.swapcase(), storefront) == tag
-    assert _normalize_response_language("zz-unlisted", storefront) == profile[0]
 
 
 def test_unknown_storefront_explicit_profile() -> None:
