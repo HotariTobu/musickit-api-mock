@@ -7,6 +7,7 @@ from urllib.parse import urlparse
 from werkzeug.exceptions import MethodNotAllowed, NotFound
 from werkzeug.routing import Map, MapAdapter
 
+from musickit_api_mock.endpoints.response_language import _response_language
 from musickit_api_mock.endpoints.router import _build_url_map, _dispatch
 from musickit_api_mock.shim.loader import _load_shim_script
 from musickit_api_mock.surfaces import (
@@ -111,10 +112,12 @@ class MusicKitApiMock:
                 _warn_possibly_musickit_related(req)
             return None
 
-        # All path placeholders use the default str converter.
-        resp = _dispatch(self, req, endpoint, cast("dict[str, str]", dict(kwargs)))
-        if resp is None:
-            return None
+        with self._endpoint_resolver.request_scope():
+            # All path placeholders use the default str converter.
+            resp = _dispatch(self, req, endpoint, cast("dict[str, str]", dict(kwargs)))
+            if resp is None:
+                return None
+            resp = _response_language(self, req, resp)
         merged = {**_cors_headers(req), **resp.headers}
         return Response(status=resp.status, headers=merged, body=resp.body)
 

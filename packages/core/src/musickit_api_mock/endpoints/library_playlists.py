@@ -199,7 +199,6 @@ def _handle_library_playlists(mock: MusicKitApiMock, req: Request) -> Response:
         offset=offset,
         limit=limit,
         include_meta_total=True,
-        language_tag=query.get("l", [None])[-1],
     )
 
 

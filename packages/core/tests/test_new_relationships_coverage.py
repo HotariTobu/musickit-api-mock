@@ -1111,7 +1111,7 @@ def test_song_genres_valid_language_tag_passes(mock: MusicKitApiMock) -> None:
         "https://api.music.apple.com/v1/catalog/us/songs/1/genres?l=ja-JP",
     )
     assert status == 200
-    assert body == {"data": [GENRE]}
+    assert body == {"data": [{**GENRE, "href": "/v1/catalog/us/genres/20?l=en-US"}]}
 
 
 def test_apple_curator_singular_invalid_language_tag_400(
@@ -1179,6 +1179,7 @@ def test_song_genres_callable_resolver_threads_locale(
         "data": [
             {
                 **GENRE_REF,
+                "href": "/v1/catalog/us/genres/20?l=en-US",
                 "attributes": {
                     "name": "Pop",
                     "url": "https://music.apple.com/us/genre/20",

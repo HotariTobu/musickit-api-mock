@@ -133,6 +133,40 @@ _JP_ALBUM_BODY = {
     ]
 }
 
+_JP_LOCALIZED_ALBUM_BODY = {
+    "data": [
+        {
+            "id": "a1",
+            "type": "albums",
+            "href": "/v1/catalog/jp/albums/a1?l=ja",
+            "attributes": ALBUM_ATTRIBUTES,
+            "relationships": {
+                "tracks": {
+                    "href": "/v1/catalog/jp/albums/a1/tracks?l=ja",
+                    "data": [
+                        {
+                            "id": "1",
+                            "type": "songs",
+                            "href": "/v1/catalog/jp/songs/1?l=ja",
+                            "attributes": SONG_ATTRIBUTES,
+                        }
+                    ],
+                },
+                "artists": {
+                    "href": "/v1/catalog/jp/albums/a1/artists?l=ja",
+                    "data": [
+                        {
+                            "id": "ar1",
+                            "type": "artists",
+                            "href": "/v1/catalog/jp/artists/ar1?l=ja",
+                        }
+                    ],
+                },
+            },
+        }
+    ]
+}
+
 
 def _invalid_language_tag_body(tag: str) -> dict[str, object]:
     return {
@@ -363,7 +397,7 @@ def test_valid_language_tag_passes(mock: MusicKitApiMock) -> None:
         "https://api.music.apple.com/v1/catalog/jp/albums?ids=a1&l=ja-JP",
     )
     assert status == 200
-    assert body == _JP_ALBUM_BODY
+    assert body == _JP_LOCALIZED_ALBUM_BODY
 
 
 def test_empty_language_tag_treated_as_absent(mock: MusicKitApiMock) -> None:
@@ -381,7 +415,7 @@ def test_trailing_hyphen_language_tag_passes(mock: MusicKitApiMock) -> None:
         mock, "https://api.music.apple.com/v1/catalog/jp/albums?ids=a1&l=ja-"
     )
     assert status == 200
-    assert body == _JP_ALBUM_BODY
+    assert body == _JP_LOCALIZED_ALBUM_BODY
 
 
 def test_three_letter_primary_language_tag_400(mock: MusicKitApiMock) -> None:
@@ -430,7 +464,7 @@ def test_uppercase_primary_language_tag_passes(mock: MusicKitApiMock) -> None:
         mock, "https://api.music.apple.com/v1/catalog/jp/albums?ids=a1&l=JA-JP"
     )
     assert status == 200
-    assert body == _JP_ALBUM_BODY
+    assert body == _JP_LOCALIZED_ALBUM_BODY
 
 
 def test_script_subtag_language_tag_passes(mock: MusicKitApiMock) -> None:
@@ -439,7 +473,7 @@ def test_script_subtag_language_tag_passes(mock: MusicKitApiMock) -> None:
         mock, "https://api.music.apple.com/v1/catalog/jp/albums?ids=a1&l=zh-Hans-CN"
     )
     assert status == 200
-    assert body == _JP_ALBUM_BODY
+    assert body == _JP_LOCALIZED_ALBUM_BODY
 
 
 def test_song_singular_default_relationships(mock: MusicKitApiMock) -> None:
@@ -870,13 +904,13 @@ def test_locale_callable_resolver_receives_request_locale() -> None:
             url="x",
         )
 
-    def expected_body(name: str) -> dict[str, object]:
+    def expected_body(name: str, href: str) -> dict[str, object]:
         return {
             "data": [
                 {
                     "id": "a1",
                     "type": "albums",
-                    "href": "/v1/catalog/jp/albums/a1",
+                    "href": href,
                     "attributes": {
                         "name": name,
                         "artistName": "Artist",
@@ -920,7 +954,7 @@ def test_locale_callable_resolver_receives_request_locale() -> None:
     )
     assert status_default == 200
     assert status_en == 200
-    assert body_default == expected_body("Test (default)")
-    assert body_en == expected_body("Test (en)")
+    assert body_default == expected_body("Test (default)", "/v1/catalog/jp/albums/a1")
+    assert body_en == expected_body("Test (en)", "/v1/catalog/jp/albums/a1?l=en-US")
     assert seen_locales[0] is None
     assert seen_locales[1] == "en-US"

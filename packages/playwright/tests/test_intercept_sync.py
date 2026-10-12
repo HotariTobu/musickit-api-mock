@@ -668,3 +668,35 @@ def test_station_radio_show_endpoint_intercepted(
     page = mount_sync_page(mock)
     page.goto(page_url)
     assert_station_radio_show_response(page.evaluate(FETCH_STATION_RADIO_SHOW))
+
+
+def test_response_language_reaches_browser(
+    mount_sync_page: Callable[..., Page], page_url: str
+) -> None:
+    mock = MusicKitApiMock()
+    mock.data.genres = {
+        "20": Genre(name="Pop", url="https://music.apple.com/us/genre/20")
+    }
+    page = mount_sync_page(mock)
+    page.goto(page_url)
+    result = page.evaluate("""async () => {
+        const response = await fetch(
+            'https://api.music.apple.com/v1/catalog/us/genres/20?l=fr');
+        return {status: response.status, body: await response.json()};
+    }""")
+    assert result == {
+        "status": 200,
+        "body": {
+            "data": [
+                {
+                    "id": "20",
+                    "type": "genres",
+                    "href": "/v1/catalog/us/genres/20?l=fr-FR",
+                    "attributes": {
+                        "name": "Pop",
+                        "url": "https://music.apple.com/us/genre/20",
+                    },
+                }
+            ]
+        },
+    }
