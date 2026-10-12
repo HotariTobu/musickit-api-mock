@@ -2855,6 +2855,8 @@ mock.endpoints.storefront = lambda: _storefront(
 
 `Account.subscription_storefront` and `Storefront.id` are independent fields — the mock does not enforce a relationship. When your app reads both, set them to the same storefront identifier to avoid the page receiving a mismatched pair MusicKit's docs never describe.
 
+Requests with a valid `l` parameter carry the storefront-normalized language into response `href` and `next` links, including nested relationships. Without `l`, links do not gain it. Unknown storefronts preserve the requested tag unless explicitly configured library-storefront language metadata supplies a fallback. This changes response links, not fixture attribute text.
+
 # Simulate a signed-in user with an active subscription
 
 The end-to-end "signed in, paid up" baseline used by almost every other recipe. Three surfaces participate:

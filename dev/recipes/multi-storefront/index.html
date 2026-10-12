@@ -1295,6 +1295,11 @@
 <p><code>current_country</code> is your test's active country — a fixture parameter, dataclass instance, or shared state holding <code>id</code> / <code>name</code> / <code>language</code> attributes. The callable runs on every <code>/v1/me/storefront</code> request, so updating <code>current_country</code> between requests changes what the page sees on the next fetch.</p>
 <h2 id="keep-account-and-storefront-aligned">Keep account and storefront aligned<a class="headerlink" href="#keep-account-and-storefront-aligned" title="Permanent link">&para;</a></h2>
 <p><code>Account.subscription_storefront</code> and <code>Storefront.id</code> are independent fields — the mock does not enforce a relationship. When your app reads both, set them to the same storefront identifier to avoid the page receiving a mismatched pair MusicKit's docs never describe.</p>
+<p>Requests with a valid <code>l</code> parameter carry the storefront-normalized language into
+response <code>href</code> and <code>next</code> links, including nested relationships. Without <code>l</code>,
+links do not gain it. Unknown storefronts preserve the requested tag unless
+explicitly configured library-storefront language metadata supplies a fallback.
+This changes response links, not fixture attribute text.</p>
 
 
 
