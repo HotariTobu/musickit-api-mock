@@ -1,4 +1,4 @@
-# AGENTS.md
+# musickit-api-mock
 
 This file provides guidance to coding agents working with code in this repository.
 

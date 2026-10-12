@@ -1,4 +1,4 @@
-# AGENTS.md
+# musickit-api-mock /docs
 
 This file contains docs-site rules for library-user documentation. Root `AGENTS.md` owns project-wide principles; this file owns the external docs layer.
 
