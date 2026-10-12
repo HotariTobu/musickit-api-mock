@@ -1,4 +1,4 @@
-# packages/core AGENTS.md
+# musickit-api-mock /packages/core
 
 Guidance for the `musickit_api_mock` core package.
 
