@@ -301,20 +301,13 @@ def _standalone_paginated_response(
     offset: int,
     limit: int,
     include_meta_total: bool = False,
-    language_tag: str | None = None,
 ) -> Response:
-    """Wrap a standalone relationship-endpoint response.
-
-    Emits ``data`` plus optional ``next`` / ``meta.total``. ``language_tag``
-    is carried into ``next`` as ``?l=`` ahead of the offset.
-    """
+    """Wrap a standalone relationship-endpoint response."""
     body: AppleResponse = {"data": items_data}
     if include_meta_total:
         body["meta"] = {"total": total}
     if offset + limit < total:
         query = f"offset={offset + limit}"
-        if language_tag is not None:
-            query = f"l={language_tag}&{query}"
         body["next"] = f"{href}?{query}"
     return _json_response(body)
 

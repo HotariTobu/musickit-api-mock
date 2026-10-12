@@ -21,7 +21,6 @@ from musickit_api_mock.endpoints.query import (
     _dedupe,
     _parse_csv_param,
     _parse_ids,
-    _parse_query,
 )
 from musickit_api_mock.endpoints.request_locale import _check_and_resolve_locale
 from musickit_api_mock.endpoints.schema import (
@@ -282,7 +281,6 @@ def _handle_library_playlist_folders(mock: MusicKitApiMock, req: Request) -> Res
         offset=offset,
         limit=limit,
         include_meta_total=True,
-        language_tag=_parse_query(req.url).get("l", [None])[-1],
     )
 
 

@@ -587,10 +587,16 @@ def test_folder_list_next_keeps_only_language_tag(mock: MusicKitApiMock) -> None
         "data": [
             {
                 **_F1,
+                "href": "/v1/me/library/playlist-folders/p.f1?l=en-US",
                 "relationships": {
                     "parent": {
-                        "href": "/v1/me/library/playlist-folders/p.f1/parent",
-                        "data": [_ROOT_REF],
+                        "href": "/v1/me/library/playlist-folders/p.f1/parent?l=en-US",
+                        "data": [
+                            {
+                                **_ROOT_REF,
+                                "href": "/v1/me/library/playlist-folders/p.playlistsroot?l=en-US",
+                            }
+                        ],
                         "meta": {"total": 1},
                     }
                 },
@@ -906,10 +912,16 @@ def test_playlist_list_next_keeps_only_language_tag(mock: MusicKitApiMock) -> No
         "data": [
             {
                 **_TOP_PLAYLIST,
+                "href": "/v1/me/library/playlists/p.pl1?l=en-US",
                 "relationships": {
                     "parent": {
-                        "href": "/v1/me/library/playlists/p.pl1/parent",
-                        "data": [_ROOT_REF],
+                        "href": "/v1/me/library/playlists/p.pl1/parent?l=en-US",
+                        "data": [
+                            {
+                                **_ROOT_REF,
+                                "href": "/v1/me/library/playlist-folders/p.playlistsroot?l=en-US",
+                            }
+                        ],
                         "meta": {"total": 1},
                     }
                 },

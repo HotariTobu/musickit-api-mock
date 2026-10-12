@@ -9,7 +9,9 @@ The resolver receives the DTO via a callback so user re-assignment of
 lookup.
 """
 
-from collections.abc import Callable, Mapping
+from collections.abc import Callable, Iterator, Mapping
+from contextlib import contextmanager
+from contextvars import ContextVar
 from dataclasses import dataclass
 from typing import TypeVar, cast
 
@@ -212,10 +214,30 @@ class _EndpointResolver:
     def __init__(self, get_endpoints: Callable[[], EndpointResponses]) -> None:
         """Bind to the endpoint-overrides DTO via a callback."""
         self._get_endpoints = get_endpoints
+        self._storefront_scope: ContextVar[dict[str, StorefrontResponse] | None] = (
+            ContextVar("storefront_scope", default=None)
+        )
+
+    @contextmanager
+    def request_scope(self) -> Iterator[None]:
+        """Keep resource paths and response language on the same storefront."""
+        token = self._storefront_scope.set({})
+        try:
+            yield
+        finally:
+            self._storefront_scope.reset(token)
 
     def storefront(self) -> StorefrontResponse:
         """Resolve the active ``storefront`` setter."""
-        return _resolve_static(self._get_endpoints().storefront, "endpoints.storefront")
+        cache = self._storefront_scope.get()
+        if cache is not None and "storefront" in cache:
+            return cache["storefront"]
+        response = _resolve_static(
+            self._get_endpoints().storefront, "endpoints.storefront"
+        )
+        if cache is not None:
+            cache["storefront"] = response
+        return response
 
     def account(self) -> AccountResponse:
         """Resolve the active ``account`` setter."""

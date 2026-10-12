@@ -385,7 +385,27 @@ def test_library_album_valid_language_tag_passes(mock: MusicKitApiMock) -> None:
         "https://api.music.apple.com/v1/me/library/albums/l.a1?l=ja-JP",
     )
     assert status == 200
-    assert body == _LIBRARY_ALBUM_BODY
+    assert body == {
+        "data": [
+            {
+                **LIBRARY_ALBUM_REF,
+                "href": "/v1/me/library/albums/l.a1?l=en-US",
+                "attributes": LIBRARY_ALBUM_ATTRIBUTES,
+                "relationships": {
+                    "tracks": {
+                        "href": "/v1/me/library/albums/l.a1/tracks?l=en-US",
+                        "data": [
+                            {
+                                **LIBRARY_SONG,
+                                "href": "/v1/me/library/songs/i.s1?l=en-US",
+                            }
+                        ],
+                        "meta": {"total": 1},
+                    }
+                },
+            }
+        ]
+    }
 
 
 def test_library_playlist_invalid_language_tag_400(mock: MusicKitApiMock) -> None:
@@ -405,7 +425,11 @@ def test_library_music_video_valid_language_tag_passes(
         "https://api.music.apple.com/v1/me/library/music-videos/i.mv1?l=en-US",
     )
     assert status == 200
-    assert body == {"data": [LIBRARY_MUSIC_VIDEO]}
+    assert body == {
+        "data": [
+            {**LIBRARY_MUSIC_VIDEO, "href": "/v1/me/library/music-videos/i.mv1?l=en-US"}
+        ]
+    }
 
 
 def test_library_album_tracks_relationship_invalid_language_tag_400(
