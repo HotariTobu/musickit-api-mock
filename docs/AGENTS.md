@@ -1,6 +1,6 @@
-# CLAUDE.md
+# AGENTS.md
 
-This file contains docs-site rules for library-user documentation. Root `CLAUDE.md` owns project-wide principles; this file owns the external docs layer.
+This file contains docs-site rules for library-user documentation. Root `AGENTS.md` owns project-wide principles; this file owns the external docs layer.
 
 ## External docs layers
 

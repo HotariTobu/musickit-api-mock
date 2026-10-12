@@ -1,6 +1,6 @@
-# CLAUDE.md
+# AGENTS.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+This file provides guidance to coding agents working with code in this repository.
 
 ## Language
 
@@ -13,16 +13,16 @@ All documentation, code comments, commit messages, and issues must be written in
 Documentation in this repo splits into three scopes; each piece belongs to exactly one layer:
 
 - **File comments / docstrings** — fine-grained design decisions scoped to a single module / class / function.
-- **Directory CLAUDE.md** (e.g. `packages/core/CLAUDE.md`, `docs/CLAUDE.md`) — mid-scope decisions and conventions that span multiple files within that directory.
-- **Root CLAUDE.md** (this file) — project-wide rules, the high-level architecture map, and design axes that hold across all layers.
+- **Directory AGENTS.md** (e.g. `packages/core/AGENTS.md`, `docs/AGENTS.md`) — mid-scope decisions and conventions that span multiple files within that directory.
+- **Root AGENTS.md** (this file) — project-wide rules, the high-level architecture map, and design axes that hold across all layers.
 
 When adding documentation, pick the layer matching the scope of the content. Don't duplicate across layers.
 
-Docstrings are external API documentation rendered into the reference site by `mkdocstrings`. Detailed docstring rules live in `docs/CLAUDE.md`; follow that file when changing docstrings or anything under `docs/`. If API reference content is wrong, fix the source docstring, type definition, or generation config rather than patching `docs/reference/*.md` to restate the contract.
+Docstrings are external API documentation rendered into the reference site by `mkdocstrings`. Detailed docstring rules live in `docs/AGENTS.md`; follow that file when changing docstrings or anything under `docs/`. If API reference content is wrong, fix the source docstring, type definition, or generation config rather than patching `docs/reference/*.md` to restate the contract.
 
 ### Code comments
 
-Default to no comments. The reader is Claude — documented external API conventions and standard library semantics are in its training data, so don't explain what Claude already knows. Write a comment only when the **why** is non-obvious even to Claude: a hidden constraint, subtle invariant, workaround for a specific bug, or behavior that would surprise the reader. Don't explain what the code does, and don't reference the current task / fix / callers. Don't carry investigation history in source (probe dates, "verified by HAR", observation-log narration) — that history belongs in commit messages, PR descriptions, or spec docs.
+Default to no comments. The reader is a coding agent — assume familiarity with documented external API conventions and standard library semantics, so don't explain those basics. Write a comment only when the **why** is non-obvious even to a coding agent: a hidden constraint, subtle invariant, workaround for a specific bug, or behavior that would surprise the reader. Don't explain what the code does, and don't reference the current task / fix / callers. Don't carry investigation history in source (probe dates, "verified by HAR", observation-log narration) — that history belongs in commit messages, PR descriptions, or spec docs.
 
 Don't reference other symbols by name in backticks (`` `SomeClass` ``, `` `helper_fn()` ``) — references go stale on rename / removal, silently breaking the comment. Describe behavior in plain words ("the resolver", "the helper") instead. The only safe reference is the symbol the comment is attached to (self-reference); cross-class / cross-file / cross-module symbol references are out.
 

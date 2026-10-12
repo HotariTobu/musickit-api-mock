@@ -1,4 +1,4 @@
-# packages/core CLAUDE.md
+# packages/core AGENTS.md
 
 Guidance for the `musickit_api_mock` core package.
 
