@@ -11,7 +11,7 @@ jobs:
       id-token: write  # Trusted Publisher OIDC
     steps:
       - uses: actions/checkout@v7.0.1
-      - uses: actions/setup-python@v7.0.0
+      - uses: actions/setup-python@v7.1.0
         with:
           python-version-file: packages/core/pyproject.toml
       - uses: astral-sh/setup-uv@v10.3.0
